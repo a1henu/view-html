@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniPSD — 解读</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+  MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+<body>
+
+<!-- ============ METADATA BAR ============ -->
+<header class="meta-bar">
+  <h1>OmniPSD: Layered PSD Generation with Diffusion Transformer</h1>
+  <div class="authors">Cheng Liu*, Yiren Song*, Haofan Wang, Mike Zheng Shou† · Show Lab, National University of Singapore + Lovart AI · CVPR Findings (CVF Open Access) · arXiv:2512.09247 (2025-12)</div>
+  <nav class="meta-links">
+    <a href="https://arxiv.org/abs/2512.09247" target="_blank">📄 arXiv / PDF</a>
+    <a href="https://github.com/showlab/OmniPSD" target="_blank">💻 Code</a>
+    <a href="https://github.com/showlab/OmniPSD" target="_blank" title="README 链接 FLUX.1-dev / FLUX.1-Kontext-dev / RGBA-VAE 等基座权重；项目自训 LoRA 路径需自行设置">🧠 Checkpoints</a>
+    <a href="https://showlab.github.io/OmniPSD/" target="_blank">🌐 Project page</a>
+    <a href="https://huggingface.co/datasets/lc03lc/OmniPSD_Layered_Poster" target="_blank">🗂️ Dataset</a>
+  </nav>
+</header>
+
+<!-- floating table of contents -->
+<nav class="toc-float">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#speedread">5 分钟速读</a></li>
+    <li><a href="#tldr">TL;DR</a></li>
+    <li><a href="#intro">问题与动机</a></li>
+    <li><a href="#lineage">发展脉络</a></li>
+    <li><a href="#bigpicture">方法总览</a></li>
+    <li><a href="#notation">符号表</a></li>
+    <li><a href="#method">方法详解</a></li>
+    <li><a href="#walkthrough">走一遍例子</a></li>
+    <li><a href="#exp">实验</a></li>
+    <li><a href="#viz">效果可视化</a></li>
+    <li><a href="#limits">局限与讨论</a></li>
+    <li><a href="#faq">常见疑问</a></li>
+    <li><a href="#repro">复现指南</a></li>
+    <li><a href="#glossary">术语表</a></li>
+  </ol>
+</nav>
+
+<main class="wrap">
+
+  <!-- ============ 5-MINUTE SPEED READ ============ -->
+  <section id="speedread">
+    <div class="callout good">
+      <div class="label">⏱️ 如果你只有 5 分钟</div>
+      <ul>
+        <li><strong>一句话：</strong>OmniPSD 用一套基于 Flux 生态的 Diffusion-Transformer 框架，同时支持「文字→分层 PSD 生成」和「图像→分层 PSD 拆解」，输出带透明 alpha 通道、可编辑的多图层文件。</li>
+        <li><strong>解决的痛点：</strong>现在的生成模型只能吐出<strong>压平的单张 RGB 位图</strong>，没有图层结构、没有透明通道，没法直接拿进 Photoshop 这类专业设计流程里编辑。</li>
+        <li><strong>关键做法：</strong>(1) 预训练一个 <strong>RGBA-VAE</strong> 把透明图编进 latent；(2) 文字→PSD 把多个目标图层<strong>排进一张 2×2 网格画布</strong>，靠 DiT 的空间注意力一次性学到图层关系（Flux-Dev）；(3) 图像→PSD 做<strong>迭代式 in-context 编辑</strong>——逐层「提取文字→擦除→还原背景→分割前景」（Flux-Kontext + LoRA）。</li>
+        <li><strong>效果：</strong>图像→PSD 重建上，OmniPSD 把 FID 从 GPT-Image-1 的 53.21 降到 <strong>30.43</strong>、CLIP 从 35.59 升到 <strong>37.64</strong>；RGBA-VAE 重建 PSNR 达 <strong>32.5</strong>（Alpha-VAE 仅 26.9），并且是唯一能输出真正 RGBA 图层的方法。</li>
+        <li><strong>能拿来干嘛：</strong>把 AI 海报生成接到真实设计工作流（拿到可改的图层）。<strong>已开源</strong>：官方代码 <a href="https://github.com/showlab/OmniPSD" target="_blank">showlab/OmniPSD</a>（含训练/推理脚本），数据集子集 <a href="https://huggingface.co/datasets/lc03lc/OmniPSD_Layered_Poster" target="_blank">lc03lc/OmniPSD_Layered_Poster</a> 也已放出。</li>
+      </ul>
+    </div>
+
+    <div class="keynum-row">
+      <div class="keynum"><div class="n">30.43</div><div class="cap">图像→PSD 的 FID（GPT-Image-1 为 53.21，越低越好）</div></div>
+      <div class="keynum"><div class="n">32.5</div><div class="cap">RGBA-VAE 重建 PSNR（Alpha-VAE 26.9）</div></div>
+      <div class="keynum"><div class="n">200k+</div><div class="cap">自建 Layered Poster Dataset 真实 PSD 文件数</div></div>
+    </div>
+
+    <figure>
+      <img src="../assets/liu-2025-omnipsd/fig1_teaser.png" alt="OmniPSD teaser">
+      <figcaption>核心图（论文 Fig.1）：OmniPSD 双向能力一图概览。<strong>左半</strong>是 Image-to-PSD——把一张压平的海报拆成文字层、多个前景层和干净背景层（棋盘格代表透明）；<strong>右半</strong>是 Text-to-PSD——先用 LLM 生成<strong>分层级的 hierarchical caption</strong>（poster / foreground / midground / background 各一段描述），再生成各图层并最后渲染可编辑文字。看懂这张图就抓住了全文：一个模型，两个方向，输出都是带透明通道的可编辑图层。</figcaption>
+    </figure>
+  </section>
+
+  <section id="tldr">
+    <div class="tldr">
+      <div class="label">TL;DR</div>
+      OmniPSD 是首个把「分层 PSD 生成」和「分层 PSD 拆解」统一进同一个 Diffusion-Transformer 架构的工作。它的三块拼图是：一个在设计数据上重训过的 <strong>RGBA-VAE</strong>（解决透明/半透明/阴影的 latent 表示），文字→PSD 走 Flux-Dev、把目标图层摆进 <strong>2×2 网格</strong>用空间注意力隐式学图层关系，图像→PSD 走 Flux-Kontext + 任务专属 LoRA、把拆解建模成<strong>条件 flow-matching 的迭代 in-context 编辑</strong>（提取→擦除→重建）。配合自建的 20 万级 Layered Poster Dataset，OmniPSD 在生成质量上与最强商用模型持平，同时是唯一能产出真正可编辑 RGBA 图层的方案。
+    </div>
+  </section>
+
+  <section id="intro">
+    <h2>1. 问题与动机</h2>
+    <p>Photoshop 的 PSD 这类<strong>分层设计格式</strong>是现代数字内容创作的基石：每个元素（标题文字、人物前景、装饰图形、背景）都是<strong>独立、可单独编辑、带透明信息</strong>的图层，设计师才能任意调整布局、替换元素、做合成推理。但今天绝大多数生成模型——无论 Stable Diffusion、SDXL 还是各种 DiT——只能输出<strong>一张压平的 RGB 位图</strong>：所有元素被烘焙在一起，既没有图层结构，也没有 alpha 透明通道。这张图很好看，却没法直接拿进专业设计流程去改。</p>
+
+    <div class="intuition">
+      <div class="label">打个比方</div>
+      <p>普通文生图就像把一桌菜端上来已经搅成了一盘<strong>炒饭</strong>——好吃，但你想把里面的虾单独挑出来换成牛肉，已经不可能了。而设计师真正要的是<strong>一份食材分装好、还贴着标签的料理包</strong>：米饭一格、虾一格、配菜一格，每格都能单独拿出来替换、调味、重新摆盘。OmniPSD 要做的就是：要么直接生成这种「料理包」（文字→PSD），要么把别人端上来的炒饭<strong>逆向拆回</strong>料理包（图像→PSD）。难点在于「虾从炒饭里挑出来后，它原来盖住的那块米饭得给补上」——也就是拆图层时必须把<strong>被遮挡的背景还原干净</strong>。</p>
+    </div>
+
+    <p><strong>现有方法的 gap（具体说）：</strong>(1) 大多数方法走「先生成压平图、再后处理拆层」的两阶段套路（用 matting/分割把前景抠出来），但这会<strong>误差累积</strong>、图层间不一致、边缘有 halo 光晕，且抠出来的前景背后是一个洞——遮挡处的背景信息已经丢了。(2) 直接生 RGBA 的方法（如 LayerDiffuse 系）多在自然图上预训练，<strong>一旦遇到设计场景的半透明文字、阴影叠加、柔和混合就严重退化</strong>。(3) 没有任何一个先前方法能从一张<strong>压平海报</strong>反推出可编辑的 PSD。OmniPSD 同时补上生成与拆解两侧，并都做到 alpha-aware。</p>
+    <div class="takeaway">问题本质：让生成/逆向都输出<strong>带透明通道、图层间一致、背景被正确补全</strong>的可编辑 PSD，而不是一张压平的好看图。</div>
+  </section>
+
+  <section id="lineage">
+    <h2>2. 相关工作与发展脉络</h2>
+    <p>这条线可以讲成一个故事：扩散模型先在<strong>压平 RGB 图</strong>上做到极致（SD/SDXL→DiT：SD3/FLUX/HunyuanDiT），同时 flow-matching 把扩散重述成连续确定性流，采样更高效。但「分层」需求一直没被满足：早期分层做法用 depth/alpha matte 在简化的前景-背景假设下拆图，够用于抠图分割，却给不出专业工具要的<strong>丰富可编辑结构</strong>。扩散时代出现两条路——一条仍是「先合成再后拆」（误差累积、层间弱一致）；另一条是<strong>直接生成分层内容</strong>：LayerDiff / LayerDiffuse / LayerFusion / ART / LayerTracer 联合建模背景+前景 RGBA+遮挡+可变层数，MuLan / PSDiffusion 进一步提升可控性与跨层一致性。平行地，图形设计方向（COLE / OpenCOLE / Graphist / Desigen / Poster-LLaVA）关注高层布局与模板合成。OmniPSD 站在这个交叉点上：既要<strong>真正的 RGBA 图层</strong>（不像设计方向只给压平渲染或粗向量），又要<strong>同时支持生成与逆向拆解</strong>（不像分层方向只做生成），并用 in-context 的方式把两者塞进同一个 DiT。</p>
+    <div class="mermaid">
+timeline
+    title 分层图像生成 / 透明内容 发展脉络
+    2021-2022 : Stable Diffusion / SDXL (压平 RGB latent 扩散)
+    2023 : DiT 系崛起 SD3 / FLUX / HunyuanDiT : flow-matching 把扩散变成确定性流
+    2024 : LayerDiffuse 给 latent 加 alpha offset 生成透明层 : LayerDiff / LayerFusion / ART 联合建模多 RGBA 层 : 图形设计 COLE / OpenCOLE / Graphist
+    2025 : MuLan / PSDiffusion 提升跨层一致 : LayerTracer 矢量分层 : 本文 OmniPSD 统一「生成 + 拆解」、RGBA-VAE + 2×2 网格 + Flux-Kontext 迭代编辑
+    </div>
+    <div class="takeaway">OmniPSD 的定位：在「真 RGBA 图层」与「生成+逆向双向」两个维度上同时补齐，是首个 text-to-PSD 与 image-to-PSD 统一框架。</div>
+  </section>
+
+  <!-- ============ BIG PICTURE ============ -->
+  <section id="bigpicture">
+    <h2>3. 方法总览（先建立直觉）</h2>
+    <p>OmniPSD 其实是三个零件拼起来的。<strong>第一个零件是底座：RGBA-VAE</strong>。普通 VAE 只认识 RGB 三通道，它把第四个通道（alpha 透明度）也学进 latent，而且专门在<strong>设计素材</strong>上重训过，所以半透明文字、阴影、柔和混合都能编码-解码得很干净。它被生成和拆解两条路<strong>共享</strong>，保证两边活在同一个 latent 空间里。</p>
+    <p><strong>第二个零件是文字→PSD（用 Flux-Dev）</strong>。核心小聪明是：不另外加什么跨层注意力模块，而是把要生成的几个图层（整图、前景、中景、背景）<strong>摆进一张 2×2 的大画布</strong>，当成一张图一次性生成。DiT 本来就有全局空间自注意力，于是网格里的各个格子天然「看得见彼此」，模型就隐式学会了图层之间的布局、遮挡、配色关系。再配合 LLM 产出的<strong>分层级 caption</strong>（每个图层一段描述）做语义引导。</p>
+    <p><strong>第三个零件是图像→PSD（用 Flux-Kontext + LoRA）</strong>。把「拆图层」类比成设计师在 PS 里一层层往外抠的手工活，做成<strong>迭代式的 in-context 图像编辑</strong>：每一轮先<strong>提取</strong>当前最外层（文字或某个前景物体）成一个 RGBA 层，再<strong>擦除</strong>它并把它盖住的背景<strong>补全</strong>，露出更深的内容，如此往复，最后得到干净背景。这个「提取→擦除→还原」被形式化成<strong>条件 flow-matching</strong>。</p>
+
+    <div class="intuition">
+      <div class="label">核心 idea 一句话</div>
+      <p>别造新模块——把「分层」这件事翻译成 DiT 本来就擅长的两种能力：生成时用<strong>空间布局</strong>（2×2 网格让图层互相可见），拆解时用<strong>in-context 编辑</strong>（一层层提取并修补背景）；再用一个共享的 RGBA-VAE 兜住透明通道，整套就能输出可编辑 PSD。</p>
+    </div>
+
+    <div class="mermaid">
+flowchart TB
+    subgraph VAE[共享底座]
+      RV["RGBA-VAE<br/>编码/解码 4 通道(含 alpha)"]
+    end
+    subgraph T2P[文字→PSD &nbsp;Flux-Dev]
+      T["文本 prompt"] --> H["LLM 生成分层级 caption<br/>poster/fg/mid/bg"]
+      H --> G["排进 2×2 网格画布 G"]
+      G --> DiT1["DiT 空间自注意力<br/>一次前向生成全部图层"]
+    end
+    subgraph I2P[图像→PSD &nbsp;Flux-Kontext + LoRA]
+      Img["压平海报 I0"] --> Ext["提取当前层<br/>(文字/前景) → RGBA"]
+      Ext --> Era["擦除 + 还原被遮挡背景"]
+      Era -->|迭代 k 次| Ext
+      Era --> BG["干净背景层"]
+    end
+    DiT1 --> RV
+    Ext --> RV
+    RV --> OUT["可编辑 PSD<br/>(多个 RGBA 图层 + 元数据)"]
+    </div>
+    <figcaption class="mermaid-cap">图：整体数据流。两条路共享 RGBA-VAE；文字路靠 2×2 网格的空间注意力，图像路靠迭代 in-context 编辑。对照下面各小节细节阅读。</figcaption>
+  </section>
+
+  <!-- ============ NOTATION TABLE ============ -->
+  <section id="notation">
+    <h2>4. 符号表</h2>
+    <p>下面方法部分会用到这些符号，看公式卡住时回来查。</p>
+    <table class="notation">
+      <thead><tr><th>符号</th><th>含义</th><th>维度 / 取值</th></tr></thead>
+      <tbody>
+        <tr><td>$I,\ \hat I$</td><td>真值图像 / RGBA-VAE 重建出的图像</td><td>$H\times W\times 4$</td></tr>
+        <tr><td>$z_{RGB},\ z_A$</td><td>颜色通道、alpha 通道对应的 latent 变量</td><td>latent</td></tr>
+        <tr><td>$\phi(\cdot)$</td><td>patch 级特征提取器（约束局部结构一致）</td><td>—</td></tr>
+        <tr><td>$\psi(\cdot)$</td><td>感知特征提取器（如 VGG，维持语义保真）</td><td>—</td></tr>
+        <tr><td>$p$</td><td>latent 的高斯先验</td><td>$\mathcal N(0,I)$</td></tr>
+        <tr><td>$\lambda_{\text{pix}},\lambda_{\text{patch}},\lambda_{\text{perc}},\lambda_{\text{KL}}$</td><td>四项损失的权重</td><td>标量</td></tr>
+        <tr><td>$\mathbf I_0$</td><td>输入的压平海报图</td><td>$H\times W\times 4$</td></tr>
+        <tr><td>$\mathbf y$</td><td>目标图层类型（前景 / 背景）</td><td>$\{\text{fg},\text{bg}\}$</td></tr>
+        <tr><td>$E_\alpha$</td><td>RGBA-VAE 编码器</td><td>—</td></tr>
+        <tr><td>$\mathbf z_0,\ \mathbf z_1$</td><td>flow 的起点（=输入 latent）与终点（=目标层 latent）</td><td>latent</td></tr>
+        <tr><td>$\mathbf z_t$</td><td>$t$ 时刻的中间 latent，$\mathbf z_t=(1-t)\mathbf z_0+t\,\mathbf z_1$</td><td>latent</td></tr>
+        <tr><td>$\mathbf v_\theta(\mathbf z_t,t\mid\mathbf z_0)$</td><td>模型预测的流速场（带参数 $\theta$）</td><td>与 latent 同形</td></tr>
+        <tr><td>$t$</td><td>流的连续时间</td><td>$t\in[0,1]$</td></tr>
+        <tr><td>$\mathbf m$</td><td>前景的二值 / bbox mask（提取模型的条件）</td><td>$H\times W$</td></tr>
+        <tr><td>$\mathbf I_{\text{fg}}$</td><td>某个前景实例对应的 RGBA 目标层</td><td>$H\times W\times 4$</td></tr>
+        <tr><td>$\mathbf z_{\text{cond}},\ \mathbf z_{\text{target}}$</td><td>条件图、目标图各自的 latent</td><td>latent</td></tr>
+        <tr><td>$\mathbf Z,\ \mathbf Z'$</td><td>拼接后的 token 序列 / 注意力输出</td><td>token 序列</td></tr>
+        <tr><td>$Q,K,V$</td><td>注意力的 query/key/value，$d$ 为维度</td><td>—</td></tr>
+        <tr><td>$\mathbf I_{\text{fg}}^{(k)},\ \mathbf I_{\text{bg}}^{(k)}$</td><td>第 $k$ 轮提取的前景层 / 还原出的背景</td><td>RGBA</td></tr>
+        <tr><td>$\mathbf G$</td><td>2×2 网格画布（整图/前景/中景/背景四格）</td><td>$2\times2$ 块</td></tr>
+        <tr><td>$\mathbf I_{\text{full}},\mathbf I_{\text{fg}},\mathbf I_{\text{mid}},\mathbf I_{\text{bg}}$</td><td>整图、前景、中景、背景四个图层</td><td>各为一格</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ METHOD ============ -->
+  <section id="method">
+    <h2>5. 方法详解</h2>
+
+    <figure>
+      <img src="../assets/liu-2025-omnipsd/fig2_pipeline.png" alt="OmniPSD architecture">
+      <figcaption>图（论文 Fig.2）：OmniPSD 架构总览。<strong>(a) RGBA-VAE 训练</strong>（对应 §5.1，损失 $L_{RGBA}$）；<strong>(b) Image Edit / (c) Image Generate 训练</strong>是两条 DiT 训练路；<strong>(d) Image-to-PSD 推理</strong>（对应 §5.2）——从一张海报反复做 Text Erasure / Object Erasure 与 Text/Object Extraction，逐层剥出 RGBA 与干净背景；<strong>(e) Text-to-PSD 推理</strong>（对应 §5.3）——GPT-4 产出 hierarchical prompt，DiT 在网格上生成各层、最后渲染文字。图例区标注了可学习模块（绿/橙）与文本 token / 噪声 latent token / 条件 token。</figcaption>
+    </figure>
+
+    <h3>5.1 RGBA-VAE：把透明通道学进 latent</h3>
+    <div class="intuition">
+      <div class="label">先理解：这一步在干嘛</div>
+      <p>所有图层最终都要进 latent 再扩散。普通 VAE 不认 alpha 通道，而现成的 AlphaVAE 又是在<strong>自然透明图</strong>上预训练的，碰到设计里的半透明文字、阴影叠加、柔和混合就糊。所以作者在<strong>真实设计素材</strong>上把它重训一遍，让它能把「颜色 + 透明度」一起干净地编码-解码。这个 VAE 是生成和拆解共享的「公共货币」。</p>
+    </div>
+    <div class="eq-card">
+      <div class="eq">$$ \mathcal{L} = \lambda_{\text{pix}}\,\mathbb{E}\big[\lVert \hat I - I\rVert_1\big] + \lambda_{\text{patch}}\,\mathbb{E}\big[\lVert \phi(\hat I)-\phi(I)\rVert_1\big] + \lambda_{\text{perc}}\,\mathbb{E}\big[\lVert \psi(\hat I)-\psi(I)\rVert_2^2\big] + \lambda_{\text{KL}}\Big(\mathrm{KL}(q(z_{RGB}\mid\cdot)\,\Vert\,p) + \mathrm{KL}(q(z_A\mid\cdot)\,\Vert\,p)\Big) $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>RGBA-VAE 的训练目标，四项加权：像素重建 + patch 局部一致 + 感知保真 + 两路 latent（颜色 / alpha）各自的 KL 正则。</dd>
+        <dt>逐符号</dt><dd>$I,\hat I$ = 真值与重建图（含 alpha）；$\lVert\cdot\rVert_1$ 像素级 L1，保证逐像素准确；$\phi(\cdot)$ = patch 级特征，约束局部结构（边缘/纹理）不走样；$\psi(\cdot)$ = 感知特征（如 VGG），维持高层语义；$\mathrm{KL}(q\Vert p)$ 把后验拉向高斯先验 $p$，让 latent 规整可采样；关键在 alpha 单独有一路 $z_A$ 的 KL，<strong>透明通道被显式建模</strong>。</dd>
+        <dt>为什么这样设计</dt><dd>纯像素 L1 会糊、丢边缘；加 patch + 感知项把「局部结构」和「语义」一起拉住，这对设计图里的<strong>细文字、硬边缘、半透明渐变</strong>尤其重要。颜色与 alpha 分两路 KL，避免透明度被颜色主导而退化。</dd>
+        <dt>直觉</dt><dd>一句话：让 VAE 既能<strong>逐像素抠准</strong>、又<strong>看起来对</strong>、还<strong>把透明度单独伺候好</strong>，这样后面无论生成还是拆解都不会在 alpha 上翻车。</dd>
+      </dl>
+    </div>
+    <div class="bridge">有了能编码透明的共享 latent 空间，接下来看更难的一侧——怎么从一张压平海报<strong>逆向</strong>拆出干净图层。</div>
+
+    <h3>5.2 Image-to-PSD：迭代式 in-context 拆解（Flux-Kontext + LoRA）</h3>
+    <div class="intuition">
+      <div class="label">先理解：这一步在干嘛</div>
+      <p>不要妄想一步把所有层都预测出来。模仿设计师手工拆 PSD：每轮只对付最外面一层——先把它<strong>提取</strong>成一个 RGBA 层，再把它从画面里<strong>擦掉</strong>并把它原来盖住的背景<strong>补全</strong>，露出更深的内容，重复直到剩下干净背景。文字层、前景物体层分别由不同的 LoRA 专家负责。整个「提取→擦除」被写成一个<strong>条件 flow-matching</strong>：给定输入这张图作为条件，学一条把噪声 latent 推向「目标层 latent」的确定性流。</p>
+    </div>
+    <div class="eq-card">
+      <div class="eq">$$ \frac{d\mathbf z_t}{dt} = \mathbf v_\theta(\mathbf z_t,\,t\mid \mathbf z_0),\qquad t\in[0,1],\qquad \mathbf z_t=(1-t)\mathbf z_0 + t\,\mathbf z_1 $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>把「从输入图 latent $\mathbf z_0$ 变到目标层 latent $\mathbf z_1$」建成一条 ODE 流：$t$ 从 0 走到 1，中间状态 $\mathbf z_t$ 是两端的线性插值，速度由网络 $\mathbf v_\theta$ 给出。</dd>
+        <dt>逐符号</dt><dd>$\mathbf z_0=E_\alpha(\mathbf I_0)$ = 压平输入图经 RGBA-VAE 编码；$\mathbf z_1=E_\alpha(\mathbf I_{\mathbf y})$ = 目标图层（前景或背景，由 $\mathbf y$ 指定）的 latent；$\mathbf z_t$ = 直线插值的中间 latent；$\mathbf v_\theta$ = DiT 预测的流速场，<strong>以 $\mathbf z_0$ 为条件</strong>（这就是 in-context：输入图全程在场）。</dd>
+        <dt>为什么这样设计</dt><dd>flow-matching 是一条<strong>确定性</strong>路径，不像扩散那样注入随机噪声，因此收敛快、推理可复现，正好契合「精确还原图层」这种要求像素级保真的任务。</dd>
+        <dt>直觉</dt><dd>给模型看着原图，让它学「怎么把这张图平滑地变形成它的某一个图层」。</dd>
+      </dl>
+    </div>
+    <div class="eq-card">
+      <div class="eq">$$ \mathcal{L}_{\text{flow}} = \mathbb{E}_{t\sim\mathcal U(0,1),\,(\mathbf z_0,\mathbf z_1)}\Big[\big\lVert \mathbf v_\theta(\mathbf z_t,\,t\mid\mathbf z_0) - (\mathbf z_1-\mathbf z_0)\big\rVert_2^2\Big] $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>标准 Flow-Matching 损失：让预测的速度场对齐真实位移 $\mathbf z_1-\mathbf z_0$。</dd>
+        <dt>逐符号</dt><dd>$t\sim\mathcal U(0,1)$ 时间均匀采样；$(\mathbf z_1-\mathbf z_0)$ = 直线流的真实速度（常量方向）；$\lVert\cdot\rVert_2^2$ 让网络输出逼近它。</dd>
+        <dt>为什么这样设计</dt><dd>因为路径是直线，真值速度就是固定的差向量，监督信号简单稳定；避免了扩散的随机噪声注入，<strong>收敛更快、推理确定</strong>。</dd>
+        <dt>直觉</dt><dd>训练就是教网络在任意时刻都「指对方向」——朝着目标图层走。</dd>
+      </dl>
+    </div>
+    <p><strong>前景提取模型（Foreground Extraction）。</strong>给定 $\mathbf I_0$，模型先定位显著区域、再为每个前景实例生成 RGBA 层。每个 LoRA 适配器在三元组 $(\mathbf I_0,\mathbf m,\mathbf I_{\text{fg}})$ 上训练（$\mathbf m$ 是二值/bbox mask，$\mathbf I_{\text{fg}}$ 是该前景的 RGBA 目标）。条件图与目标图各自编码后<strong>拼成一条统一的 token 序列</strong>：</p>
+    <div class="eq-card">
+      <div class="eq">$$ \mathbf z_{\text{cond}}=E_\alpha(\mathbf I_0),\quad \mathbf z_{\text{target}}=E_\alpha(\mathbf I_{\text{fg}});\qquad \mathbf Z=[\,\mathbf z_{\text{cond}};\,\mathbf z_{\text{target}}\,] $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>把「条件（原图）」和「目标（要提取的前景）」编码后首尾拼接成一个序列 $\mathbf Z$，交给 DiT 一起处理。</dd>
+        <dt>逐符号</dt><dd>$\mathbf z_{\text{cond}}$ = 原图 latent；$\mathbf z_{\text{target}}$ = 目标前景 latent；$[\cdot;\cdot]$ = 沿 token 维拼接。</dd>
+        <dt>为什么这样设计</dt><dd>拼成一条序列后，注意力能<strong>同时看到原图和目标</strong>，前景该长什么样、边界在哪，都能从原图对应区域「抄」过来——这正是 in-context 编辑的精髓。</dd>
+        <dt>直觉</dt><dd>把「参考图」和「答题区」放进同一张卷子，模型边看参考边作答。</dd>
+      </dl>
+    </div>
+    <div class="eq-card">
+      <div class="eq">$$ \mathbf Z' = \mathrm{MMA}(\mathbf Z) = \mathrm{Softmax}\!\Big(\frac{QK^\top}{\sqrt d}\Big)V $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>Multi-Modal Attention（MMA，FLUX 的注意力）在拼好的序列上做<strong>双向</strong>注意力，输出 $\mathbf Z'$。</dd>
+        <dt>逐符号</dt><dd>$Q,K,V$ 由 $\mathbf Z$ 线性投影得到；$\sqrt d$ 缩放；双向意味着条件 token 与目标 token 互相可见。</dd>
+        <dt>为什么这样设计</dt><dd>双向上下文让模型在原图和目标之间建立<strong>像素级 + 语义级</strong>对应，从而精准地把前景实例从原图里「读」出来。</dd>
+        <dt>直觉</dt><dd>这一步就是「对照原图，把这块前景临摹成一个独立透明层」。</dd>
+      </dl>
+    </div>
+    <p><strong>前景擦除模型（Foreground Erasure）。</strong>提取完一个前景后，擦除模型在相同条件 $\mathbf I_0$ 和 mask $\mathbf m$ 下重建<strong>无遮挡的背景</strong>。第 $k$ 轮移除当前前景、还原被它盖住的背景 $\mathbf I_{\text{bg}}^{(k)}$，并把移除的内容存为一个 RGBA 层，最终堆成 PSD Stack：</p>
+    <div class="eq-card">
+      <div class="eq">$$ \big\{\mathbf I_{\text{fg}}^{(1)},\,\ldots,\,\mathbf I_{\text{fg}}^{(K)},\,\mathbf I_{\text{bg}}\big\}\ \rightarrow\ \text{PSD Stack} $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>$K$ 轮迭代后，收集到的 $K$ 个前景 RGBA 层加上最后的干净背景层，组装成可编辑的 PSD 图层栈。</dd>
+        <dt>逐符号</dt><dd>$\mathbf I_{\text{fg}}^{(k)}$ = 第 $k$ 轮提取的前景层；$\mathbf I_{\text{bg}}$ = 全部擦完后的干净背景。</dd>
+        <dt>为什么这样设计</dt><dd>所有 LoRA 共享 Flux-Kontext 的同一个 latent 流空间，使「文字移除 / 物体提取 / 背景修补」三个子任务<strong>模块化可组合</strong>，逐轮叠加而不互相破坏。</dd>
+        <dt>直觉</dt><dd>「提取一层→擦掉→补背景」反复做，像剥洋葱一样把海报剥成一摞透明图层。</dd>
+      </dl>
+    </div>
+    <details class="dig">
+      <summary>深入（可跳过）：可编辑文字层恢复（OCR→字体→渲染）</summary>
+      <p>光把文字抠成一张位图还不够「可编辑」。OmniPSD 用一条 <strong>OCR → 字体恢复 → 重渲染</strong> 流水线把光栅文字变回真正的矢量文字层：先用基于 transformer 的 OCR（PaddleOCR，支持多语种与版面）从像素里识别文字内容；再用 <strong>语义字体 embedding 检索 + 轻量字体分类系统</strong>从字体库里匹配最可能的字体；最后把「文字内容 + 推断的字体属性」重新渲染成<strong>分辨率无关的矢量文字对象</strong>，从而保留原排版与版式，得到真正可改字的图层。</p>
+    </details>
+    <div class="bridge">逆向拆解搞定了。但很多场景<strong>根本没有参考图</strong>，用户只给一句话描述。于是需要另一条路：直接从文字生成分层 PSD。</div>
+
+    <h3>5.3 Text-to-PSD：2×2 网格的 in-context 图层推理（Flux-Dev）</h3>
+    <div class="intuition">
+      <div class="label">先理解：这一步在干嘛</div>
+      <p>要让生成出的各个图层「彼此看得见、布局协调、遮挡合理」，最省事的办法不是加跨层注意力模块，而是把四个图层<strong>摆进一张 2×2 大画布</strong>当成一整张图来生成。DiT 的全局自注意力天然让四格互相对照，模型就隐式学会了图层间关系。再喂 LLM 写好的<strong>分层级 caption</strong>做语义锚点。</p>
+    </div>
+    <div class="eq-card">
+      <div class="eq">$$ \mathbf G = \begin{bmatrix} \mathbf I_{\text{full}} & \mathbf I_{\text{fg}} \\[2pt] \mathbf I_{\text{mid}} & \mathbf I_{\text{bg}} \end{bmatrix} $$</div>
+      <dl class="eq-explain">
+        <dt>是什么</dt><dd>把整图、前景、中景、背景四个图层拼成一个 2×2 网格 $\mathbf G$，作为 in-context 视觉画布一次性生成。</dd>
+        <dt>逐符号</dt><dd>$\mathbf I_{\text{full}}$ = 完整海报（左上）；$\mathbf I_{\text{fg}}$ = 前景（右上）；$\mathbf I_{\text{mid}}$ = 中景（左下）；$\mathbf I_{\text{bg}}$ = 背景（右下）。整张 $\mathbf G$ 经 RGBA-VAE 编码后由 DiT 在<strong>一次前向</strong>里处理。</dd>
+        <dt>为什么这样设计</dt><dd>网格内的图层 token 通过空间自注意力<strong>互相 attend 到完整海报 token</strong>，于是跨层对应与构图关系被隐式学到，<strong>不需要任何额外的跨层注意力模块</strong>。训练时仍只用标准 flow-matching 目标，不加新损失，语义完全来自分层 prompt + 网格结构。</dd>
+        <dt>直觉</dt><dd>把「四个图层」摆成一张拼图让模型一起画，它自然就懂得让前景压在背景上、整图等于各层叠加。</dd>
+      </dl>
+    </div>
+    <details class="dig">
+      <summary>深入（可跳过）：Hierarchical Text Prompts 与训练设置</summary>
+      <p><strong>分层级提示：</strong>每个样本标注一条 JSON，给整图与每个语义层各一段描述，例如 <code>{"poster":"...","foreground":"...","midground":"...","background":"..."}</code>；其中 <code>poster</code> 描述全局场景，其余字段描述对应图层。这给了结构化的语义锚点。<br><strong>训练设置（实验细节）：</strong>文字→PSD 用 Flux 1.0-dev，分辨率 $1024\times1024$、2×2 网格布局，LoRA rank 128、batch 8、lr 0.001、30k 步微调。数据集构造时<strong>故意去掉所有文字层</strong>（文字最后再渲染，以保真字体与可编辑性），四格布局为：左上完整海报、右上前景层1、左下前景层2、右下背景层。</p>
+    </details>
+
+    <div class="takeaway">核心机制一句话：<strong>共享 RGBA-VAE 兜住透明</strong>；<strong>生成靠 2×2 网格的空间注意力</strong>隐式学图层关系；<strong>拆解靠条件 flow-matching 的迭代 in-context 编辑</strong>逐层提取并修补背景。</div>
+  </section>
+
+  <!-- ============ WORKED EXAMPLE ============ -->
+  <section id="walkthrough">
+    <h2>6. 走一遍例子</h2>
+    <p>拿一张「世界读书日」海报，分别走两条路看清楚。</p>
+    <ol class="walkthrough">
+      <li class="step"><strong>输入（图像→PSD）：</strong>一张压平的 JPG 海报 $\mathbf I_0$——顶上有手写体大字「WORLD BOOK DAY」，中间一摞书的插画，背景是米黄色纹理。</li>
+      <li class="step"><strong>第 1 轮·提取文字：</strong>文字 LoRA 把 $\mathbf I_0$ 编成 $\mathbf z_0$，沿 flow 推向「只含文字」的目标 latent，解码出一张<strong>仅文字、其余透明</strong>的 RGBA 层 $\mathbf I_{\text{fg}}^{(1)}$；再走 OCR→字体匹配→重渲染，把它变成可改字的矢量文字层。</li>
+      <li class="step"><strong>第 1 轮·擦除文字：</strong>擦除 LoRA 在同一 $\mathbf I_0$ 与文字 mask 下，重建出「文字被抹掉、底下纹理补全」的图 $\mathbf I_{\text{bg}}^{(1)}$，露出干净的书堆+背景。</li>
+      <li class="step"><strong>第 2 轮·提取/擦除前景：</strong>对 $\mathbf I_{\text{bg}}^{(1)}$ 重复——提取「那摞书」为 $\mathbf I_{\text{fg}}^{(2)}$（带透明边缘），擦除后补全得到纯米黄背景 $\mathbf I_{\text{bg}}$。</li>
+      <li class="step"><strong>输出：</strong>$\{\mathbf I_{\text{fg}}^{(1)}\text{(文字)},\ \mathbf I_{\text{fg}}^{(2)}\text{(书)},\ \mathbf I_{\text{bg}}\text{(背景)}\}$ 组装成 PSD。看——你现在可以单独把标题改成中文、把书换成咖啡杯，背景纹路完好无缺。</li>
+      <li class="step"><strong>对照（文字→PSD）：</strong>若只给一句「极简生态海报，深青背景，云环绕的地球居中，顶部浅蓝波浪」——LLM 先写出 poster/fg/mid/bg 四段分层 caption，DiT 在 2×2 网格里一次生成四格（整图/前景地球/中景波浪/背景），最后渲染文字，同样得到一摞可编辑 RGBA 层。</li>
+    </ol>
+  </section>
+
+  <section id="exp">
+    <h2>7. 实验</h2>
+    <p><strong>设置：</strong>自建 <strong>Layered Poster Dataset</strong>（20 万+ 真实 PSD，专业设计师创作，含语义分组/字体层/形状组/特效叠加，自动抽取组级与层级元数据，过滤保留有效 RGBA 结构）。文字→PSD baseline 用 LayerDiffuse、GPT-Image-1；图像→PSD 因为<strong>此前没有同类方法</strong>，对比若干能产 RGBA 层的商用系统，以及一个非-RGBA 代理方案（前景生在白底 + 用 SAM2 分割得到透明 mask）。指标：FID（视觉真实度）、PSNR/SSIM/MSE（重建保真）、CLIP（图文语义对齐）、GPT-4-score（用 GPT-4 当评委打布局与设计一致性）。文字→PSD 训 30k 步、图像→PSD 各专家 LoRA 训 30k 步，分辨率 $1024^2$。</p>
+
+    <p><strong>怎么读表 1（图像→PSD 重建）：</strong>盯最后一行 OmniPSD，五个指标全面领先——MSE/FID 越低越好、PSNR/SSIM/CLIP-I/GPT-4 越高越好。</p>
+    <table>
+      <thead><tr><th>Method</th><th class="num">MSE ↓</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">CLIP-I ↑</th><th class="num">GPT-4-score ↑</th></tr></thead>
+      <tbody>
+        <tr><td>Kontext</td><td class="num">1.10e-1</td><td class="num">9.59</td><td class="num">0.653</td><td class="num">0.692</td><td class="num">0.64</td></tr>
+        <tr><td>Nano-Banana</td><td class="num">2.06e-2</td><td class="num">16.9</td><td class="num">0.816</td><td class="num">0.916</td><td class="num">0.86</td></tr>
+        <tr><td>GPT-Image-1</td><td class="num">2.48e-2</td><td class="num">16.1</td><td class="num">0.761</td><td class="num">0.837</td><td class="num">0.84</td></tr>
+        <tr><td><strong>OmniPSD (ours)</strong></td><td class="num best">1.14e-3</td><td class="num best">24.0</td><td class="num best">0.952</td><td class="num best">0.959</td><td class="num best">0.92</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>怎么读表 2（文字→PSD 生成）：</strong>FID 越低、CLIP/GPT-4 越高越好。OmniPSD 把 FID 几乎砍掉一半。</p>
+    <table>
+      <thead><tr><th>Method</th><th class="num">FID ↓</th><th class="num">CLIP Score ↑</th><th class="num">GPT-4 Score ↑</th></tr></thead>
+      <tbody>
+        <tr><td>LayerDiffuse SDXL</td><td class="num">89.35</td><td class="num">24.78</td><td class="num">0.66</td></tr>
+        <tr><td>GPT-Image-1</td><td class="num">53.21</td><td class="num">35.59</td><td class="num">0.84</td></tr>
+        <tr><td><strong>OmniPSD (ours)</strong></td><td class="num best">30.43</td><td class="num best">37.64</td><td class="num best">0.90</td></tr>
+      </tbody>
+    </table>
+
+    <div class="takeaway">读出的结论：不是「略好」，而是<strong>跨度量级的优势</strong>——重建 MSE 比商用模型低一个数量级（1.14e-3 vs ~2e-2），文字→PSD 的 FID 几乎腰斩。更关键的是，baseline 们<strong>根本输不出真正的 RGBA 图层</strong>，OmniPSD 在「能做到」这件事上独一份。</div>
+
+    <details class="dig">
+      <summary>深入（可跳过）：子任务分解（表3）、RGBA-VAE 消融（表4）、prompt 消融（表5）</summary>
+      <p><strong>表 3（图像→PSD 各组件）：</strong>四个子任务的指标——文字提取 FID 11.42/PSNR 26.86/GPT-4 0.86；文字擦除 FID 19.38/PSNR 26.37/GPT-4 0.94；前景提取 FID 33.35/PSNR 19.27/GPT-4 0.84；前景擦除 FID 27.14/PSNR 29.41/GPT-4 0.92；整条 Full Image-to-PSD FID 24.71/MSE 1.14e-3/PSNR 23.98/GPT-4 0.90。可见文字相关子任务最稳，前景提取最难（FID 最高）。</p>
+      <table>
+        <thead><tr><th>VAE</th><th class="num">MSE ↓</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">LPIPS ↓</th></tr></thead>
+        <tbody>
+          <tr><td>LayerDiffuse VAE</td><td class="num">2.54e-1</td><td class="num">8.06</td><td class="num">0.289</td><td class="num">0.473</td></tr>
+          <tr><td>Red-VAE</td><td class="num">2.52e-1</td><td class="num">8.53</td><td class="num">0.300</td><td class="num">0.451</td></tr>
+          <tr><td>Alpha-VAE</td><td class="num">4.15e-3</td><td class="num">26.9</td><td class="num">0.739</td><td class="num">0.120</td></tr>
+          <tr><td><strong>RGBA-VAE (ours)</strong></td><td class="num best">9.82e-4</td><td class="num best">32.5</td><td class="num best">0.945</td><td class="num best">0.0348</td></tr>
+        </tbody>
+      </table>
+      <p><strong>表 4（RGBA-VAE 重建消融）：</strong>在设计素材上重训过的 RGBA-VAE 全面碾压——PSNR 32.5（次优 Alpha-VAE 26.9），LPIPS 0.0348（次优 0.120），证明「在设计数据上重训透明 VAE」是必要的（自然图预训的 LayerDiffuse VAE / Red-VAE 直接崩到 PSNR 8 级别）。<br><strong>表 5（文字→PSD 的 prompt 消融）：</strong>去掉分层级 prompt（w/o layer-specific prompt）FID 38.56/CLIP 34.31/GPT-4 0.78，加回完整分层 prompt 后 FID 30.43/CLIP 37.64/GPT-4 0.90——naive prompt 会让生成质量明显下降，说明<strong>分层级 caption 是有效语义锚点</strong>。</p>
+    </details>
+  </section>
+
+  <section id="viz">
+    <h2>8. 效果可视化</h2>
+    <figure>
+      <img src="../assets/liu-2025-omnipsd/fig4_results.png" alt="OmniPSD results">
+      <figcaption>图（论文 Fig.4）：OmniPSD 生成结果。<strong>(a) 图像→PSD 重建</strong>——把输入海报拆成可编辑文字层、多个前景层和干净背景层（棋盘格=透明）；注意被前景遮挡的背景区域被合理补全。<strong>(b) 文字→PSD 生成</strong>——下方 JSON 即分层级 caption（poster/foreground/midground/background 各一段），模型据此生成背景与前景层，最后渲染文字。每一格都是一个独立透明图层。</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/liu-2025-omnipsd/fig5_compare.png" alt="comparison with baselines">
+      <figcaption>图（论文 Fig.5）：与 baseline 对比。<strong>(a) 文字→PSD</strong>：LayerDiffuse-SDXL 前景尚可但背景不稳、有伪影；GPT-Image-1 画质强却常丢失/改动背景元素、破坏全局一致；OmniPSD 前景背景都干净、整图协调。<strong>(b) 图像→PSD</strong>：其他方法<strong>给不出真正的 RGBA 图层</strong>（无棋盘格透明），且在文字提取/前景去除/背景重建上难以保持一致；OmniPSD 各步都准确，提取与擦除区域彼此对齐。</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/liu-2025-omnipsd/fig6_vae.png" alt="RGBA-VAE comparison">
+      <figcaption>图（论文 Fig.6）：RGBA-VAE 对比。从左到右是 Ground Truth、LayerDiffuse VAE、Red-VAE、Alpha-VAE、RGBA-VAE(ours)。前几个 VAE 在设计场景下重建糊、文字模糊、透明区域出错；OmniPSD 的 RGBA-VAE 重建最接近真值（对应表 4 的 PSNR 32.5 / LPIPS 0.0348）。</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/liu-2025-omnipsd/fig3_dataset.png" alt="Layered Poster Dataset">
+      <figcaption>图（论文 Fig.3）：Layered Poster Dataset。<strong>(a) 图像→PSD 重建数据</strong>用成对样本训练（前景提取/擦除、文字提取/擦除）；<strong>(b) 文字→PSD 生成数据</strong>用 2×2 网格，把整张海报与它分解后的图层摆在一起，供 in-context 学习。每个样本含 poster/foreground/midground/background 的结构化文本标注。</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ LIMITS & DISCUSSION ============ -->
+  <section id="limits">
+    <h2>9. 局限与讨论</h2>
+    <ul>
+      <li><strong>适用边界：</strong>方法是为<strong>设计/海报类</strong>素材量身定的（明确的文字层、前景图形、平铺背景）；对自然照片这类没有清晰图层语义的图，「提取→擦除→还原」范式未必适用。前景提取也是整条流水线里最难、FID 最高的一环。</li>
+      <li><strong>代价：</strong>依赖 Flux 大底座（Flux-Dev + Flux-Kontext）与多套任务专属 LoRA；图像→PSD 是<strong>迭代多轮</strong>推理，层数越多耗时越长；还挂着外部 LLM（GPT-4）写分层 caption 与 PaddleOCR 字体恢复，是一条多组件流水线。</li>
+      <li><strong>误差可能逐层累积：</strong>迭代式拆解中，前一轮背景补全的瑕疵会带进下一轮（虽然作者论证比「先合成再后拆」更稳，但本质仍是序贯过程）。</li>
+      <li><strong>开源但权重不完整：</strong>官方代码（<a href="https://github.com/showlab/OmniPSD" target="_blank">showlab/OmniPSD</a>）与训练/推理脚本已放出，HuggingFace 上也给了数据集<strong>子集</strong>（<code>lc03lc/OmniPSD_Layered_Poster</code>）；但 README <strong>未直接提供项目自训的 LoRA 权重下载</strong>（推理脚本里 <code>LORA_PATH</code> 需用户自填），完整的 20 万+ Layered Poster Dataset 也因来自在线设计仓库、存在版权/可分发性限制而未全量公开。</li>
+      <li><strong>开放问题：</strong>层数与拆解顺序目前由流程固定（文字优先、再前景）；如何让模型<strong>自适应决定图层数与顺序</strong>、以及推广到非海报的通用分层内容，是后续方向。</li>
+    </ul>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section id="faq">
+    <h2>10. 常见疑问</h2>
+    <div class="faq">
+      <details><summary>它和 LayerDiffuse 这类「直接生 RGBA 层」的方法到底差在哪？</summary>
+        <p>两点。(1) <strong>场景</strong>：LayerDiffuse 系主要在自然透明图上训练，碰到设计里的半透明文字/阴影/柔和混合会退化（见表 4，其 VAE PSNR 仅 8 级）；OmniPSD 在真实设计 PSD 上重训了 RGBA-VAE。(2) <strong>能力范围</strong>：LayerDiffuse 只做生成，OmniPSD 还能从一张<strong>已经压平的海报</strong>反向拆出可编辑图层——这是先前没有方法能做的。</p></details>
+      <details><summary>为什么文字→PSD 不直接加个跨层注意力模块，非要用 2×2 网格这种「取巧」做法？</summary>
+        <p>因为 DiT 的全局空间自注意力<strong>本来就让画布内任意位置互相可见</strong>。把四个图层摆进一张网格，各格 token 自然能 attend 到完整海报 token，图层关系被免费学到——不用改架构、不加新模块、不加新损失，工程上更省、训练更稳。消融（表 5）也表明语义主要靠分层 prompt + 网格结构来给。</p></details>
+      <details><summary>「擦除前景并补全背景」靠谱吗？补出来的会不会是乱编的？</summary>
+        <p>这正是难点，也是 OmniPSD 相对「先合成再用 matting 后拆」的优势所在：后者抠完前景背后是个空洞，OmniPSD 的擦除 LoRA 是专门训练来<strong>重建无遮挡背景</strong>的（在三元组数据上学过「原图→去前景的干净背景」），并以原图作为 in-context 条件，因此补全更连贯。当然补出的是合理猜测而非真实被遮内容，遮挡很大时仍可能失真。</p></details>
+      <details><summary>为什么用 flow-matching 而不是普通扩散去噪？</summary>
+        <p>flow-matching 走的是<strong>确定性直线路径</strong>（$\mathbf z_t=(1-t)\mathbf z_0+t\mathbf z_1$），不注入随机噪声，监督信号是固定的速度差向量，<strong>收敛快、推理可复现</strong>。对「精确还原某个图层」这种要求像素级保真、希望结果稳定的任务很合适。</p></details>
+    </div>
+  </section>
+
+  <section id="repro">
+    <h2>11. 复现指南</h2>
+
+    <div class="callout">
+      <div class="label">已开源：官方代码 + 数据子集</div>
+      <p>OmniPSD <strong>已开源</strong>。官方仓库 <a href="https://github.com/showlab/OmniPSD" target="_blank">showlab/OmniPSD</a>（约 116 ⭐，Official implementation）提供 <code>requirements.txt</code>、训练脚本与推理脚本；HuggingFace 上放出了数据集<strong>子集</strong> <a href="https://huggingface.co/datasets/lc03lc/OmniPSD_Layered_Poster" target="_blank">lc03lc/OmniPSD_Layered_Poster</a>。需要注意：README 链接的是<strong>基座权重</strong>（FLUX.1-dev / FLUX.1-Kontext-dev / RGBA-VAE），推理脚本中的 <code>LORA_PATH</code> 指向项目自训 LoRA，<strong>需用户自行训练或填入</strong>。下方命令引自 README（本报告未实际运行）。</p>
+    </div>
+
+    <div class="callout">
+      <div class="label">资源汇总</div>
+      <ul>
+        <li>代码仓库：<a href="https://github.com/showlab/OmniPSD" target="_blank">github.com/showlab/OmniPSD</a>（<strong>官方</strong>，约 116 ⭐，Python ≈99.8%）</li>
+        <li>论文：<a href="https://arxiv.org/abs/2512.09247" target="_blank">arXiv:2512.09247</a>（2025-12-10）；项目主页：<a href="https://showlab.github.io/OmniPSD/" target="_blank">showlab.github.io/OmniPSD</a>；在线 Demo：<a href="https://www.lovart.ai/" target="_blank">Lovart AI</a></li>
+        <li>数据集：<a href="https://huggingface.co/datasets/lc03lc/OmniPSD_Layered_Poster" target="_blank">lc03lc/OmniPSD_Layered_Poster</a>（Layered Poster Dataset 的<strong>子集</strong>；完整 20 万+ 集未全量公开）</li>
+        <li>权重 / Checkpoints：基座权重见 README ——<a href="https://huggingface.co/black-forest-labs/FLUX.1-dev" target="_blank">FLUX.1-dev</a>（文字→PSD）、<a href="https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev" target="_blank">FLUX.1-Kontext-dev</a>（图像→PSD）、RGBA-VAE（FLUX.1-dev-alpha，脚本中替换路径）；<span class="disabled">项目自训 LoRA 未直接提供下载，<code>LORA_PATH</code> 需自填</span>；OCR 用 <a href="https://github.com/PaddlePaddle/PaddleOCR" target="_blank">PaddleOCR</a></li>
+      </ul>
+    </div>
+
+    <h3>Quick Start（命令引自官方 README）</h3>
+    <pre><code># 0) 拉代码 + 装依赖
+git clone https://github.com/showlab/OmniPSD
+cd OmniPSD
+pip install -r requirements.txt
+# 下载基座权重：FLUX.1-dev、FLUX.1-Kontext-dev、RGBA-VAE(FLUX.1-dev-alpha)，并在脚本中替换为本地路径
+
+# 1) 训练 —— 文字→PSD（基于 Flux-Dev）
+bash scripts/train_psd_flux.sh
+#    图像→PSD 的各任务专家（内容层前景/背景、文本层前景/背景等）有对应的 train 脚本
+
+# 2) 推理 —— 文字→PSD
+#    先编辑 inference/infer_psd_flux.py（设置 prompt、基座与 LORA_PATH 等），然后：
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$(pwd) python inference/infer_psd_flux.py</code></pre>
+
+    <div class="callout warn">
+      <div class="label">算力与踩坑</div>
+      <p>论文训练分辨率 $1024\times1024$，文字→PSD 与各 LoRA 均 30k 步。需 Flux 量级底座（建议 24GB+ 显存做 LoRA 微调，推理同样吃显存）。注意：图像→PSD 是<strong>多轮迭代推理</strong>，层数多时延迟显著；分层 caption 与字体恢复依赖外部 GPT-4 / PaddleOCR，需各自配好。最大的复现障碍是<strong>完整 Layered Poster Dataset 未全量公开</strong>（仅放出子集）——这套带 RGBA 图层标注的真实 PSD 数据是效果的关键。此外 <code>LORA_PATH</code> 指向的项目自训权重需自行训练得到。</p>
+    </div>
+  </section>
+
+  <!-- ============ GLOSSARY ============ -->
+  <section id="glossary">
+    <h2>12. 术语表</h2>
+    <dl class="glossary">
+      <dt>PSD</dt><dd>Photoshop Document，分层设计文件格式，每个元素是独立、可编辑、带透明信息的图层。</dd>
+      <dt>RGBA / alpha 通道</dt><dd>在 RGB 三色之外多一个 A（透明度）通道，记录每个像素的不透明程度，是图层合成的基础。</dd>
+      <dt>RGBA-VAE</dt><dd>本文重训的、能编码/解码 4 通道（含 alpha）的变分自编码器，生成与拆解两路共享。</dd>
+      <dt>DiT (Diffusion Transformer)</dt><dd>用 Transformer 做去噪主干的扩散模型，靠全局自注意力获得更好的保真与对齐（SD3/FLUX 等）。</dd>
+      <dt>Flux-Dev / Flux-Kontext</dt><dd>Flux 生态的两个模型：前者是文生图生成器，后者是 in-context 图像编辑模型；OmniPSD 分别用作两条路的底座。</dd>
+      <dt>Flow-Matching</dt><dd>把扩散重述成一条确定性 ODE 流，学一个速度场把起点 latent 推向终点；无随机噪声，收敛快、推理可复现。</dd>
+      <dt>In-context learning（视觉）</dt><dd>把参考/条件图与目标摆进同一序列或画布，让注意力直接「看着参考作答」，无需额外模块。</dd>
+      <dt>LoRA</dt><dd>低秩适配器，少量参数微调大模型；本文为文字/前景的提取与擦除各训一套，共享同一 latent 流空间。</dd>
+      <dt>Hierarchical caption</dt><dd>分层级文本标注，给整图与每个图层各写一段描述（poster/fg/mid/bg），作为生成的语义锚点。</dd>
+      <dt>FID / CLIP score / GPT-4-score</dt><dd>分别衡量视觉真实度、图文语义对齐、以及用 GPT-4 当评委打的布局/设计一致性。</dd>
+      <dt>Layered Poster Dataset</dt><dd>作者自建的 20 万+ 真实 PSD 数据集，含语义分组/字体层/特效叠加与结构化标注。</dd>
+    </dl>
+  </section>
+
+</main>
+</body>
+</html>

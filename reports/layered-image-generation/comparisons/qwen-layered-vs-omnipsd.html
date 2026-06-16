@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qwen-Image-Layered vs OmniPSD — 分层图像生成/分解对比解读</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+<script>
+  MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<header class="meta-bar">
+  <h1>Qwen-Image-Layered × OmniPSD：两条通往「可编辑分层图像」的路</h1>
+  <div class="authors">对比文章：Qwen-Image-Layered (Yin 2025, HKUST(GZ)+Alibaba) · OmniPSD (Liu 2025, Show Lab NUS+Lovart AI)</div>
+  <nav class="meta-links">
+    <a href="../index.html">← 返回索引</a>
+    <a href="../reports/yin-2025-qwen-image-layered.html">Qwen-Image-Layered 解读</a>
+    <a href="../reports/liu-2025-omnipsd.html">OmniPSD 解读</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h2>1. 它们是什么关系</h2>
+    <p>这两篇是 2025 年几乎同期出现的<strong>姊妹工作</strong>，都在回答同一个核心问题：<em>怎样让生成模型输出的不再是一张「压平的」RGB 图，而是一叠可以单独编辑、带透明 alpha 通道的图层（RGBA layers / PSD 图层）</em>。它们共享同一套底层信念——<strong>把「分层」当成图像的天然表示，而不是事后补救</strong>——因此都重训了一个能保住透明通道的 <code>RGBA-VAE</code>，都从真实 PSD 设计文档里挖训练数据，都建立在 Diffusion Transformer（DiT / flow-matching）之上。</p>
+    <p>但它们是<strong>互补而非竞争</strong>：切入的任务方向、底座模型、以及「如何得到多层」的机制各不相同。可以这样记——</p>
+    <ul>
+      <li><strong>Qwen-Image-Layered</strong>：以 <em>分解（Image-to-Layers）</em> 为核心，主打<strong>变长图层、一次性端到端</strong>把一张图拆成 N 个语义层（也支持 Text-to-Layers），底座是 Qwen-Image，关键词是<em>共享 RGBA-VAE + Layer3D RoPE 变长建模 + 三阶段课程训练</em>。</li>
+      <li><strong>OmniPSD</strong>：以 <em>统一双向（Text-to-PSD 生成 ＋ Image-to-PSD 分解）</em> 为卖点，聚焦<strong>海报/平面设计</strong>域，底座是 Flux 生态（Flux-Dev + Flux-Kontext），关键词是<em>2×2 网格空间注意力做生成 + 迭代式 in-context 编辑（提取→擦除→还原）做分解</em>。</li>
+    </ul>
+    <div class="callout">
+      <strong>一句话总结：</strong>两者都想让你「改一层不动其它层」。Qwen-Image-Layered 把赌注押在<strong>「能拆出任意多层、且 RGB↔RGBA 同一个 latent」</strong>的通用分解器上；OmniPSD 把赌注押在<strong>「同一个 Flux 架构里既能从文字长出 PSD、又能把海报拆回 PSD」</strong>的设计工作流闭环上。
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 演进脉络</h2>
+    <p>两篇都站在「分层图像生成」这条线上。早期 matting/分割只给前景-背景的简化分层；LayerDiffuse 让扩散模型能直接生成透明 RGBA；随后 ART / LayerTracer / MuLan / PSDiffusion 等开始追求<strong>多层、可控、层间一致</strong>。这两篇是这条线在 2025 年的两个分叉：一个把<strong>分解</strong>做到变长且端到端，一个把<strong>生成＋分解</strong>统一进一个设计工作流。</p>
+    <div class="mermaid">
+graph LR
+    M[matting / 分割<br/>前景-背景简化分层] --> LD[LayerDiffuse 2024<br/>扩散直接生成透明 RGBA]
+    LD --> ML[ART / LayerTracer / MuLan<br/>PSDiffusion：多层 + 层间一致]
+    ML --> Q[Qwen-Image-Layered 2025<br/>变长分解 · 共享 RGBA-VAE<br/>端到端一次产出 N 层]
+    ML --> O[OmniPSD 2025<br/>统一 T2PSD 生成 + I2PSD 分解<br/>Flux 迭代式 in-context 编辑]
+    </div>
+    <p class="bridge">两者的「数据来源」也英雄所见略同：都意识到高质量多层素材稀缺，于是都去解析真实 <strong>PSD 文档</strong>构建数据集——这正是把它们绑在同一谱系里的另一条暗线。</p>
+  </section>
+
+  <section>
+    <h2>3. 逐项对比</h2>
+    <p>下表把两篇拉到同一张表里对照。注意：两者评测口径不同（Qwen 报 Crello 上的 Alpha soft-IoU / RGB L1；OmniPSD 报 FID / PSNR / CLIP），所以<strong>指标数字不可直接横向比大小</strong>，只能各看各的相对优势。</p>
+    <table class="cmp-table">
+      <thead>
+        <tr><th>维度</th><th>Qwen-Image-Layered</th><th>OmniPSD</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>核心思想</td><td>把图像的天然表示定义为「变长 RGBA 图层栈」，训练一个通用<strong>分解器</strong></td><td>把<strong>生成与分解统一</strong>进同一 DiT，覆盖设计工作流的两端</td></tr>
+        <tr><td>任务方向</td><td>主打 Image→Layers 分解（I2L），兼顾 Text→Layers</td><td>双向：Text→PSD 生成 ＋ Image→PSD 分解</td></tr>
+        <tr><td>底座模型</td><td>Qwen-Image (MMDiT)</td><td>Flux 生态：Flux-Dev（生成）＋ Flux-Kontext（编辑/分解）</td></tr>
+        <tr><td>「得到多层」的机制</td><td><strong>一次性端到端</strong>预测全部层；Layer3D RoPE + Multi-Modal Attention 支持<strong>变长层（最多 20）</strong></td><td>生成走 <strong>2×2 网格</strong>空间排布 + 空间注意力隐式学层关系；分解走<strong>迭代式 in-context 编辑</strong>（提取文字→擦除→还原背景→分割前景）</td></tr>
+        <tr><td>透明通道方案</td><td>共享 <strong>RGBA-VAE</strong>，让 RGB 与 RGBA 进同一 latent 空间，消除分布 gap</td><td>重训 <strong>RGBA-VAE</strong> 作为辅助表征模块，生成/分解共享</td></tr>
+        <tr><td>训练策略</td><td>多阶段课程：T2RGB → T2RGBA → T2L → I2L（500K+400K+400K steps）</td><td>Flux-Dev 微调 + Flux-Kontext + LoRA 做迭代编辑</td></tr>
+        <tr><td>数据集</td><td>自建 PSD 多层集（psd-tools 解析 + Qwen2.5-VL 标注，≤20 层，未公开）；评测用 Crello、AIM-500</td><td>自建 Layered Poster Dataset（200k+ 真实 PSD，含字体层/特效）；HF 已放出<strong>子集</strong> <code>lc03lc/OmniPSD_Layered_Poster</code></td></tr>
+        <tr><td>关键指标（各自口径）</td><td>Crello Alpha soft-IoU <span class="num best">0.8705</span>（LayerD 0.7520）；RGBA-VAE AIM-500 PSNR <span class="num">38.83</span> / rFID <span class="num">5.31</span></td><td>I2PSD FID <span class="num best">30.43</span>（GPT-Image-1 53.21）；重建 MSE <span class="num">1.14e-3</span>；T2PSD CLIP <span class="num">37.64</span></td></tr>
+        <tr><td>应用域</td><td>开放域通用图像（含含文字海报）</td><td>偏海报 / 平面设计</td></tr>
+        <tr><td>开放性</td><td><strong>已开源</strong>：代码 <a href="https://github.com/QwenLM/Qwen-Image-Layered">QwenLM/Qwen-Image-Layered</a>（~1.9k⭐，Apache-2.0）；权重 <a href="https://huggingface.co/Qwen/Qwen-Image-Layered">HF</a>/ModelScope + 在线 Demo；训练数据未公开</td><td><strong>已开源</strong>：代码 <a href="https://github.com/showlab/OmniPSD">showlab/OmniPSD</a>（~116⭐）；数据集<strong>子集</strong> <a href="https://huggingface.co/datasets/lc03lc/OmniPSD_Layered_Poster">HF</a>；但项目自训 LoRA 未提供下载、完整数据集未全量公开</td></tr>
+      </tbody>
+    </table>
+    <p class="note">✅ 链接已于 2026-06 联网核实：Qwen-Image-Layered = <a href="https://arxiv.org/abs/2512.15603">arXiv:2512.15603</a>、<a href="https://github.com/QwenLM/Qwen-Image-Layered">github.com/QwenLM/Qwen-Image-Layered</a>（~1.9k⭐）、<a href="https://huggingface.co/Qwen/Qwen-Image-Layered">HF 权重</a>；OmniPSD = <a href="https://arxiv.org/abs/2512.09247">arXiv:2512.09247</a>、<a href="https://github.com/showlab/OmniPSD">github.com/showlab/OmniPSD</a>（~116⭐）、<a href="https://huggingface.co/datasets/lc03lc/OmniPSD_Layered_Poster">HF 数据子集</a>。两者评测口径不同，指标数字不可直接横向比大小。</p>
+  </section>
+
+  <section>
+    <h2>4. 发展逻辑与取舍</h2>
+    <p><strong>为什么会分叉成这两条路？</strong>因为「可编辑分层」其实有两个不同痛点。一个是<strong>「我已经有一张图，想把它拆开改」</strong>——这要求分解器足够通用、层数不固定、且拆出来的层拼回去要和原图一致。Qwen-Image-Layered 正是冲这个去的：用共享 VAE 消除 RGB↔RGBA 鸿沟，用 Layer3D RoPE 支持任意层数，用课程训练把一个现成的生成大模型「改造」成分解器，从而在 Crello 分解质量上明显超过 LayerD 等递归式基线。</p>
+    <p>另一个痛点是<strong>「我在做设计，希望从一句话直接长出可分层编辑的 PSD，必要时也能把别人的成品海报逆向成 PSD」</strong>——这是一个工作流闭环。OmniPSD 选择不另起炉灶，而是复用成熟的 Flux 生态：生成端把多层塞进 2×2 网格让空间注意力自己学层间关系，分解端把「拆层」改写成 Flux-Kontext 擅长的<strong>迭代式图像编辑</strong>（一步步提取并擦除元素）。代价是它更聚焦海报域、分解是分步迭代（可能有误差累积），但换来了生成与分解共用一套架构的优雅。</p>
+    <div class="callout">
+      <strong>怎么选？</strong>
+      <ul>
+        <li>要<strong>把任意图像拆成多层、追求分解保真与变长层数</strong> → 看 Qwen-Image-Layered。</li>
+        <li>要<strong>「文字生 PSD + 海报逆向成 PSD」的设计闭环</strong>、且已在 Flux 生态里 → 看 OmniPSD。</li>
+        <li>两者的 <code>RGBA-VAE</code> 思路与「用真实 PSD 建数据」的做法可互相借鉴——这是该方向接下来的公共基础设施。</li>
+      </ul>
+    </div>
+    <p class="bridge">想深入任一篇的公式与实现细节，回到对应解读页：<a href="../reports/yin-2025-qwen-image-layered.html">Qwen-Image-Layered</a> · <a href="../reports/liu-2025-omnipsd.html">OmniPSD</a>。</p>
+  </section>
+
+</main>
+</body>
+</html>

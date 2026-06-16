@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分层图像生成与分解 — Paper Reading 索引</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="hero">
+  <h1>分层图像生成与分解 · Layered Image Generation</h1>
+  <p>把「压平的 RGB 图」变回「可单独编辑的 RGBA / PSD 图层」——两篇 2025 年代表性工作的中文精读 · 共 2 篇 + 1 篇对比</p>
+</div>
+
+<!-- ===== Comparison pages ===== -->
+<div class="section-title">对比解读</div>
+<div class="card-grid">
+  <a class="card" href="comparisons/qwen-layered-vs-omnipsd.html">
+    <span class="tag cmp">对比</span>
+    <h3>Qwen-Image-Layered × OmniPSD</h3>
+    <p>两条通往「可编辑分层图像」的路：变长端到端分解器 vs 统一双向的 PSD 生成/分解工作流。演进脉络、逐项对照、如何选型。</p>
+  </a>
+</div>
+
+<!-- ===== Per-paper reports ===== -->
+<div class="section-title">单篇解读</div>
+<div class="card-grid">
+  <a class="card" href="reports/yin-2025-qwen-image-layered.html">
+    <span class="tag">layer-decomposition</span>
+    <h3>Qwen-Image-Layered</h3>
+    <p>用端到端扩散模型把单张 RGB 图分解成多张语义独立的<strong>变长 RGBA 图层</strong>，获得 Photoshop 式的天生可编辑性。三件套：共享 RGBA-VAE + VLD-MMDiT(Layer3D RoPE) + 多阶段训练。</p>
+    <div class="venue">arXiv:2512.15603 (2025-12) · HKUST(GZ) + Alibaba</div>
+  </a>
+  <a class="card" href="reports/liu-2025-omnipsd.html">
+    <span class="tag">PSD / graphic-design</span>
+    <h3>OmniPSD</h3>
+    <p>基于 Flux 生态的统一 Diffusion-Transformer，<strong>同时支持文字→分层 PSD 生成与图像→分层 PSD 拆解</strong>。生成走 2×2 网格空间注意力，分解走迭代式 in-context 编辑。</p>
+    <div class="venue">CVPR Findings · arXiv:2512.09247 (2025-12) · Show Lab NUS + Lovart AI</div>
+  </a>
+</div>
+
+</body>
+</html>
