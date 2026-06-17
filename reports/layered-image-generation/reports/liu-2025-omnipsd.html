@@ -71,7 +71,7 @@
 
     <figure>
       <img src="../assets/liu-2025-omnipsd/fig1_teaser.png" alt="OmniPSD teaser">
-      <figcaption>核心图（论文 Fig.1）：OmniPSD 双向能力一图概览。<strong>左半</strong>是 Image-to-PSD——把一张压平的海报拆成文字层、多个前景层和干净背景层（棋盘格代表透明）；<strong>右半</strong>是 Text-to-PSD——先用 LLM 生成<strong>分层级的 hierarchical caption</strong>（poster / foreground / midground / background 各一段描述），再生成各图层并最后渲染可编辑文字。看懂这张图就抓住了全文：一个模型，两个方向，输出都是带透明通道的可编辑图层。</figcaption>
+      <figcaption>核心图（论文 Fig.1）：OmniPSD 双向能力一图概览。<strong>左半</strong>是 Image-to-PSD——把一张压平的海报拆成文字层、多个前景层和干净背景层（棋盘格代表透明）；<strong>右半</strong>是 Text-to-PSD——先用 LLM 生成<strong>分层级的 hierarchical caption</strong>（poster / foreground / midground / background 各一段描述），再生成各图层并最后渲染可编辑文字。看懂这张图就抓住了全文：一个模型，两个方向，输出都是带透明通道的可编辑图层。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 1. OmniPSD is a Diffusion-Transformer framework that generates layered PSD ﬁles with transparent alpha channels. Our systemsupports both Text-to-PSD multi-layer synthesis and Image-to-PSD reconstruction, producing editable layers that preserve structure, trans-parency, and semantic consistency.</p></details></figcaption>
     </figure>
   </section>
 
@@ -182,7 +182,7 @@ flowchart TB
 
     <figure>
       <img src="../assets/liu-2025-omnipsd/fig2_pipeline.png" alt="OmniPSD architecture">
-      <figcaption>图（论文 Fig.2）：OmniPSD 架构总览。<strong>(a) RGBA-VAE 训练</strong>（对应 §5.1，损失 $L_{RGBA}$）；<strong>(b) Image Edit / (c) Image Generate 训练</strong>是两条 DiT 训练路；<strong>(d) Image-to-PSD 推理</strong>（对应 §5.2）——从一张海报反复做 Text Erasure / Object Erasure 与 Text/Object Extraction，逐层剥出 RGBA 与干净背景；<strong>(e) Text-to-PSD 推理</strong>（对应 §5.3）——GPT-4 产出 hierarchical prompt，DiT 在网格上生成各层、最后渲染文字。图例区标注了可学习模块（绿/橙）与文本 token / 噪声 latent token / 条件 token。</figcaption>
+      <figcaption>图（论文 Fig.2）：OmniPSD 架构总览。<strong>(a) RGBA-VAE 训练</strong>（对应 §5.1，损失 $L_{RGBA}$）；<strong>(b) Image Edit / (c) Image Generate 训练</strong>是两条 DiT 训练路；<strong>(d) Image-to-PSD 推理</strong>（对应 §5.2）——从一张海报反复做 Text Erasure / Object Erasure 与 Text/Object Extraction，逐层剥出 RGBA 与干净背景；<strong>(e) Text-to-PSD 推理</strong>（对应 §5.3）——GPT-4 产出 hierarchical prompt，DiT 在网格上生成各层、最后渲染文字。图例区标注了可学习模块（绿/橙）与文本 token / 噪声 latent token / 条件 token。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 2. OmniPSD overview. A uniﬁed Diffusion-Transformer with a shared RGBA-VAE enables both text-to-PSD layered generation(left) and image-to-PSD decomposition (right). Text-to-PSD leverages spatial in-context learning with hierarchical captions, while Image-to-PSD performs iterative ﬂow-guided foreground extraction and background restoration. Our method produces fully editable PSD layerswith transparent alpha channels.</p></details></figcaption>
     </figure>
 
     <h3>5.1 RGBA-VAE：把透明通道学进 latent</h3>
@@ -342,19 +342,19 @@ flowchart TB
     <h2>8. 效果可视化</h2>
     <figure>
       <img src="../assets/liu-2025-omnipsd/fig4_results.png" alt="OmniPSD results">
-      <figcaption>图（论文 Fig.4）：OmniPSD 生成结果。<strong>(a) 图像→PSD 重建</strong>——把输入海报拆成可编辑文字层、多个前景层和干净背景层（棋盘格=透明）；注意被前景遮挡的背景区域被合理补全。<strong>(b) 文字→PSD 生成</strong>——下方 JSON 即分层级 caption（poster/foreground/midground/background 各一段），模型据此生成背景与前景层，最后渲染文字。每一格都是一个独立透明图层。</figcaption>
+      <figcaption>图（论文 Fig.4）：OmniPSD 生成结果。<strong>(a) 图像→PSD 重建</strong>——把输入海报拆成可编辑文字层、多个前景层和干净背景层（棋盘格=透明）；注意被前景遮挡的背景区域被合理补全。<strong>(b) 文字→PSD 生成</strong>——下方 JSON 即分层级 caption（poster/foreground/midground/background 各一段），模型据此生成背景与前景层，最后渲染文字。每一格都是一个独立透明图层。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 4. Generation results of OmniPSD. (a) Image-to-PSD reconstruction decomposes an input poster into editable text layers, mul-tiple foreground layers, and a clean background layer. (b) Text-to-PSD synthesis uses hierarchical captions to generate background andforeground layers, followed by rendering the corresponding editable text layers.</p></details></figcaption>
     </figure>
     <figure>
       <img src="../assets/liu-2025-omnipsd/fig5_compare.png" alt="comparison with baselines">
-      <figcaption>图（论文 Fig.5）：与 baseline 对比。<strong>(a) 文字→PSD</strong>：LayerDiffuse-SDXL 前景尚可但背景不稳、有伪影；GPT-Image-1 画质强却常丢失/改动背景元素、破坏全局一致；OmniPSD 前景背景都干净、整图协调。<strong>(b) 图像→PSD</strong>：其他方法<strong>给不出真正的 RGBA 图层</strong>（无棋盘格透明），且在文字提取/前景去除/背景重建上难以保持一致；OmniPSD 各步都准确，提取与擦除区域彼此对齐。</figcaption>
+      <figcaption>图（论文 Fig.5）：与 baseline 对比。<strong>(a) 文字→PSD</strong>：LayerDiffuse-SDXL 前景尚可但背景不稳、有伪影；GPT-Image-1 画质强却常丢失/改动背景元素、破坏全局一致；OmniPSD 前景背景都干净、整图协调。<strong>(b) 图像→PSD</strong>：其他方法<strong>给不出真正的 RGBA 图层</strong>（无棋盘格透明），且在文字提取/前景去除/背景重建上难以保持一致；OmniPSD 各步都准确，提取与擦除区域彼此对齐。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 5. Compare with baselines on text-to-PSD and image-to-PSD. OmniPSD matches the visual quality of leading diffusion and vision-language models while uniquely supporting multi-layer PSD generation with transparent alpha channels. Compared to existing layeredsynthesis baselines, it achieves clearly superior visual ﬁdelity and more coherent, logically structured layers.</p></details></figcaption>
     </figure>
     <figure>
       <img src="../assets/liu-2025-omnipsd/fig6_vae.png" alt="RGBA-VAE comparison">
-      <figcaption>图（论文 Fig.6）：RGBA-VAE 对比。从左到右是 Ground Truth、LayerDiffuse VAE、Red-VAE、Alpha-VAE、RGBA-VAE(ours)。前几个 VAE 在设计场景下重建糊、文字模糊、透明区域出错；OmniPSD 的 RGBA-VAE 重建最接近真值（对应表 4 的 PSNR 32.5 / LPIPS 0.0348）。</figcaption>
+      <figcaption>图（论文 Fig.6）：RGBA-VAE 对比。从左到右是 Ground Truth、LayerDiffuse VAE、Red-VAE、Alpha-VAE、RGBA-VAE(ours)。前几个 VAE 在设计场景下重建糊、文字模糊、透明区域出错；OmniPSD 的 RGBA-VAE 重建最接近真值（对应表 4 的 PSNR 32.5 / LPIPS 0.0348）。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 6. OmniPSD’s RGBA-VAE. Compared to existing VAEmethods which compatible with image alpha channels.</p></details></figcaption>
     </figure>
     <figure>
       <img src="../assets/liu-2025-omnipsd/fig3_dataset.png" alt="Layered Poster Dataset">
-      <figcaption>图（论文 Fig.3）：Layered Poster Dataset。<strong>(a) 图像→PSD 重建数据</strong>用成对样本训练（前景提取/擦除、文字提取/擦除）；<strong>(b) 文字→PSD 生成数据</strong>用 2×2 网格，把整张海报与它分解后的图层摆在一起，供 in-context 学习。每个样本含 poster/foreground/midground/background 的结构化文本标注。</figcaption>
+      <figcaption>图（论文 Fig.3）：Layered Poster Dataset。<strong>(a) 图像→PSD 重建数据</strong>用成对样本训练（前景提取/擦除、文字提取/擦除）；<strong>(b) 文字→PSD 生成数据</strong>用 2×2 网格，把整张海报与它分解后的图层摆在一起，供 in-context 学习。每个样本含 poster/foreground/midground/background 的结构化文本标注。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 3. OmniPSD’s layered dataset. Image-to-PSD is trained onpaired samples, while Text-to-PSD uses a 2 × 2 grid that presentsthe full poster and its decomposed layers for in-context learning.</p></details></figcaption>
     </figure>
   </section>
 

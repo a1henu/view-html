@@ -71,7 +71,7 @@
 
     <figure>
       <img src="../assets/yin-2025-qwen-image-layered/fig1-teaser.png" alt="teaser">
-      <figcaption>核心图（Fig.1）：一张「酸糖」海报被分解成右侧一叠半透明 RGBA 图层（背景太阳、人物、文字、柠檬装饰各一层）；底部一排展示了在图层上做的六种基本编辑——重新着色 / 替换 / 修改 / 删除 / 缩放 / 重新摆放，每次只动一层，其余内容像素级不变。这就是「inherent editability（天生可编辑性）」。</figcaption>
+      <figcaption>核心图（Fig.1）：一张「酸糖」海报被分解成右侧一叠半透明 RGBA 图层（背景太阳、人物、文字、柠檬装饰各一层）；底部一排展示了在图层上做的六种基本编辑——重新着色 / 替换 / 修改 / 删除 / 缩放 / 重新摆放，每次只动一层，其余内容像素级不变。这就是「inherent editability（天生可编辑性）」。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 1. Qwen-Image-Layered is capable of decomposing an input image into multiple semantically disentangled RGBA layers, therebyenabling inherent editability, where each layer can be independently manipulated without affecting other content.</p></details></figcaption>
     </figure>
   </section>
 
@@ -179,7 +179,7 @@ flowchart TB
 
     <figure>
       <img src="../assets/yin-2025-qwen-image-layered/fig4-arch.png" alt="architecture">
-      <figcaption>图（Fig.4）：Qwen-Image-Layered 总架构。<strong>左</strong>：文本经 Qwen2.5-VL 编码，输入图与目标层各经 <em>RGBA-VAE Encoder</em> + <em>Patchify</em>，目标层 latent 加噪并叠加时刻 $t$；三段序列拼接后送入 $N$ 个 <em>VLD-MMDiT Block</em>，最后 UnPatchify 还原。<strong>右</strong>：<em>Layer3D RoPE</em> 示意——在原本的 (height, width) 网格上新增一个「layer」维度（图中第三个坐标），使位置编码能区分不同图层、并容纳可变的层数。对应下面 5.1（VAE）、5.2（VLD-MMDiT）、5.3（训练）。</figcaption>
+      <figcaption>图（Fig.4）：Qwen-Image-Layered 总架构。<strong>左</strong>：文本经 Qwen2.5-VL 编码，输入图与目标层各经 <em>RGBA-VAE Encoder</em> + <em>Patchify</em>，目标层 latent 加噪并叠加时刻 $t$；三段序列拼接后送入 $N$ 个 <em>VLD-MMDiT Block</em>，最后 UnPatchify 还原。<strong>右</strong>：<em>Layer3D RoPE</em> 示意——在原本的 (height, width) 网格上新增一个「layer」维度（图中第三个坐标），使位置编码能区分不同图层、并容纳可变的层数。对应下面 5.1（VAE）、5.2（VLD-MMDiT）、5.3（训练）。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 4. Overview of Qwen-Image-Layered. Left: Illustration of our proposed VLD-MMDiT (Variable Layers Decomposition MMDiT),where the input RGB image and the target RGBA layers are both encoded by our proposed RGBA-VAE. During attention computation,these two sequences are concatenated along the sequence dimension, thereby enhancing inter-layer and intra-layer interactions. Right:Illustration of Layer3D RoPE, where a new layer dimension is introduced to support a variable number of layers.</p></details></figcaption>
     </figure>
 
     <div class="intuition">
@@ -295,7 +295,7 @@ flowchart TB
     </ol>
     <figure>
       <img src="../assets/yin-2025-qwen-image-layered/fig5-data.png" alt="dataset stats">
-      <figcaption>图（Fig.5）：处理后多层数据集统计。<strong>(a)</strong> 合并前后的层数分布——合并空间不重叠层后，长尾的「上百层」被显著压缩到可训练范围（最大层数设为 20）。<strong>(b)</strong> 类别分布：Poster（海报）约 50.2% 为主，其余为 UI design、Rendering、Illustration 等。这解释了为何模型对海报/带文字的设计图分解尤其擅长。</figcaption>
+      <figcaption>图（Fig.5）：处理后多层数据集统计。<strong>(a)</strong> 合并前后的层数分布——合并空间不重叠层后，长尾的「上百层」被显著压缩到可训练范围（最大层数设为 20）。<strong>(b)</strong> 类别分布：Poster（海报）约 50.2% 为主，其余为 UI design、Rendering、Illustration 等。这解释了为何模型对海报/带文字的设计图分解尤其擅长。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 5. Statistics of the processed multilayer image dataset. (a)Distribution of layer counts before and after merging. (b) Categorydistribution in the final dataset.</p></details></figcaption>
     </figure>
   </section>
 
@@ -362,7 +362,7 @@ flowchart TB
     <h2>8. 效果可视化</h2>
     <figure>
       <img src="../assets/yin-2025-qwen-image-layered/fig6-qual.png" alt="qualitative">
-      <figcaption>图（Fig.6）：分解质量定性对比（最左为输入图，右侧为分解出的各层）。<strong>上两行</strong>同一张「CROSSING INFINITY」龙年海报：<em>LayerD</em>（第 1 行）在 Output Layer 1 留下明显的 inpainting 伪影（红底里有补全痕迹），Layer 2/3 分割不准（文字和龙没分干净）；<em>Qwen-Image-Layered</em>（第 2 行）把红色背景、龙+主标题、副标题文字干净地分到不同层，alpha 边缘锐利、可直接编辑。下两行兔子海报同理。这张图直观说明：端到端、不依赖外部分割/补全模块，才能产出语义连贯、可编辑的层。</figcaption>
+      <figcaption>图（Fig.6）：分解质量定性对比（最左为输入图，右侧为分解出的各层）。<strong>上两行</strong>同一张「CROSSING INFINITY」龙年海报：<em>LayerD</em>（第 1 行）在 Output Layer 1 留下明显的 inpainting 伪影（红底里有补全痕迹），Layer 2/3 分割不准（文字和龙没分干净）；<em>Qwen-Image-Layered</em>（第 2 行）把红色背景、龙+主标题、副标题文字干净地分到不同层，alpha 边缘锐利、可直接编辑。下两行兔子海报同理。这张图直观说明：端到端、不依赖外部分割/补全模块，才能产出语义连贯、可编辑的层。<details class="orig-cap"><summary>📄 原文 caption</summary><p>Figure 6. Qualitative comparison of Image-to-Multi-RGBA (I2L). The leftmost column shows the input image; the subsequent columnspresent the decomposed layers. Notably, LayerD [36] exhibits inpainting artifacts (Output Layer 1) and inaccurate segmentation (OutputLayer 2 and 3), while our method produces high-quality, semantically disentangled layers, suitable for inherently consistent image editing.</p></details></figcaption>
     </figure>
     <p>论文还展示了三类典型结果：<strong>Fig.2</strong>（开放域自然图，把人物/动物/装饰拆成透明层）、<strong>Fig.3</strong>（含中英文文字的设计图，文字被准确单独拆出一层）、<strong>Fig.7</strong>（编辑对比：Qwen-Image-Edit-2509 在缩放/重摆/换构图时会引入像素级偏移、改动背景，而本文只改目标层、背景像素级保持）、<strong>Fig.8</strong>（T2L 文生多层，以及「先 T2I 生图再 I2L 分层」的组合管线）。</p>
   </section>
