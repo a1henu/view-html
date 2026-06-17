@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第六章 数理统计的基本概念 · 概率统计学习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">概率统计<small>学习报告 · 第六章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <a href="#intro">本章导读</a>
+      <div class="nav-group">一 · 基本概念</div>
+      <a href="#sec1">数理统计与基本概念</a>
+      <a href="#sec1-pop" class="lvl2">总体与个体</a>
+      <a href="#sec1-sample" class="lvl2">简单随机样本</a>
+      <a href="#sec1-edf" class="lvl2">经验分布函数</a>
+      <a href="#sec1-gc" class="lvl2">格利文科-坎泰利定理</a>
+      <div class="nav-group">二 · 三个重要分布</div>
+      <a href="#sec2">三个重要的抽样分布</a>
+      <a href="#sec2-chi" class="lvl2">$\chi^2$ 分布</a>
+      <a href="#sec2-fisher" class="lvl2">Fisher 引理</a>
+      <a href="#sec2-t" class="lvl2">$t$ 分布</a>
+      <a href="#sec2-f" class="lvl2">$F$ 分布</a>
+      <div class="nav-group">三 · 正态总体抽样分布</div>
+      <a href="#sec3">正态总体的抽样分布</a>
+      <a href="#sec3-summary" class="lvl2">抽样分布定理总表</a>
+      <a href="#sec3-ex" class="lvl2">综合例题</a>
+      <div class="nav-group">小结</div>
+      <a href="#summary">本章小结与速查表</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">PROBABILITY &amp; STATISTICS · CHAPTER 6</div>
+      <h1>第六章　数理统计的基本概念</h1>
+      <p>从概率论走向统计学：什么是总体、样本与统计量，如何用经验分布函数"以数据逼近真相"，以及支撑全部正态统计推断的三大抽样分布——$\chi^2$、$t$、$F$ 分布及其相互联系。</p>
+    </div></header>
+    <div class="content-inner">
+
+    <!-- ============== 本章导读 ============== -->
+    <section id="intro">
+      <h2>本章导读</h2>
+      <p>概率论中，我们总是<strong>假定</strong>随机现象的概率分布是<strong>已知</strong>的，然后去计算各种概率与数字特征。而在现实世界里，总体（或随机过程）的概率模型往往是<strong>未知</strong>的——我们只能拿到一堆<strong>数据</strong>，反过来去推断那个看不见的分布。这就是<span class="term">数理统计学</span>：一门以数据为基础，研究如何收集数据、分析数据，并据此得出客观结论或进行科学推断的学科。</p>
+      <p>本章是整个数理统计部分的"地基"，主线如下：</p>
+      <ol class="steps">
+        <li><strong>对象与语言。</strong>把研究对象的全体抽象成<span class="term">总体</span>（一个随机变量 $X$ 及其分布 $F(x)$），把抽到的 $n$ 个观测抽象成<span class="term">简单随机样本</span>（独立同分布于总体）。</li>
+        <li><strong>用数据逼近真相。</strong><span class="term">经验分布函数</span> $F_n(x)$ 完全由数据算出，由大数定律与<span class="term">格利文科-坎泰利定理</span>保证它一致地收敛到真实的 $F(x)$——这是一切非参数统计的理论基石。</li>
+        <li><strong>三大抽样分布。</strong>从样本"加工"出来的<span class="term">统计量</span>本身是随机变量，它们的分布称为<span class="term">抽样分布</span>。正态总体下最重要的三个抽样分布是 $\chi^2$、$t$、$F$，它们之间环环相扣。</li>
+        <li><strong>正态总体抽样分布定理。</strong>样本均值 $\bar X$、样本方差 $S^2$ 的分布及其独立性（Fisher 引理），是后续参数估计与假设检验全部公式的来源。</li>
+      </ol>
+      <div class="box insight"><div class="box-title"><span class="tag">直觉</span> 一句话抓住全章</div>
+        概率论是"已知骰子算结果"，数理统计是"看结果猜骰子"。本章先把"猜"的语言（总体/样本/统计量）和"逼近"的保证（经验分布函数收敛）讲清楚，再把日后做推断要用的三把尺子（$\chi^2,t,F$ 分布）打磨出来。
+      </div>
+    </section>
+
+    <!-- ============== 第一节 ============== -->
+    <section id="sec1">
+      <h2><span class="secnum">一</span>数理统计与基本概念</h2>
+      <p>在概率论中，我们通常假设随机现象的概率分布是已知的；但在实际问题中，总体（或随机过程）的概率模型往往是未知的。<span class="term">数理统计学</span>正是以数据为基础，研究如何收集、分析数据，并据此得出客观结论或进行科学推断的学科。</p>
+      <div class="box example"><div class="box-title"><span class="tag">引例</span> 灯泡次品率</div>
+        要测定某批灯泡的次品率（规定寿命低于 1000 小时即为次品）。由于寿命测试具有<strong>破坏性</strong>，无法对全部灯泡逐一全检。我们只能抽取一部分灯泡作为样本进行检验，通过样本信息来推断整批灯泡（总体）的次品率。这正是数理统计的核心研究问题之一——<strong>用局部推断整体</strong>。
+      </div>
+
+      <h3 id="sec1-pop">总体与个体</h3>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> 总体与个体</div>
+        <strong>总体</strong>：所研究对象的全体。<br>
+        <strong>个体</strong>：组成总体的每一个基本成员。
+      </div>
+      <div class="box insight"><div class="box-title"><span class="tag">直觉</span> 把"总体"直接看成一个随机变量</div>
+        实际研究中我们关心的往往是个体的某项数量指标，因此可以把该指标视为一个随机变量 $X$。在统计学中，为方便起见，常常<strong>不加区分地把随机变量 $X$ 及其分布函数 $F(x)$ 直接称为总体</strong>。例如研究某公司员工工资：所有员工构成"总体"，每位员工是"个体"，而我们真正研究的是"工资"这个随机变量的分布。
+      </div>
+
+      <h3 id="sec1-sample">随机抽样、样本与简单随机样本</h3>
+      <p>数理统计的主要任务，是从总体中抽取部分个体，并根据这部分数据对总体分布进行推断。下面是一组环环相扣的核心概念。</p>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> 抽样 · 样本 · 样本空间</div>
+        <ul>
+          <li><strong>抽样</strong>：从总体中随机抽取 $n$ 个个体，被抽取的个体总数 $n$ 称为<span class="term">样本容量</span>。</li>
+          <li><strong>样本</strong>：从总体中抽取得到的部分个体 $X_1,X_2,\dots,X_n$。</li>
+          <li><strong>样本观测值与样本空间</strong>：样本 $X_1,\dots,X_n$ 的一组具体观测值记为 $x_1,\dots,x_n$；所有可能观测值的集合构成<span class="term">样本空间</span>。</li>
+        </ul>
+      </div>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> 简单随机样本</div>
+        若容量为 $n$ 的样本 $X_1,X_2,\dots,X_n$ 满足以下两个条件，则称为<span class="term">简单随机样本</span>：
+        <ol>
+          <li><strong>代表性</strong>：每个 $X_i$ 与总体 $X$ 具有相同的分布；</li>
+          <li><strong>独立性</strong>：$X_1,X_2,\dots,X_n$ 相互独立。</li>
+        </ol>
+        简言之，简单随机样本就是<strong>独立同分布（i.i.d.）</strong>于总体 $X$ 的一组随机变量。
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">注</span> 联合分布函数</div>
+        由独立同分布性质，若总体 $X$ 的分布函数为 $F(x)$，则简单随机样本 $X_1,\dots,X_n$ 的联合分布函数恰好是各边缘分布之积：
+        $$F(x_1,x_2,\dots,x_n)=\prod_{i=1}^{n} F(x_i).$$
+        这一连乘形式正是日后写"似然函数"的出发点。
+      </div>
+
+      <div class="box example"><div class="box-title"><span class="tag">例</span> 有放回抽样产生简单随机样本</div>
+        <p>某部门从工厂收购了一批产品（共 $N$ 件），需抽样检验估计总体不合格率 $p$。记 $X=1$ 表示不合格，$X=0$ 表示合格。</p>
+        <ol class="steps">
+          <li><strong>有放回抽样</strong>：每抽一件记录后立即放回再抽，以保证样本各分量的独立性。我们观测到的 $x_1,\dots,x_n$ 是 $n$ 维随机变量 $(X_1,\dots,X_n)$ 的一组观测值，其中每个 $X_i$ 都与总体 $X$ 同分布。</li>
+          <li><strong>样本空间</strong>：由所有可能的 $n$ 维 0-1 向量组成。由于每个 $x_i$ 只取 0 或 1，故样本空间共含 $2^n$ 个离散点。</li>
+          <li><strong>结论</strong>：满足同分布 + 独立，故有放回抽样得到的是一个容量为 $n$ 的简单随机样本。</li>
+        </ol>
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">注</span> 无放回抽样为何是"近似的"简单随机样本</div>
+        实际验收常用<strong>无放回抽样</strong>。此时第二次抽到不合格品的概率依赖于第一次的结果：
+        $$P(X_2=1\mid X_1=1)=\frac{Np-1}{N-1},\qquad P(X_2=1\mid X_1=0)=\frac{Np}{N-1}.$$
+        各次抽取不再独立，严格说不是简单随机样本。但当总体容量 $N$ 很大时，二者之差微乎其微：
+        $$P(X_2=1\mid X_1=1)\approx P(X_2=1\mid X_1=0)\approx p.$$
+        因此当 $N$ 很大且 $n$ 相对较小（通常 $n/N\le 0.05$）时，仍把无放回抽样<strong>近似</strong>视为简单随机样本处理。
+      </div>
+
+      <h3 id="sec1-edf">经验分布函数</h3>
+      <p>有了样本数据，最自然的想法是：能否直接用数据"画出"一个分布函数，来近似那个未知的真实分布 $F(x)$？这就是<span class="term">经验分布函数</span>。</p>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> 次序统计量与经验分布函数</div>
+        <p>设 $x_1,x_2,\dots,x_n$ 是取自分布函数为 $F(x)$ 的总体的一个简单随机样本的观测值。将其按从小到大排序，得到<span class="term">次序统计量</span>
+        $$x_{(1)}\le x_{(2)}\le \cdots \le x_{(n)},$$
+        其中 $x_{(1)}$ 是样本中的最小值，$x_{(i)}$ 是第 $i$ 小的数。</p>
+        <p>对任意实数 $x$，定义函数 $F_n(x)$：
+        $$F_n(x)=\begin{cases}0, & x<x_{(1)},\\[4pt] \dfrac{k}{n}, & x_{(k)}\le x<x_{(k+1)}\ (k=1,2,\dots,n-1),\\[6pt] 1, & x\ge x_{(n)}.\end{cases}$$
+        称 $F_n(x)$ 为<span class="term">经验分布函数</span>。</p>
+      </div>
+      <div class="box insight"><div class="box-title"><span class="tag">直觉</span> 经验分布函数就是"频率版的分布函数"</div>
+        $F_n(x)$ 的含义，就是样本观测值中<strong>小于等于 $x$ 的数据所占的比例（频率）</strong>。它是一个单调不减、右连续的<strong>阶梯函数</strong>，每遇到一个数据点就向上跳一格 $\tfrac1n$；并且满足 $F_n(-\infty)=0$、$F_n(+\infty)=1$，因此它本身就是一个合法的分布函数。它用"频率"去模拟"概率"，正是"频率逼近概率"思想的直接体现。
+      </div>
+
+      <h3 id="sec1-gc">从大数定律到格利文科-坎泰利定理</h3>
+      <p>经验分布函数 $F_n(x)$ 与真实分布 $F(x)$ 到底有多接近？这要靠两个层次的收敛性结论来回答。</p>
+      <div class="box note"><div class="box-title"><span class="tag">第一层</span> 逐点收敛（伯努利大数定律）</div>
+        对任意<strong>固定</strong>的 $x$，事件"$X\le x$"在 $n$ 次独立观测中发生的频率正是 $F_n(x)$。由伯努利大数定律，当 $n$ 足够大时 $F_n(x)$ 依概率收敛于理论值 $F(x)$，即对任意 $\varepsilon>0$，
+        $$\lim_{n\to+\infty} P\big(|F_n(x)-F(x)|>\varepsilon\big)=0.$$
+        <strong>局限</strong>：这只保证了在某一个局部点 $x$ 上的收敛性（逐点收敛）。而实际推断中我们关心的是整条曲线 $F_n$ 能否与 $F$ 整体重合。
+      </div>
+      <div class="box theorem"><div class="box-title"><span class="tag">定理</span> 格利文科-坎泰利定理 (Glivenko–Cantelli)</div>
+        当 $n\to+\infty$ 时，经验分布函数 $F_n(x)$ 关于 $x$ <strong>一致地</strong>、且以概率 1（几乎处处）收敛于总体分布函数 $F(x)$，即
+        $$P\Big(\lim_{n\to+\infty}\ \sup_{-\infty<x<+\infty} |F_n(x)-F(x)|=0\Big)=1.$$
+      </div>
+      <div class="box insight"><div class="box-title"><span class="tag">深刻意义</span> 为什么它被称作"统计学基本定理"</div>
+        <ol>
+          <li><strong>全局一致收敛</strong>：公式中的 $\sup$（上确界）说明，无论在实数轴上哪个位置，两者之间的<strong>最大垂直误差</strong>最终都趋于 0——不是某一点对得上，而是整条曲线对得上。</li>
+          <li><strong>非参数推断的基石</strong>：在总体分布完全未知的情况下，该定理从理论上保证了我们可以放心地用可观测的 $F_n(x)$ 作为未知 $F(x)$ 的优良近似。这是一切基于数据的非参数统计方法的核心支撑。</li>
+        </ol>
+      </div>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 1</span> 经验分布函数的期望与方差</div>
+        <p>设 $X_1,\dots,X_n$ 是取自分布函数为 $F(x)$ 的总体的简单随机样本，$F_n(x)$ 为经验分布函数。对任意固定实数 $x$，证明：
+        (1) $E[F_n(x)]=F(x)$（即 $F_n(x)$ 是 $F(x)$ 的无偏估计）；(2) $\mathrm{Var}(F_n(x))=\dfrac{F(x)[1-F(x)]}{n}$。</p>
+        <ol class="steps">
+          <li><strong>构造示性函数。</strong>设指示变量 $I_i(x)=1$（当 $X_i\le x$ 时），否则 $I_i(x)=0$。<br><em>为什么这样设？</em>因为这样就能把"是否落在 $x$ 左侧"这件事翻译成 0-1 数值，便于求和与求期望。</li>
+          <li><strong>识别 $I_i(x)$ 的分布。</strong>因为 $X_i$ 与总体同分布，所以 $I_i(x)$ 服从参数为 $p=P(X_i\le x)=F(x)$ 的伯努利分布，于是
+          $$E[I_i(x)]=F(x),\qquad \mathrm{Var}(I_i(x))=F(x)[1-F(x)].$$</li>
+          <li><strong>把 $F_n$ 写成示性函数的平均。</strong>由定义，落在 $x$ 左侧的数据比例恰为
+          $$F_n(x)=\frac1n\sum_{i=1}^{n} I_i(x).$$
+          <em>这一步是关键的"翻译"：把阶梯函数还原成均值形式。</em></li>
+          <li><strong>求期望（用线性性）。</strong>
+          $$E[F_n(x)]=\frac1n\cdot n\,F(x)=F(x).$$
+          故 $F_n(x)$ 平均意义上就是 $F(x)$，这就是"无偏"。</li>
+          <li><strong>求方差（用独立性）。</strong>因 $X_i$ 相互独立故 $I_i(x)$ 相互独立，方差可逐项相加：
+          $$\mathrm{Var}(F_n(x))=\frac{1}{n^2}\cdot n\,\mathrm{Var}(I_1(x))=\frac{F(x)[1-F(x)]}{n}.$$</li>
+        </ol>
+        <p class="conclusion">$E[F_n(x)]=F(x)$ 说明 $F_n$ 平均无偏；$\mathrm{Var}(F_n(x))=\tfrac{F(x)[1-F(x)]}{n}\to 0$ 说明样本越多越精确。两者合起来正是格利文科-坎泰利定理在"一阶、二阶矩"层面的体现。<span class="qed">∎</span></p>
+      </div>
+    </section>
+
+    <!-- ============== 第二节 ============== -->
+    <section id="sec2">
+      <h2><span class="secnum">二</span>三个重要的抽样分布</h2>
+      <p>由样本构造出来的统计量本身是随机变量，其分布称为<span class="term">抽样分布</span>。在正态总体的统计推断中，反复出现三个最重要的抽样分布：$\chi^2$ 分布、$t$ 分布、$F$ 分布。它们都以标准正态分布 $N(0,1)$ 为"原料"逐层搭建，且彼此之间存在紧密的转换关系。先把这三把"尺子"造出来，下一节才能用它们去量正态总体的 $\bar X$ 与 $S^2$。</p>
+
+      <h3 id="sec2-chi">$\chi^2$ 分布（卡方分布）</h3>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> $\chi^2$ 分布</div>
+        设随机变量 $X_1,X_2,\dots,X_n$ 相互独立，且均服从标准正态分布 $N(0,1)$，则称它们的平方和
+        $$\chi^2=\sum_{i=1}^{n} X_i^2$$
+        服从<strong>自由度为 $n$</strong> 的 $\chi^2$ 分布，记作 $\chi^2\sim\chi^2(n)$。其概率密度函数为
+        $$f_n(y)=\begin{cases}\dfrac{1}{2^{n/2}\Gamma(n/2)}\,y^{\,n/2-1}\,e^{-y/2}, & y>0,\\[6pt] 0, & y\le 0,\end{cases}$$
+        其中伽马函数 $\Gamma(\alpha)=\displaystyle\int_0^{+\infty} x^{\alpha-1}e^{-x}\,dx$。
+      </div>
+      <div class="box insight"><div class="box-title"><span class="tag">直觉</span> $\chi^2$ 分布就是特殊的伽马分布</div>
+        回顾 $\Gamma(\alpha,\lambda)$ 分布的密度 $f(x)=\frac{\lambda^\alpha}{\Gamma(\alpha)}x^{\alpha-1}e^{-\lambda x}\ (x>0)$，对照可知：
+        <ul>
+          <li>$\chi^2(n)$ 实际上是参数 $\alpha=n/2,\ \lambda=1/2$ 的伽马分布，即 $\chi^2(n)\sim\Gamma(n/2,\,1/2)$。</li>
+          <li>特别地 $\chi^2(1)\sim\Gamma(1/2,\,1/2)$。</li>
+          <li>当 $n=2$ 时 $\chi^2(2)\sim\Gamma(1,\,1/2)$，这恰好是参数为 $1/2$ 的指数分布 $\mathrm{Exp}(1/2)$。</li>
+        </ul>
+        记住"$\chi^2$ 是伽马的特例"，许多变量代换题就有了统一钥匙。
+      </div>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 2</span> 指数分布的代换：$2\lambda\sum X_i\sim\chi^2(2n)$</div>
+        <p>已知 $X_1,\dots,X_n\sim\mathrm{Exp}(\lambda)$ 且相互独立，证明：$2\lambda\sum_{i=1}^{n}X_i\sim\chi^2(2n)$。</p>
+        <ol class="steps">
+          <li><strong>先看单个变量。</strong>考虑变换 $Y_i=2\lambda X_i$。由概率密度的变量代换公式（$f_{X}(x)=\lambda e^{-\lambda x}$）：
+          $$f_{Y_i}(y)=f_X\!\Big(\frac{y}{2\lambda}\Big)\cdot\Big|\frac{1}{2\lambda}\Big|=\lambda e^{-\lambda\cdot\frac{y}{2\lambda}}\cdot\frac{1}{2\lambda}=\frac12 e^{-y/2}\quad(y>0).$$</li>
+          <li><strong>识别它是谁。</strong>这恰好是参数 $1/2$ 的指数分布 $\mathrm{Exp}(1/2)$，等价于自由度 2 的 $\chi^2$ 分布，即 $2\lambda X_i\sim\chi^2(2)$（用前面"$\chi^2(2)=\mathrm{Exp}(1/2)$"的结论）。</li>
+          <li><strong>用可加性求和。</strong>$n$ 个独立的 $\chi^2(2)$ 变量相加，由 $\chi^2$ 分布的可加性，结果服从 $\chi^2(2n)$。证毕。</li>
+        </ol>
+        <p class="conclusion">指数样本和的"标准化因子"是 $2\lambda$，结果自由度是 $2n$（每个变量贡献 2）。<span class="qed">∎</span></p>
+      </div>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 3</span> 均匀分布的代换：$-2\ln X\sim\chi^2(2)$</div>
+        <p>已知 $X\sim U(0,1)$，证明：$-2\ln X\sim\chi^2(2)$。</p>
+        <ol class="steps">
+          <li><strong>确定取值范围。</strong>令 $Y=-2\ln X$。由于 $0<X<1$，故 $\ln X<0$，于是 $Y>0$。</li>
+          <li><strong>求 $Y$ 的分布函数（CDF 法）。</strong>对任意 $y>0$，
+          $$F_Y(y)=P(Y\le y)=P(-2\ln X\le y)=P\big(X\ge e^{-y/2}\big).$$
+          <em>注意 $\ln$ 是增函数、乘以 $-2$ 翻转不等号，这是符号处理的关键。</em></li>
+          <li><strong>代入均匀分布。</strong>因为 $X\sim U(0,1)$，故 $P(X\ge x)=1-x$，于是
+          $$F_Y(y)=1-e^{-y/2}.$$</li>
+          <li><strong>识别结果。</strong>这正是指数分布 $\mathrm{Exp}(1/2)$ 的分布函数。由例题 2 的结论 $\mathrm{Exp}(1/2)\sim\chi^2(2)$。得证。</li>
+        </ol>
+        <p class="conclusion">这一结论是计算机生成 $\chi^2$ 随机数、以及似然比检验中的常用桥梁。<span class="qed">∎</span></p>
+      </div>
+
+      <div class="box note"><div class="box-title"><span class="tag">性质</span> $\chi^2$ 分布的三大性质</div>
+        <ol>
+          <li><strong>数字特征</strong>：若 $\chi^2\sim\chi^2(n)$，则 $E(\chi^2)=n$，$D(\chi^2)=2n$。<br><span class="muted">推导：$E(X_i^2)=D(X_i)=1$ 故和为 $n$；$D(X_i^2)=E(X_i^4)-1=3-1=2$ 故和为 $2n$。</span></li>
+          <li><strong>可加性</strong>：若 $\chi_n^2\sim\chi^2(n)$，$\chi_m^2\sim\chi^2(m)$ 且相互独立，则 $\chi_n^2+\chi_m^2\sim\chi^2(n+m)$。（本质是"独立标准正态平方和"个数相加。）</li>
+          <li><strong>渐近正态性</strong>：由中心极限定理，当自由度 $n$ 充分大时，$\chi^2(n)$ 近似服从正态分布 $N(n,2n)$。</li>
+        </ol>
+      </div>
+      <div class="box theorem"><div class="box-title"><span class="tag">重要结论</span> 正态样本方差的分布</div>
+        设 $X_1,\dots,X_n$ 是取自正态总体 $N(\mu,\sigma^2)$ 的简单随机样本，$S^2$ 为样本方差，则
+        $$\frac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1).$$
+        注意自由度是 $n-1$ 而非 $n$——"丢掉的一个自由度"用在了估计 $\mu$（即出现了 $\bar X$）上。这一结论由下面的 Fisher 引理严格给出。
+      </div>
+
+      <h3 id="sec2-fisher">正态总体样本均值与方差的分布（Fisher 引理）</h3>
+      <div class="box theorem"><div class="box-title"><span class="tag">定理</span> Fisher 引理</div>
+        设总体 $X\sim N(\mu,\sigma^2)$，从中抽取容量为 $n$ 的简单随机样本，记样本均值 $\bar X=\frac1n\sum_{i=1}^{n}X_i$，样本方差 $S^2=\frac{1}{n-1}\sum_{i=1}^{n}(X_i-\bar X)^2$。则
+        <ol>
+          <li>$\bar X$ 与 $S^2$ <strong>相互独立</strong>；</li>
+          <li>$\dfrac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1)$。</li>
+        </ol>
+      </div>
+      <details class="derive"><summary>完整证明：用正交变换把样本"旋转"成独立分量</summary>
+      <div>
+        <p><strong>(1) 构造正交变换。</strong>定义列向量 $\boldsymbol X=(X_1,X_2,\dots,X_n)^{\!\top}$，引入一个 $n\times n$ 正交矩阵 $A$，其第一行元素全取 $\frac{1}{\sqrt n}$，其余各行按 Helmert（亥姆霍特）方式构造，使 $A$ 满足 $AA^{\top}=I$：</p>
+        $$A=\begin{pmatrix}\frac{1}{\sqrt n}&\frac{1}{\sqrt n}&\frac{1}{\sqrt n}&\cdots&\frac{1}{\sqrt n}\\[4pt]\frac{1}{\sqrt{1\cdot2}}&\frac{-1}{\sqrt{1\cdot2}}&0&\cdots&0\\[4pt]\frac{1}{\sqrt{2\cdot3}}&\frac{1}{\sqrt{2\cdot3}}&\frac{-2}{\sqrt{2\cdot3}}&\cdots&0\\ \vdots&\vdots&\vdots&\ddots&\vdots\\ \frac{1}{\sqrt{(n-1)n}}&\frac{1}{\sqrt{(n-1)n}}&\cdots&\cdots&\frac{-(n-1)}{\sqrt{(n-1)n}}\end{pmatrix}.$$
+        <p>做线性变换 $\boldsymbol Y=A\boldsymbol X$，得到新变量 $\boldsymbol Y=(Y_1,Y_2,\dots,Y_n)^{\!\top}$。由 $A$ 第一行元素全为 $\frac{1}{\sqrt n}$，得
+        $$Y_1=\frac{1}{\sqrt n}\sum_{i=1}^{n}X_i=\sqrt n\,\bar X.$$</p>
+        <p><strong>(2) 独立性推导。</strong>因为 $\boldsymbol X\sim N(\mu\mathbf 1,\sigma^2 I)$，且 $A$ 为正交矩阵（$AA^{\top}=I$），根据多维正态分布的线性变换性质，$\boldsymbol Y$ 仍是正态向量，其协方差阵为
+        $$\mathrm{Cov}(\boldsymbol Y)=A(\sigma^2 I)A^{\top}=\sigma^2 AA^{\top}=\sigma^2 I.$$
+        这说明 $Y_1,Y_2,\dots,Y_n$ 互不相关的正态变量，因此它们<strong>相互独立</strong>。</p>
+        <p><strong>(3) 平方和分解。</strong>因为正交变换保持长度（向量模）不变，故 $\sum_{i=1}^{n}Y_i^2=\sum_{i=1}^{n}X_i^2$。由此展开样本平方和：
+        $$(n-1)S^2=\sum_{i=1}^{n}X_i^2-n\bar X^2=\sum_{i=1}^{n}Y_i^2-Y_1^2=\sum_{i=2}^{n}Y_i^2.$$</p>
+        <p><strong>结论 (1)。</strong>由上式可知 $S^2$ 仅依赖于 $Y_2,\dots,Y_n$，而 $\bar X$ 仅依赖于 $Y_1$。由于 $Y_1$ 与 $(Y_2,\dots,Y_n)$ 独立，故 $\bar X$ 与 $S^2$ 相互独立。</p>
+        <p><strong>结论 (2)。</strong>对 $i\ge 2$，$A$ 的第 $i$ 行元素之和为 0，故 $E(Y_i)=0$；又 $D(Y_i)=\sigma^2$，因此 $Y_i\sim N(0,\sigma^2)$。标准化后得
+        $$\frac{(n-1)S^2}{\sigma^2}=\sum_{i=2}^{n}\Big(\frac{Y_i}{\sigma}\Big)^2\sim\chi^2(n-1),$$
+        正是 $n-1$ 个独立标准正态变量的平方和。证毕。<span class="qed">∎</span></p>
+      </div>
+      </details>
+      <div class="box insight"><div class="box-title"><span class="tag">直觉</span> 为什么是 $n-1$ 个自由度</div>
+        正交变换 $A$ 把 $n$ 个原始观测"旋转"成 $n$ 个独立分量：第 1 个分量 $Y_1=\sqrt n\,\bar X$ 专门装载了"均值信息"，剩下的 $n-1$ 个分量装载"离散信息"。$S^2$ 只用到后 $n-1$ 个分量，所以它的自由度是 $n-1$；而 $\bar X$ 只用第 1 个分量，自然与 $S^2$ 独立。
+
+      </div>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 4</span> $\chi^2$ 分布的判定与可加性</div>
+        <p>设 $X_1,\dots,X_{10}$ 是取自正态总体 $N(0,0.5^2)$ 的简单随机样本，定义 $Y=4\sum_{i=1}^{10}X_i^2$。(1) 指出 $Y$ 所服从的分布及自由度；(2) 设 $Z\sim\chi^2(5)$ 且与 $Y$ 独立，求 $E(Y+Z)$ 与 $D(Y+Z)$。</p>
+        <ol class="steps">
+          <li><strong>标准化每个 $X_i$。</strong>因为 $X_i\sim N(0,0.5^2)$，所以 $\frac{X_i}{0.5}=2X_i\sim N(0,1)$。</li>
+          <li><strong>改写 $Y$ 成标准正态平方和。</strong>$Y=4\sum X_i^2=\sum (2X_i)^2$，恰是 10 个独立标准正态变量的平方和，故 $Y\sim\chi^2(10)$。</li>
+          <li><strong>用可加性。</strong>$Y\sim\chi^2(10)$ 与 $Z\sim\chi^2(5)$ 独立，故 $Y+Z\sim\chi^2(10+5)=\chi^2(15)$。</li>
+          <li><strong>读出期望与方差。</strong>$\chi^2(15)$ 的期望为自由度 15、方差为 2 倍自由度：$E(Y+Z)=15,\ D(Y+Z)=2\times15=30$。</li>
+        </ol>
+        <p class="conclusion">凑出"标准正态平方和"是判定 $\chi^2$ 的核心套路；期望 = 自由度，方差 = 2×自由度。<span class="qed">∎</span></p>
+      </div>
+
+      <h3 id="sec2-t">$t$ 分布（学生分布）</h3>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> $t$ 分布（Student's t-distribution）</div>
+        设随机变量 $X\sim N(0,1)$，$Y\sim\chi^2(n)$，且 $X$ 与 $Y$ 相互独立。则称随机变量
+        $$T=\frac{X}{\sqrt{Y/n}}$$
+        服从<strong>自由度为 $n$</strong> 的 $t$ 分布，记作 $T\sim t(n)$。其概率密度函数为
+        $$f(t,n)=\frac{\Gamma\!\big(\frac{n+1}{2}\big)}{\sqrt{n\pi}\,\Gamma\!\big(\frac n2\big)}\Big(1+\frac{t^2}{n}\Big)^{-\frac{n+1}{2}},\quad -\infty<t<+\infty.$$
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">注</span> 命名与特例</div>
+        $t$ 分布由统计学家威廉·戈塞特（W. S. Gosset）以笔名"Student"首次发表，故又称学生分布。特例：当自由度 $n=1$ 时，$t(1)$ 即著名的<strong>柯西分布</strong>，它没有数学期望。
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">性质</span> $t$ 分布的四大性质</div>
+        <ol>
+          <li><strong>对称性</strong>：密度函数是偶函数，关于纵轴（$t=0$）严格对称。</li>
+          <li><strong>数字特征</strong>：当 $n>1$ 时 $E(T)=0$；当 $n>2$ 时 $D(T)=\frac{n}{n-2}>1$，比标准正态更"分散"。</li>
+          <li><strong>渐近正态性（厚尾）</strong>：相比 $N(0,1)$，$t$ 分布中间峰值略低、两侧尾部更厚（更易出现极端值）。当 $n\to\infty$ 时 $t(n)$ 收敛于 $N(0,1)$。</li>
+          <li><strong>核心应用</strong>：设 $X_1,\dots,X_n$ 取自 $N(\mu,\sigma^2)$，$\sigma$ 未知时用 $S$ 替代 $\sigma$，则 $\dfrac{\bar X-\mu}{S/\sqrt n}\sim t(n-1)$。</li>
+        </ol>
+      </div>
+      <div class="box theorem"><div class="box-title"><span class="tag">定理</span> 单正态总体均值的 $t$ 统计量</div>
+        设总体 $X\sim N(\mu,\sigma^2)$，样本容量 $n$，样本均值 $\bar X$、样本方差 $S^2$，则
+        $$T=\frac{\bar X-\mu}{S/\sqrt n}\sim t(n-1).$$
+      </div>
+      <details class="derive"><summary>完整推导：把 $\sigma$ 换成 $S$ 后为何变成 $t$ 分布</summary>
+      <div>
+        <ol class="steps">
+          <li><strong>构造分子（标准正态）。</strong>已知 $\bar X\sim N(\mu,\sigma^2/n)$，标准化得 $U=\dfrac{\bar X-\mu}{\sigma/\sqrt n}\sim N(0,1)$。</li>
+          <li><strong>构造分母（$\chi^2$）。</strong>由 Fisher 引理，$V=\dfrac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1)$。</li>
+          <li><strong>利用独立性组合。</strong>同由 Fisher 引理 $\bar X$ 与 $S^2$ 独立，故 $U$ 与 $V$ 也独立。按 $t$ 分布定义 $T=\dfrac{U}{\sqrt{V/(n-1)}}$，代入：
+          $$T=\frac{\frac{\bar X-\mu}{\sigma/\sqrt n}}{\sqrt{\frac{(n-1)S^2/\sigma^2}{n-1}}}=\frac{\frac{\bar X-\mu}{\sigma/\sqrt n}}{S/\sigma}=\frac{\bar X-\mu}{S/\sqrt n}.$$
+          分子分母中的 $\sigma$ 恰好<strong>约掉</strong>，于是该统计量服从自由度 $n-1$ 的 $t$ 分布。<span class="qed">∎</span></li>
+        </ol>
+        <p class="muted">这正是 $t$ 分布的妙处：当总体方差 $\sigma^2$ 未知时，用样本方差 $S^2$ 替代它，"代价"是把分布从正态变成更厚尾的 $t$ 分布。</p>
+      </div>
+      </details>
+      <div class="box theorem"><div class="box-title"><span class="tag">定理</span> 双正态总体均值差的 $t$ 统计量（方差齐性）</div>
+        设两独立样本 $X_1,\dots,X_{n_1}$ 与 $Y_1,\dots,Y_{n_2}$ 分别取自 $N(\mu_1,\sigma^2)$ 与 $N(\mu_2,\sigma^2)$（<strong>总体方差相同</strong>）。记样本均值 $\bar X,\bar Y$，样本方差 $S_1^2,S_2^2$。定义<strong>合并样本方差</strong> $S_w^2=\dfrac{(n_1-1)S_1^2+(n_2-1)S_2^2}{n_1+n_2-2}$。则
+        $$T=\frac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{S_w\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\sim t(n_1+n_2-2).$$
+      </div>
+      <details class="derive"><summary>推导：两样本如何拼出一个 $t$ 统计量</summary>
+      <div>
+        <ol class="steps">
+          <li><strong>分子标准化。</strong>由两样本独立，$\bar X-\bar Y\sim N\!\big(\mu_1-\mu_2,\,(\frac{1}{n_1}+\frac{1}{n_2})\sigma^2\big)$，标准化得 $U=\dfrac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{\sigma\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\sim N(0,1)$。</li>
+          <li><strong>合并 $\chi^2$。</strong>已知 $\frac{(n_1-1)S_1^2}{\sigma^2}\sim\chi^2(n_1-1)$ 且 $\frac{(n_2-1)S_2^2}{\sigma^2}\sim\chi^2(n_2-1)$，两样本独立故可加：$V=\dfrac{(n_1+n_2-2)S_w^2}{\sigma^2}\sim\chi^2(n_1+n_2-2)$。</li>
+          <li><strong>组合并约去 $\sigma$。</strong>$U$ 与 $V$ 独立，按定义 $T=\dfrac{U}{\sqrt{V/(n_1+n_2-2)}}$，化简后 $\sigma$ 约去，得
+          $$T=\frac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{S_w\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\sim t(n_1+n_2-2).\qquad\text{∎}$$</li>
+        </ol>
+      </div>
+      </details>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 5</span> 利用上侧分位数与对称性求概率</div>
+        <p>设 $T\sim t(10)$，已知查表得上侧分位数 $t_{0.025}(10)=2.228$，$t_{0.05}(10)=1.812$。求 $P(-1.812\le T\le 2.228)$。</p>
+        <ol class="steps">
+          <li><strong>右尾翻译。</strong>由上侧分位数定义：$P(T>2.228)=0.025$，$P(T>1.812)=0.05$。</li>
+          <li><strong>用对称性算左尾。</strong>$t$ 分布关于原点对称，故 $t_{1-\alpha}(n)=-t_\alpha(n)$，于是左尾 $P(T<-1.812)=P(T>1.812)=0.05$。</li>
+          <li><strong>用 1 减去两尾。</strong>所求区间概率 = 总概率 1 − 两侧尾部概率：
+          $$P(-1.812\le T\le 2.228)=1-P(T<-1.812)-P(T>2.228)=1-0.05-0.025=0.925.$$</li>
+        </ol>
+        <p class="conclusion">对称性 $t_{1-\alpha}=-t_\alpha$ 是把"负分位点"转成查得到的"正分位点"的关键工具。<span class="qed">∎</span></p>
+      </div>
+
+      <h3 id="sec2-f">$F$ 分布</h3>
+      <div class="box definition"><div class="box-title"><span class="tag">定义</span> $F$ 分布 (Fisher–Snedecor distribution)</div>
+        设随机变量 $X\sim\chi^2(n_1)$，$Y\sim\chi^2(n_2)$，且 $X$ 与 $Y$ 相互独立。则称随机变量
+        $$F=\frac{X/n_1}{Y/n_2}$$
+        服从第一自由度为 $n_1$、第二自由度为 $n_2$ 的 $F$ 分布，记作 $F\sim F(n_1,n_2)$。它的取值非负，密度曲线右偏。
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">性质</span> $F$ 分布与其它分布的联系</div>
+        <ol>
+          <li><strong>倒数性质</strong>：若 $F\sim F(n_1,n_2)$，则倒数 $F^{-1}=\frac1F\sim F(n_2,n_1)$（两个自由度对调）。</li>
+          <li><strong>与 $t$ 分布的联系</strong>：若 $T\sim t(n)$，则 $T^2\sim F(1,n)$。<br><span class="muted">提示：$T^2=\dfrac{N(0,1)^2}{\chi^2(n)/n}=\dfrac{\chi^2(1)/1}{\chi^2(n)/n}\sim F(1,n)$。</span></li>
+          <li><strong>形状</strong>：$F$ 分布只取非负值，密度曲线一直向右拖尾的右偏曲线；自由度增大时逐渐趋于对称。</li>
+          <li><strong>应用</strong>：$F$ 分布是方差分析 (ANOVA) 与回归分析中参数检验的核心理论基础。</li>
+        </ol>
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">分位数</span> $F$ 分布上侧分位数的倒数关系</div>
+        对给定显著性水平 $\alpha$，满足 $P(F>F_\alpha(n_1,n_2))=\alpha$ 的点 $F_\alpha(n_1,n_2)$ 称为上侧 $\alpha$ 分位数。重要倒数关系（查表常用）：
+        $$F_{1-\alpha}(n_1,n_2)=\frac{1}{F_\alpha(n_2,n_1)}.$$
+        <span class="muted">推导：由 $P(F>F_{1-\alpha}(n_1,n_2))=1-\alpha$ 取对立事件 $P(F\le F_{1-\alpha})=\alpha$；两边取倒数（不等号方向变号），并用 $\frac1F\sim F(n_2,n_1)$ 即得，注意自由度对调。</span>
+      </div>
+      <div class="box theorem"><div class="box-title"><span class="tag">定理</span> 双正态总体样本方差比的分布</div>
+        设总体 $X\sim N(\mu_1,\sigma_1^2)$ 与 $Y\sim N(\mu_2,\sigma_2^2)$ 相互独立，样本容量 $n_1,n_2$，样本方差 $S_1^2,S_2^2$。则
+        $$F=\frac{S_1^2/\sigma_1^2}{S_2^2/\sigma_2^2}\sim F(n_1-1,\,n_2-1).$$
+      </div>
+      <details class="derive"><summary>推导：方差比为何服从 $F$ 分布</summary>
+      <div>
+        <ol class="steps">
+          <li><strong>各自的 $\chi^2$。</strong>由方差分布定理 $U=\dfrac{(n_1-1)S_1^2}{\sigma_1^2}\sim\chi^2(n_1-1)$，$V=\dfrac{(n_2-1)S_2^2}{\sigma_2^2}\sim\chi^2(n_2-1)$。</li>
+          <li><strong>独立性。</strong>两样本相互独立，故 $U$ 与 $V$ 也独立。</li>
+          <li><strong>按定义构造比。</strong>把两个独立 $\chi^2$ 各除以自身自由度后作比：
+          $$\frac{U/(n_1-1)}{V/(n_2-1)}=\frac{\frac{(n_1-1)S_1^2}{\sigma_1^2}/(n_1-1)}{\frac{(n_2-1)S_2^2}{\sigma_2^2}/(n_2-1)}=\frac{S_1^2/\sigma_1^2}{S_2^2/\sigma_2^2}\sim F(n_1-1,n_2-1).\quad\text{∎}$$</li>
+        </ol>
+        <p class="muted"><strong>统计学意义</strong>：当假设两总体方差相等（$\sigma_1^2=\sigma_2^2$）时，上式化简为 $\frac{S_1^2}{S_2^2}\sim F(n_1-1,n_2-1)$。这正是比较两总体方差是否相等的"$F$ 检验（方差齐性检验）"的基础。</p>
+      </div>
+      </details>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 6</span> 由定义构造 $\chi^2$ 统计量</div>
+        <p>设总体 $X\sim N(\mu,\sigma^2)$，$\mu,\sigma^2$ 已知，$X_1,\dots,X_n$ 是取自总体 $X$ 的样本。(1) 求统计量 $\chi^2=\frac{1}{\sigma^2}\sum_{i=1}^n(X_i-\mu)^2$ 的分布；(2) 设 $n=5$，若 $a(X_1-X_2)^2+b(2X_3-X_4-X_5)^2\sim\chi^2(k)$，求 $a,b,k$。</p>
+        <ol class="steps">
+          <li><strong>(1) 标准化求和。</strong>作变换 $Y_i=\frac{X_i-\mu}{\sigma}$，$i=1,\dots,n$。显然 $Y_1,\dots,Y_n$ 相互独立且 $Y_i\sim N(0,1)$，于是 $\chi^2=\sum_{i=1}^n\big(\frac{X_i-\mu}{\sigma}\big)^2=\sum Y_i^2\sim\chi^2(n)$。<br><em>注意：因 $\mu$ 已知（不需用 $\bar X$ 估计），自由度是 $n$ 而非 $n-1$。</em></li>
+          <li><strong>(2) 凑标准正态。</strong>由独立正态线性组合：$X_1-X_2\sim N(0,2\sigma^2)$，故 $\frac{(X_1-X_2)^2}{2\sigma^2}\sim\chi^2(1)$；又 $2X_3-X_4-X_5\sim N(0,6\sigma^2)$，故 $\frac{(2X_3-X_4-X_5)^2}{6\sigma^2}\sim\chi^2(1)$。</li>
+          <li><strong>用独立性相加。</strong>两组不含公共变量故独立，求和 $\frac{(X_1-X_2)^2}{2\sigma^2}+\frac{(2X_3-X_4-X_5)^2}{6\sigma^2}\sim\chi^2(2)$。对照得 $a=\frac{1}{2\sigma^2},\ b=\frac{1}{6\sigma^2},\ k=2$。</li>
+        </ol>
+        <p class="conclusion">系数 = 1/(线性组合的方差)，自由度 = 独立平方项个数。<span class="qed">∎</span></p>
+      </div>
+    </section>
+
+    <!-- ============== 第三节 ============== -->
+    <section id="sec3">
+      <h2><span class="secnum">三</span>正态总体的抽样分布</h2>
+      <p>本节把前两节的结论汇总成一张"作战地图"：单正态总体与双正态总体下，$\bar X$、$S^2$ 及其组合分别服从什么分布。这些公式是第七、八章参数估计与假设检验的全部弹药。</p>
+
+      <h4 id="sec3-summary">抽样分布定理总表</h4>
+      <p>设两相互独立的总体 $X\sim N(\mu_1,\sigma_1^2)$ 与 $Y\sim N(\mu_2,\sigma_2^2)$，分别抽取容量为 $n_1,n_2$ 的简单随机样本，记样本均值 $\bar X,\bar Y$，样本方差 $S_1^2,S_2^2$。</p>
+      <div class="tbl-wrap">
+      <table class="data">
+        <caption>单正态总体（以 $X$ 为例）的抽样分布</caption>
+        <thead><tr><th>统计量</th><th>分布</th><th>使用条件</th></tr></thead>
+        <tbody>
+          <tr><td>$\bar X$</td><td>$N\!\big(\mu_1,\tfrac{\sigma_1^2}{n_1}\big)$</td><td>恒成立</td></tr>
+          <tr><td>$\dfrac{\bar X-\mu_1}{\sigma_1/\sqrt{n_1}}$</td><td>$N(0,1)$</td><td>$\sigma_1$ 已知</td></tr>
+          <tr><td>$\dfrac{(n_1-1)S_1^2}{\sigma_1^2}$</td><td>$\chi^2(n_1-1)$</td><td>恒成立</td></tr>
+          <tr><td>$\dfrac{\bar X-\mu_1}{S_1/\sqrt{n_1}}$</td><td>$t(n_1-1)$</td><td>$\sigma_1$ 未知（用 $S_1$ 替代）</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="tbl-wrap">
+      <table class="data">
+        <caption>双正态总体的抽样分布</caption>
+        <thead><tr><th>统计量</th><th>分布</th><th>使用条件</th></tr></thead>
+        <tbody>
+          <tr><td>$\dfrac{S_1^2/\sigma_1^2}{S_2^2/\sigma_2^2}$</td><td>$F(n_1-1,n_2-1)$</td><td>恒成立</td></tr>
+          <tr><td>$\dfrac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{\sigma\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}$</td><td>$N(0,1)$</td><td>$\sigma_1^2=\sigma_2^2=\sigma^2$ 已知</td></tr>
+          <tr><td>$\dfrac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{S_w\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}$</td><td>$t(n_1+n_2-2)$</td><td>$\sigma_1^2=\sigma_2^2$ 未知（方差齐性）</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="box note"><div class="box-title"><span class="tag">记忆口诀</span> 三把尺子各管什么</div>
+        <ul>
+          <li><strong>$\chi^2$ 分布</strong>管"方差"（标准正态平方和，自由度 = 独立平方项个数）；</li>
+          <li><strong>$t$ 分布</strong>管"$\sigma$ 未知时的均值"（正态÷根号卡方，分子分母里的 $\sigma$ 约掉）；</li>
+          <li><strong>$F$ 分布</strong>管"两个方差之比"（两卡方各除自由度再作比）。</li>
+        </ul>
+      </div>
+
+      <h3 id="sec3-ex">综合例题：抽样分布的判定与构造</h3>
+      <div class="box example"><div class="box-title"><span class="tag">例题 7</span> 同一总体两样本：方差之差与 $t$ 统计量</div>
+        <p>设总体 $X\sim N(\mu,\sigma^2)$，$(X_1,\dots,X_4)$ 与 $(Y_1,\dots,Y_9)$ 是取自总体 $X$ 的两个相互独立的样本，$\bar X,S_1^2$ 和 $\bar Y,S_2^2$ 分别为两样本的均值与方差。(1) 求差的方差 $D(S_1^2-S_2^2)$；(2) 若常数 $a$ 和自由度 $k$ 使 $\frac{a(\bar X-\bar Y)}{S_1}\sim t(k)$，求 $a,k$。</p>
+        <ol class="steps">
+          <li><strong>(1) 求各样本方差的方差。</strong>由 $\frac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1)$ 知其方差为 $2(n-1)$，故 $D(S^2)=\frac{2\sigma^4}{n-1}$。代入容量：$D(S_1^2)=\frac{2\sigma^4}{4-1}=\frac{2\sigma^4}{3}$，$D(S_2^2)=\frac{2\sigma^4}{9-1}=\frac{\sigma^4}{4}$。</li>
+          <li><strong>用独立性合并。</strong>两样本独立故 $S_1^2,S_2^2$ 独立，
+          $$D(S_1^2-S_2^2)=D(S_1^2)+D(S_2^2)=\frac{2\sigma^4}{3}+\frac{\sigma^4}{4}=\frac{11\sigma^4}{12}.$$</li>
+          <li><strong>(2) 凑分子标准正态。</strong>$\bar X\sim N(\mu,\frac{\sigma^2}{4})$，$\bar Y\sim N(\mu,\frac{\sigma^2}{9})$ 且独立，故 $\bar X-\bar Y\sim N\!\big(0,\frac{13\sigma^2}{36}\big)$。标准化 $U=\frac{\bar X-\bar Y}{\sqrt{13/36}\,\sigma}\sim N(0,1)$。</li>
+          <li><strong>凑分母卡方并组合。</strong>已知 $V=\frac{3S_1^2}{\sigma^2}\sim\chi^2(3)$ 且与 $U$ 独立。按 $t$ 定义构造 $T=\frac{U}{\sqrt{V/3}}=\frac{\bar X-\bar Y}{\sqrt{13/36}\,S_1}=\frac{6}{\sqrt{13}}\cdot\frac{\bar X-\bar Y}{S_1}\sim t(3)$。</li>
+          <li><strong>对照求参数。</strong>故 $a=\frac{6}{\sqrt{13}}=\frac{6\sqrt{13}}{13},\ k=3$。</li>
+        </ol>
+        <p class="conclusion">独立样本方差差的方差按独立和相加；构造 $t$ 时把"标准化分母的常数"凑进系数 $a$，自由度 $k$ 来自所用 $\chi^2$。<span class="qed">∎</span></p>
+      </div>
+
+      <div class="box example"><div class="box-title"><span class="tag">例题 8</span> 已知均值时构造 $F$ 统计量</div>
+        <p>设总体 $X\sim N(\mu,\sigma^2)$，$(X_1,\dots,X_4)$ 与 $(Y_1,\dots,Y_9)$ 是取自 $X$ 的两个相互独立样本（$S_2^2$ 为第二组样本方差，$\mu$ 已知）。若常数 $b$ 和自由度 $n_1,n_2$ 使 $b\cdot\dfrac{\sum_{i=1}^4 (X_i-\mu)^2}{S_2^2}\sim F(n_1,n_2)$，求 $b,n_1,n_2$。</p>
+        <ol class="steps">
+          <li><strong>分子凑卡方。</strong>由于总体均值 $\mu$ 已知，直接标准化即可：$\frac{1}{\sigma^2}\sum_{i=1}^4(X_i-\mu)^2\sim\chi^2(4)$（4 个独立标准正态平方和，自由度 4）。</li>
+          <li><strong>分母凑卡方。</strong>第二组 $\frac{8S_2^2}{\sigma^2}\sim\chi^2(8)$。两者相互独立。</li>
+          <li><strong>按 $F$ 定义作比。</strong>把两个独立 $\chi^2$ 各除以自身自由度作比：
+          $$F=\frac{\frac{1}{\sigma^2}\sum_{i=1}^4(X_i-\mu)^2\big/4}{\frac{8S_2^2}{\sigma^2}\big/8}=\frac14\cdot\frac{\sum_{i=1}^4(X_i-\mu)^2}{S_2^2}\sim F(4,8).$$</li>
+          <li><strong>对照求参数。</strong>故 $b=\frac14,\ n_1=4,\ n_2=8$。</li>
+        </ol>
+        <p class="conclusion">均值已知 → 分子自由度为 $n$（不减 1）；常数 $b$ 来自"各除以自由度"的归一化因子之比。<span class="qed">∎</span></p>
+      </div>
+    </section>
+
+    <!-- ============== 本章小结 ============== -->
+    <section id="summary">
+      <h2><span class="secnum">小结</span>本章小结与速查表</h2>
+      <p>本章是数理统计的"地基"，可浓缩为三句话：把研究对象抽象成<strong>总体/样本/统计量</strong>；用<strong>经验分布函数</strong>逼近未知分布（格利文科-坎泰利定理保证一致收敛）；造出<strong>$\chi^2,t,F$ 三大抽样分布</strong>，刻画正态总体下 $\bar X$ 与 $S^2$ 的行为。</p>
+
+      <h3>核心定义与定理速查</h3>
+      <div class="tbl-wrap">
+      <table class="data">
+        <caption>三大抽样分布的定义与数字特征</caption>
+        <thead><tr><th>分布</th><th>定义（由 $N(0,1)$ 搭建）</th><th>记号</th><th>关键数字特征</th></tr></thead>
+        <tbody>
+          <tr><td>$\chi^2$</td><td>$\sum_{i=1}^n X_i^2$，$X_i\overset{\text{iid}}{\sim}N(0,1)$</td><td>$\chi^2(n)$</td><td>$E=n,\ D=2n$；$\chi^2(n)=\Gamma(\frac n2,\frac12)$</td></tr>
+          <tr><td>$t$</td><td>$\dfrac{N(0,1)}{\sqrt{\chi^2(n)/n}}$（分子分母独立）</td><td>$t(n)$</td><td>对称；$E=0\,(n>1)$，$D=\frac{n}{n-2}\,(n>2)$；$n\to\infty$ 趋于 $N(0,1)$</td></tr>
+          <tr><td>$F$</td><td>$\dfrac{\chi^2(n_1)/n_1}{\chi^2(n_2)/n_2}$（独立）</td><td>$F(n_1,n_2)$</td><td>右偏；$\frac1F\sim F(n_2,n_1)$；$t(n)^2\sim F(1,n)$</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="tbl-wrap">
+      <table class="data">
+        <caption>核心定理一览</caption>
+        <thead><tr><th>定理 / 结论</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>格利文科-坎泰利</td><td>$P(\lim_{n\to\infty}\sup_x|F_n(x)-F(x)|=0)=1$，经验分布一致收敛到真分布</td></tr>
+          <tr><td>Fisher 引理</td><td>正态总体下 $\bar X\perp S^2$，且 $\frac{(n-1)S^2}{\sigma^2}\sim\chi^2(n-1)$</td></tr>
+          <tr><td>单总体均值 $t$</td><td>$\sigma$ 未知时 $\frac{\bar X-\mu}{S/\sqrt n}\sim t(n-1)$</td></tr>
+          <tr><td>双总体均值差 $t$</td><td>方差齐性下 $\frac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{S_w\sqrt{1/n_1+1/n_2}}\sim t(n_1+n_2-2)$</td></tr>
+          <tr><td>双总体方差比 $F$</td><td>$\frac{S_1^2/\sigma_1^2}{S_2^2/\sigma_2^2}\sim F(n_1-1,n_2-1)$</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>关键易错点提醒</h3>
+      <div class="box pitfall"><div class="box-title"><span class="tag">易错</span> 最容易出错的五个点</div>
+        <ol>
+          <li><strong>自由度是 $n$ 还是 $n-1$</strong>：均值 $\mu$ <strong>已知</strong>时用 $\sum(X_i-\mu)^2$，自由度 $n$；$\mu$ <strong>未知</strong>需用 $\bar X$ 估计时出现 $S^2$，自由度 $n-1$（丢掉一个自由度）。</li>
+          <li><strong>无放回 ≠ 简单随机样本</strong>：严格说无放回抽样各分量不独立，仅在 $N$ 很大、$n/N\le0.05$ 时近似当作简单随机样本。</li>
+          <li><strong>$t$ 分布分子分母必须独立</strong>：用 Fisher 引理的 $\bar X\perp S^2$ 才能凑出 $t$；忘了独立性会用错定义。</li>
+          <li><strong>$F$ 分位数倒数关系的自由度对调</strong>：$F_{1-\alpha}(n_1,n_2)=1/F_\alpha(n_2,n_1)$，自由度顺序要换，最易写反。</li>
+          <li><strong>构造 $\chi^2$ 时系数 = 1/方差</strong>：把线性组合 $\sum c_i X_i$ 标准化时分母是其方差 $\mathrm{Var}(\sum c_iX_i)$，写平方项时务必先算对方差再取倒数。</li>
+        </ol>
+      </div>
+    </section>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>

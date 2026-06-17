@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第八章 假设检验 · 概率统计学习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">概率统计<small>学习报告 · 第八章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <a href="#intro">本章导读</a>
+      <div class="nav-group">一 · 基本概念</div>
+      <a href="#sec1">8.1 假设检验基本概念</a>
+      <a class="lvl2" href="#s1-idea">检验思想 · 小概率原理</a>
+      <a class="lvl2" href="#s1-hypo">原假设与备择假设</a>
+      <a class="lvl2" href="#s1-region">检验规则与拒绝域</a>
+      <a class="lvl2" href="#s1-errors">两类错误</a>
+      <a class="lvl2" href="#s1-seesaw">跷跷板与显著性水平</a>
+      <a class="lvl2" href="#s1-steps">基本步骤 · 临界值法</a>
+      <a class="lvl2" href="#s1-pvalue">p 值与决策</a>
+      <a class="lvl2" href="#s1-onesided">单边检验例题</a>
+      <div class="nav-group">二 · 单个正态总体</div>
+      <a href="#sec2">8.2 单总体检验</a>
+      <a class="lvl2" href="#s2-z">Z 检验（σ² 已知）</a>
+      <a class="lvl2" href="#s2-t">t 检验（σ² 未知）</a>
+      <a class="lvl2" href="#s2-chi">χ² 检验（方差）</a>
+      <div class="nav-group">三 · 两个正态总体</div>
+      <a href="#sec3">8.3 双总体检验</a>
+      <a class="lvl2" href="#s3-mean">两均值之差（独立）</a>
+      <a class="lvl2" href="#s3-paired">成对数据 t 检验</a>
+      <a class="lvl2" href="#s3-f">两方差 F 检验</a>
+      <a class="lvl2" href="#s3-flow">双样本分析流程</a>
+      <div class="nav-group">四 · 检验与区间</div>
+      <a href="#sec4">8.4 检验与区间估计</a>
+      <div class="nav-group">五 · 非参数检验</div>
+      <a href="#sec5">8.5 非参数检验</a>
+      <a class="lvl2" href="#s5-gof">拟合优度检验</a>
+      <a class="lvl2" href="#s5-indep">独立性检验</a>
+      <div class="nav-group">小结</div>
+      <a href="#summary">本章小结 · 速查表</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">PROBABILITY &amp; STATISTICS · CHAPTER 8</div>
+      <h1>第八章　假设检验</h1>
+      <p>用样本的随机性去检验一个关于总体的论断：以"小概率原理"为逻辑核心，借助第七章的抽样分布构造检验统计量，在显著性水平的约束下做出"拒绝"或"不拒绝"的判决。</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ======================= 本章导读 ======================= -->
+<section id="intro">
+<h2><span class="secnum">导读</span>本章导读：从"估计"到"判决"</h2>
+
+<p>第七章我们解决了统计推断的第一类问题——<span class="term">参数估计</span>：总体均值 $\mu$ 大概是多少？给一个点估计、再给一个置信区间。本章转向统计推断的第二类核心问题——<span class="term">假设检验</span>：对总体的某个<span class="hl">论断</span>（如"均值等于 6.0"、"两种工艺没有差别"、"数据服从泊松分布"）做出"成立 / 不成立"的<span class="hl">判决</span>。</p>
+
+<p>这两类问题并非彼此孤立。本章第四节将揭示一个深刻的<span class="term">对偶关系</span>：在显著性水平 $\alpha$ 下，一个双边检验"不拒绝"的所有参数值，恰好就构成了置信度为 $1-\alpha$ 的置信区间。所以——<span class="hl">置信区间是"全体能通过检验的假设"，假设检验是"看真值是否落在区间内"</span>。学完本章再回看第七章，两者会融为一体。</p>
+
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>假设检验的一句话本质</div>
+<p>假设检验是<span class="hl">用概率语言写成的反证法</span>：先假定待检验的论断（原假设 $H_0$）为真，再看在这个前提下"我们实际观察到的数据"是否变成了一个几乎不可能发生的小概率事件。如果是——根据"小概率事件在一次试验中几乎不发生"的信念，我们就反过来怀疑当初的假定，从而<span class="term">拒绝 $H_0$</span>。</p>
+</div>
+
+<p>全章逻辑主线如下：</p>
+<ol class="steps">
+<li><b>思想层</b>：小概率原理 / 反证法，确立 $H_0$、$H_1$、拒绝域、两类错误、显著性水平、$p$ 值这一整套概念框架（第 8.1 节）。</li>
+<li><b>方法层（单总体）</b>：把第七章的<span class="term">枢轴量</span>直接搬来当<span class="term">检验统计量</span>——$Z$ 检验、$t$ 检验、$\chi^2$ 检验（第 8.2 节）。</li>
+<li><b>方法层（双总体）</b>：比较两个总体的均值、方差，引出合并方差 $t$ 检验、成对 $t$ 检验、$F$ 检验（第 8.3 节）。</li>
+<li><b>统一层</b>：检验与区间估计的对偶（第 8.4 节）。</li>
+<li><b>推广层</b>：当分布形式未知时的非参数检验——拟合优度与独立性（第 8.5 节）。</li>
+</ol>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= 第一节 基本概念 ======================= -->
+<section id="sec1">
+<h2><span class="secnum">8.1</span>假设检验的基本概念</h2>
+
+<h3 id="s1-idea">8.1.1 检验的思想：小概率原理与反证法</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>核心思想：小概率原理</div>
+<p><span class="term">带有概率性质的反证法</span>。其依据是 <span class="hl">小概率原理</span>：概率很小的事件在一次试验中几乎是不会发生的。<br>因此——如果在某个假设成立的前提下，推出了"本应是小概率"的事件竟然在这一次试验中真的发生了，我们就有理由怀疑这个假设的真实性。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>引例：清漆干燥时间</div>
+<p>设某种清漆的 9 个样品，其干燥时间（单位：小时）为：</p>
+$$6.0,\;5.7,\;5.8,\;6.5,\;7.0,\;6.3,\;5.6,\;6.1,\;5.0$$
+<p>根据以往经验，干燥时间的总体服从正态分布 $N(6.0,\,0.36)$。现根据样本检验：<span class="hl">总体均值是否仍为 6.0？</span></p>
+<p>这个问题涉及两个对立的论断（假设）：</p>
+<ul>
+<li><b>原假设</b>：样本检验均值与以往没有显著差异（均值仍为 6.0）；</li>
+<li><b>备择假设</b>：样本检验均值与以往有显著差异（均值不为 6.0）。</li>
+</ul>
+<p class="conclusion">假设检验的目的，就是基于样本的随机性，通过研究<b>"原假设的不合理性"</b>来决定是否推翻原假设。</p>
+</div>
+
+<h3 id="s1-hypo">8.1.2 原假设与备择假设的建立</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>假设相关概念</div>
+<p><span class="term">假设（hypothesis）</span>：关于未知分布或未知参数的论断。</p>
+<p><span class="term">原假设 $H_0$（Null Hypothesis）</span>：通常代表<span class="hl">"维持现状"、"没有差异"</span>或我们<span class="hl">希望被证伪</span>的假设。</p>
+<p><span class="term">备择假设 $H_1$（Alternative Hypothesis）</span>：与原假设对立的假设，通常是我们<span class="hl">希望证明其成立</span>的假设。</p>
+<p>关于总体参数 $\theta$，常见的三种假设形式为：</p>
+$$
+\begin{aligned}
+&H_0:\theta\ge\theta_0,\quad H_1:\theta<\theta_0 \qquad &&\text{(左边检验)}\\
+&H_0:\theta\le\theta_0,\quad H_1:\theta>\theta_0 \qquad &&\text{(右边检验)}\\
+&H_0:\theta=\theta_0,\quad H_1:\theta\ne\theta_0 \qquad &&\text{(双边检验)}
+\end{aligned}
+$$
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>参数检验 vs 非参数检验</div>
+<p><b>参数检验</b>：已知总体分布的形式，对其中的未知参数进行假设检验（本章 8.2、8.3 节）。<br>
+<b>非参数检验</b>：总体的分布形式完全未知，对总体的分布或数字特征进行假设检验（本章 8.5 节）。</p>
+</div>
+
+<div class="box pitfall">
+<div class="box-title"><span class="tag">易错</span>保护原假设原则——谁来当 $H_0$？</div>
+<p>假设检验中 $H_0$ 处于<span class="hl">被保护</span>的地位（类似于法庭上的"无罪推定"）。只有当样本提供出充分证据时，我们才拒绝 $H_0$；否则，我们只能说<span class="hl">"不能推翻 $H_0$"</span>（而尽量避免说"接受 $H_0$"），因为我们<span class="hl">并非真正证明了 $H_0$ 成立</span>，只是没有足够证据反对它。</p>
+<p>实践口诀：把<b>"想要证明、想要推翻、需要严控错误"</b>的论断放进 $H_1$，把"维持现状、待被推翻"的论断放进 $H_0$。</p>
+</div>
+
+<h3 id="s1-region">8.1.3 检验规则与拒绝域</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>检验规则与拒绝域</div>
+<p>从样本出发，构造出规则来判断是否拒绝原假设，称为一个<span class="term">检验规则</span>。具体来说，对于样本的取值 $(x_1,x_2,\dots,x_n)$，我们将样本空间划分为两个互不相交的子空间 $W$ 与 $\overline{W}$：</p>
+<ul>
+<li>当 $(x_1,\dots,x_n)\in W$ 时，<span class="hl">拒绝原假设</span>；</li>
+<li>当 $(x_1,\dots,x_n)\in \overline{W}$ 时，<span class="hl">不拒绝原假设</span>。</li>
+</ul>
+<p>其中 $W$ 被称作该检验的<span class="term">拒绝域（reject region）</span>。在实际操作中，我们通过寻找合适的检验统计量 $T(x_1,\dots,x_n)$ 来构建拒绝域，则拒绝域可表示为统计量取值的一个区间：
+$$W=\{x_1,\dots,x_n:\,T(x_1,\dots,x_n)\in\mathcal{T}\}.$$</p>
+<p class="conclusion">当原假设 $H_0$ 成立时，统计量落入拒绝域 $W$ 应是一个<b>小概率事件</b>。这正是用"小概率原理"做判决的着力点。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>清漆干燥时间的拒绝域构造</div>
+<p>回顾：设清漆干燥时间 $X\sim N(\mu,\sigma^2)$，其中已知 $\sigma^2=0.36$（$\sigma=0.6$），样本量 $n=9$。考虑关于总体均值 $\mu$ 的双边假设：
+$$H_0:\mu=6.0,\qquad H_1:\mu\ne 6.0.$$</p>
+<p>用样本均值 $\bar X$ 的取值反映 $\mu$ 的大小。当 $H_0$ 成立时，样本均值 $\bar X$ 应该在 6.0 附近波动，即 $|\bar X-6.0|$ 取值应偏小。<br><b>检验规则</b>（$C$ 为待定常数）：</p>
+<ul>
+<li>当 $|\bar X-6.0|\ge C$ 时，差异过大，超出随机波动的合理范围，<span class="hl">拒绝</span> $H_0$；</li>
+<li>当 $|\bar X-6.0|<C$ 时，差异在合理范围内，<span class="hl">不拒绝</span> $H_0$。</li>
+</ul>
+<p>因此该检验的拒绝域为 $W=\{(x_1,\dots,x_n):|\bar x-6.0|\ge C\}$。<br><b>遗留问题</b>：如何科学地确定常数 $C$？这就涉及到假设检验的错误控制。</p>
+</div>
+
+<h3 id="s1-errors">8.1.4 第 I 类错误与第 II 类错误</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>两类错误</div>
+<p>在假设检验中，由于样本的随机性，任一检验规则在应用时，都有可能发生错误的判断。</p>
+<p><span class="term">第 I 类错误（弃真错误）</span>：原假设是真的，却被拒绝了。概率记为 $\alpha$：
+$$\alpha=P\{\text{第 I 类错误}\}=P\{\text{拒绝 }H_0\mid H_0\text{ 是真的}\}.$$</p>
+<p><span class="term">第 II 类错误（存伪错误）</span>：原假设是假的，却没有被拒绝。概率记为 $\beta$：
+$$\beta=P\{\text{第 II 类错误}\}=P\{\text{不拒绝 }H_0\mid H_0\text{ 是假的}\}.$$</p>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>表 8-1　两类错误一览（行=检验结果，列=真实情况）</caption>
+<thead>
+<tr><th>检验结果 ＼ 真实情况</th><th>$H_0$ 为真</th><th>$H_0$ 为假</th></tr>
+</thead>
+<tbody>
+<tr><td><b>拒绝 $H_0$</b></td><td style="color:#dc2626;font-weight:600">第 I 类错误（$\alpha$）</td><td>判断正确（$1-\beta$，称<b>检验功效</b>）</td></tr>
+<tr><td><b>不拒绝 $H_0$</b></td><td>判断正确（$1-\alpha$）</td><td style="color:#dc2626;font-weight:600">第 II 类错误（$\beta$）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>"疑罪从无"的法庭类比</div>
+<p>把假设检验想象成一场刑事审判：</p>
+<ul>
+<li>$H_0$：<span class="hl">"嫌疑人无罪"</span>（无罪推定，被保护的一方）；$H_1$：<span class="hl">"嫌疑人有罪"</span>。</li>
+<li><b>第 I 类错误（$\alpha$）= 冤枉好人</b>：本来无罪（$H_0$ 真），却判了有罪（拒绝 $H_0$）。这是司法体系最忌讳的错误。</li>
+<li><b>第 II 类错误（$\beta$）= 放走坏人</b>：本来有罪（$H_0$ 假），却判了无罪（不拒绝 $H_0$）。</li>
+</ul>
+<p>基于<span class="term">"疑罪从无"</span>原则，法律宁可放走坏人，也要尽力避免冤枉好人——也就是<span class="hl">优先把 $\alpha$ 压到很低</span>。这正是下文 Neyman–Pearson 原则的现实写照。</p>
+</div>
+
+<h3 id="s1-seesaw">8.1.5 两类错误的"跷跷板"与显著性水平</h3>
+
+<p>我们当然希望选择好的检验规则，使得 $\alpha$ 与 $\beta$ 同时尽可能小。但在样本量 $n$ <span class="hl">固定</span>时，这是做不到的。</p>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>两类错误的"跷跷板"效应</div>
+<p>结合拒绝域 $W=\{|\bar x-\mu_0|\ge C\}$ 来看：</p>
+<ul>
+<li>如果想要减少犯第 I 类错误（$\alpha$）的概率，就需要使得拒绝 $H_0$ 更困难，即增大临界值 $C$；</li>
+<li>然而，增大 $C$ 会使得接受区域变宽，导致当 $H_0$ 是假的时，样本更容易落入接受区域，从而<span class="hl">增加</span>了犯第 II 类错误（$\beta$）的概率。</li>
+</ul>
+<p class="conclusion">$\alpha$ 与 $\beta$ 此消彼长，犹如跷跷板。唯一能<b>同时</b>减小两类错误的方法是<b>增大样本容量 $n$</b>（提供更多信息，降低统计量分布的方差）。</p>
+</div>
+
+<div class="box theorem">
+<div class="box-title"><span class="tag">定理</span>Neyman–Pearson 原则与显著性水平</div>
+<p>既然无法同时最小化 $\alpha$ 和 $\beta$，我们应优先控制哪一个？基于"疑罪从无"，应优先保证"冤枉好人"（$\alpha$）的概率极低。于是有：</p>
+<p><span class="term">显著性检验法则（Neyman–Pearson 原则）</span>：<span class="hl">首先控制</span>第 I 类错误（弃真错误）的概率不超过给定的极小常数 $\alpha\in(0,1)$，在此前提下再寻找检验规则使得第 II 类错误 $\beta$ 尽可能小。</p>
+<p>这个预先给定的上限 $\alpha$ 称为<span class="term">显著性水平（Significance Level）</span>，通常取 $0.05$、$0.01$ 或 $0.10$。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>确定清漆检验的临界值 $C$</div>
+<p>回顾：$H_0:\mu=6.0$，$H_1:\mu\ne 6.0$，$n=9$，$\sigma=0.6$。当 $H_0$ 成立时，将统计量标准化：
+$$Z=\frac{\bar X-6.0}{\sigma/\sqrt n}\sim N(0,1).$$</p>
+<p>犯第 I 类错误的概率：
+$$\alpha(C)=P\!\left\{|\bar X-6.0|\ge C\mid\mu=6.0\right\}=P\!\left\{\frac{|\bar X-6.0|}{\sigma/\sqrt n}\ge\frac{C}{\sigma/\sqrt n}\right\}.$$</p>
+<p>给定显著性水平 $\alpha=0.05$，由标准正态分布的双侧临界值知，须有
+$$\frac{C}{\sigma/\sqrt n}=z_{0.025}=1.96.$$</p>
+<p>计算得临界值
+$$C=z_{0.025}\cdot\frac{\sigma}{\sqrt n}=1.96\times\frac{0.6}{3}=0.392.$$</p>
+<p class="conclusion">拒绝域为 $W=\{|\bar x-6.0|\ge 0.392\}$。由样本算得 $\bar x=6.4$，故 $|\bar x-6.0|=0.4>0.392$，样本落入拒绝域。在 $\alpha=0.05$ 下，有充分证据拒绝 $H_0$，认为油漆干燥时间与以往有显著差异。</p>
+</div>
+
+<h3 id="s1-steps">8.1.6 假设检验的基本步骤（临界值法）</h3>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>临界值法四步流程</div>
+<ol class="steps">
+<li><b>提出假设</b>：根据问题提出原假设 $H_0$ 和备择假设 $H_1$；</li>
+<li><b>选取统计量</b>：选择一个合适的检验统计量，并明确当 $H_0$ 成立时统计量的理论分布（如 $N(0,1)$、$t(n-1)$ 等）；</li>
+<li><b>计算临界值</b>：给定显著性水平 $\alpha$，查表求出对应的分位点，从而确定拒绝域 $W$；</li>
+<li><b>作出决策</b>：根据样本观测值计算统计量的实测值，若落入拒绝域则拒绝 $H_0$；若未落入则不拒绝 $H_0$。</li>
+</ol>
+</div>
+
+<h3 id="s1-pvalue">8.1.7 $p$ 值与决策</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>$p$ 值（Probability value）</div>
+<p><span class="term">$p$ 值</span>：假设原假设 $H_0$ 成立的情况下，检验统计量取得<span class="hl">等于或比实际观察到的结果更为极端</span>的数值的概率。</p>
+<p>$p$ 值可以理解为<span class="hl">支持原假设的证据强度</span>，越小说明证据越弱（越倾向于拒绝 $H_0$）。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>清漆例题的 $p$ 值计算</div>
+<p>仍在清漆例子中：$H_0:\mu=6.0$，$H_1:\mu\ne 6.0$。实测样本均值 $\bar x=6.4$，由于是双边检验，"更极端"意味着距离 6.0 的绝对偏差大于等于 $|6.4-6.0|=0.4$。计算该样本的 $p$ 值：
+$$
+p=P_{H_0}\!\big(|\bar X-6.0|\ge0.4\big)
+ =P_{H_0}\!\left(\left|\tfrac{\bar X-6.0}{0.2}\right|\ge\tfrac{0.4}{0.2}\right)
+ =P(|Z|\ge2)=2-2\Phi(2)=0.0455.
+$$
+<span class="muted">（这里 $\sigma/\sqrt n=0.6/3=0.2$。）</span></p>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>$p$ 值决策法则</div>
+<p>若 $p\le\alpha$，则<span class="hl">拒绝</span>原假设 $H_0$，称检验结果在水平 $\alpha$ 下统计显著；<br>
+若 $p>\alpha$，则<span class="hl">不拒绝</span>原假设 $H_0$，称检验结果在水平 $\alpha$ 下统计不显著。</p>
+<p>对照上例 $p=0.0455$：</p>
+<ul>
+<li>若 $\alpha=0.05$：因为 $p\le\alpha$，所以<b>拒绝</b> $H_0$；</li>
+<li>若 $\alpha=0.01$（要求更严格）：因为 $p>\alpha$，此时<b>不能</b>拒绝 $H_0$。</li>
+</ul>
+<p><b>优势</b>：现代统计软件（R、Python、SPSS）通常直接输出 $p$ 值。它不仅告诉我们是否拒绝，还能直观反映"拒绝的把握有多大"。</p>
+</div>
+
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>临界值法与 $p$ 值法是同一枚硬币的两面</div>
+<p>临界值法是把<span class="hl">显著性水平 $\alpha$ 翻译成统计量坐标轴上的边界</span>，再看实测统计量落在边界内外；$p$ 值法是把<span class="hl">实测统计量翻译成概率刻度</span>，再与 $\alpha$ 直接比较。两者的判决结论永远一致：实测统计量越极端 ⟺ $p$ 值越小 ⟺ 越倾向拒绝 $H_0$。</p>
+</div>
+
+<h3 id="s1-onesided">8.1.8 单边假设检验（例题）</h3>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>包装机"缺斤少两"——左边检验</div>
+<p>某工厂用自动包装机装袋水泥，规定每袋标准重量不低于 50 kg。已知重量服从正态分布，且标准差 $\sigma=0.8$ kg。现随机抽取 16 袋进行抽查，测得样本均值 $\bar x=49.5$ kg。问：在显著性水平 $\alpha=0.05$ 下，能否认为该包装机存在"缺斤少两"的问题（即均值明显偏低）？</p>
+<ol class="steps">
+<li><b>建立假设（左边检验）</b>：由于我们想要证明是否"缺斤少两"，故将其设为备择假设：
+$$H_0:\mu\ge50\quad\text{vs}\quad H_1:\mu<50.$$</li>
+<li><b>检验统计量</b>：在 $H_0$ 边界（取 $\mu=50$）下，
+$$Z=\frac{\bar X-50}{\sigma/\sqrt n}\sim N(0,1).$$</li>
+<li><b>计算 $p$ 值</b>：因为是左边检验，"更极端"意味着比实测值更小。实测统计量
+$$z_0=\frac{49.5-50}{0.8/\sqrt{16}}=\frac{-0.5}{0.2}=-2.5,\qquad
+p=P(Z\le-2.5)=\Phi(-2.5)=1-0.9938=0.0062.$$</li>
+<li><b>结论</b>：由于 $p=0.0062<\alpha=0.05$，所以<span class="hl">拒绝</span> $H_0$，有充分理由认为该机器存在缺斤少两的问题，需要修理。</li>
+</ol>
+</div>
+
+<div class="box pitfall">
+<div class="box-title"><span class="tag">易错</span>单边 vs 双边：拒绝域只在一侧</div>
+<p>单边检验的"极端"只朝一个方向：左边检验只看左尾，右边检验只看右尾。因此<b>同一个显著性水平 $\alpha$，单边检验用 $z_\alpha$（不分摊），双边检验用 $z_{\alpha/2}$（两尾各分 $\alpha/2$）</b>。把双边的 $z_{\alpha/2}$ 误用到单边，或把单边写成双边，是最常见的失分点。是否单边，取决于题目<b>关心的方向</b>（"是否偏低 / 偏高" → 单边；"是否有差异" → 双边）。</p>
+</div>
+
+</section>
+
+<hr class="sep">
+
+<!-- ======================= 第二节 单总体 ======================= -->
+<section id="sec2">
+<h2><span class="secnum">8.2</span>单个正态总体的假设检验</h2>
+
+<p>设样本 $X_1,\dots,X_n$ 来自正态总体 $N(\mu,\sigma^2)$，$\bar X$ 为样本均值，$S^2$ 为样本方差。本节的检验统计量，本质上就是第七章构造置信区间所用的<span class="term">枢轴量</span>——区别只在于：区间估计把参数当未知量解出来；假设检验则把参数<span class="hl">钉死在 $H_0$ 的取值 $\theta_0$ 上</span>，看枢轴量随之得到的实测值是否极端。</p>
+
+<h3 id="s2-z">8.2.1 均值的检验（$\sigma^2$ 已知，$Z$ 检验）</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>$Z$ 检验统计量与分布</div>
+<p>$\sigma^2$ 已知，检验 $\mu$。因为当 $H_0$ 为真（$\mu=\mu_0$）时 $\bar X\sim N(\mu_0,\sigma^2/n)$，将其标准化得到检验统计量：
+$$Z=\frac{\bar X-\mu_0}{\sigma/\sqrt n}\sim N(0,1).$$</p>
+</div>
+
+<details class="derive">
+<summary>推导：左边检验拒绝域为什么是 $Z\le-z_\alpha$（含错误控制）</summary>
+<div>
+<p>以左边检验 $H_0:\mu\ge\mu_0$，$H_1:\mu<\mu_0$ 为例。检验统计量取为 $Z=\dfrac{\bar X-\mu_0}{\sigma/\sqrt n}$。因为备择假设 $\mu<\mu_0$，所以当 $\bar X$ 显著小于 $\mu_0$（即 $Z$ 是一个很大的负数）时倾向于拒绝 $H_0$，拒绝域形如 $Z\le C_0$。控制第 I 类错误（在 $H_0$ 范围 $\mu\ge\mu_0$ 内取最不利的边界 $\mu=\mu_0$）：</p>
+$$
+\begin{aligned}
+P\{\text{拒绝}H_0\mid H_0\text{真}\}
+&=P\!\left\{\frac{\bar X-\mu_0}{\sigma/\sqrt n}\le C_0\ \Big|\ \mu\ge\mu_0\right\}\\
+&=P\!\left\{\frac{\bar X-\mu}{\sigma/\sqrt n}\le C_0+\frac{\mu_0-\mu}{\sigma/\sqrt n}\ \Big|\ \mu\ge\mu_0\right\}\\
+&=\Phi\!\left(C_0+\frac{\mu_0-\mu}{\sigma/\sqrt n}\right)\le\Phi(C_0).
+\end{aligned}
+$$
+<p>为使第 I 类错误概率最大不超过 $\alpha$（在边界 $\mu=\mu_0$ 处取等号），须 $\Phi(C_0)=\alpha$，故 $C_0=-z_\alpha$。因此左边检验拒绝域为
+$$W=\left\{Z=\frac{\bar X-\mu_0}{\sigma/\sqrt n}\le-z_\alpha\right\}.$$</p>
+</div>
+</details>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>均值 $Z$ 检验判断准则（统计量 $z_0=\dfrac{\bar x-\mu_0}{\sigma/\sqrt n}$）</div>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>类型</th><th>$H_0$ / $H_1$</th><th>拒绝域 $W$</th><th>$p$ 值</th></tr></thead>
+<tbody>
+<tr><td>双边</td><td>$\mu=\mu_0$ / $\mu\ne\mu_0$</td><td>$|Z|\ge z_{\alpha/2}$</td><td>$2\big(1-\Phi(|z_0|)\big)$</td></tr>
+<tr><td>左边</td><td>$\mu\ge\mu_0$ / $\mu<\mu_0$</td><td>$Z\le-z_\alpha$</td><td>$\Phi(z_0)$</td></tr>
+<tr><td>右边</td><td>$\mu\le\mu_0$ / $\mu>\mu_0$</td><td>$Z\ge z_\alpha$</td><td>$1-\Phi(z_0)$</td></tr>
+</tbody>
+</table>
+</div>
+<p>判定：$p\le\alpha$ 拒绝 $H_0$，否则不拒绝。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>钢管直径检测（双边 $Z$ 检验）</div>
+<p>某机床厂加工一种钢管，已知其直径 $X\sim N(\mu,0.04)$。正常情况下，$\mu=50$ mm。现随机抽取 5 根，测得直径分别为 $49.7,\,50.6,\,51.8,\,52.4,\,49.8$。问：在 $\alpha=0.05$ 下，机床工作是否正常？</p>
+<ol class="steps">
+<li><b>建立假设</b>：需检验机床是否存在系统偏差（偏大或偏小都不行），故双边检验：
+$$H_0:\mu=50,\qquad H_1:\mu\ne50.$$</li>
+<li><b>统计量</b>：已知 $\sigma=\sqrt{0.04}=0.2$，$n=5$，$\mu_0=50$。当 $H_0$ 真时 $Z=\dfrac{\bar X-50}{\sigma/\sqrt n}\sim N(0,1)$。</li>
+<li><b>计算</b>：$\bar x=\dfrac{49.7+50.6+51.8+52.4+49.8}{5}=50.86$，
+$$z_0=\frac{50.86-50}{0.2/\sqrt5}=\frac{0.86}{0.0894}\approx9.61.$$</li>
+<li><b>结论</b>：查表临界值 $z_{\alpha/2}=z_{0.025}=1.96$。因 $|z_0|=9.61>1.96$，落在拒绝域内，<span class="hl">拒绝 $H_0$</span>。$p$ 值远小于 $0.05$，认为机床工作不正常（存在显著系统偏差）。</li>
+</ol>
+</div>
+
+<h3 id="s2-t">8.2.2 均值的检验（$\sigma^2$ 未知，$t$ 检验）</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>$t$ 检验统计量与分布</div>
+<p>实际中总体方差 $\sigma^2$ 往往未知。由于不能再用 $Z$，用样本标准差 $S$ 替代未知的总体标准差 $\sigma$，采用新的检验统计量：
+$$T=\frac{\bar X-\mu_0}{S/\sqrt n}.$$</p>
+<p><b>分布的改变</b>：由于 $S$ 本身是随机变量，引入了额外的随机波动，当 $H_0$ 成立时统计量不再服从标准正态分布，而是服从自由度为 $n-1$ 的 $t$ 分布：
+$$T=\frac{\bar X-\mu_0}{S/\sqrt n}\sim t(n-1).$$</p>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>均值 $t$ 检验判断准则（统计量 $t_0=\dfrac{\bar x-\mu_0}{s/\sqrt n}$）</div>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>类型</th><th>$H_0$ / $H_1$</th><th>拒绝域 $W$</th><th>$p$ 值</th></tr></thead>
+<tbody>
+<tr><td>双边</td><td>$\mu=\mu_0$ / $\mu\ne\mu_0$</td><td>$|T|\ge t_{\alpha/2}(n-1)$</td><td>$2P\{t(n-1)\ge|t_0|\}$</td></tr>
+<tr><td>左边</td><td>$\mu\ge\mu_0$ / $\mu<\mu_0$</td><td>$T\le-t_\alpha(n-1)$</td><td>$P\{t(n-1)\le t_0\}$</td></tr>
+<tr><td>右边</td><td>$\mu\le\mu_0$ / $\mu>\mu_0$</td><td>$T\ge t_\alpha(n-1)$</td><td>$P\{t(n-1)\ge t_0\}$</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>元件寿命——右边 $t$ 检验</div>
+<p>某种元件寿命 $X$（小时）服从正态分布 $N(\mu,\sigma^2)$，$\mu,\sigma^2$ 均未知。随机抽取 16 只元件，测得寿命数据：159, 280, 101, 212, 224, 379, 179, 264, 222, 362, 168, 250, 149, 260, 485, 170。问：是否有充分的理由认为该元件的平均寿命大于 225 小时？（$\alpha=0.05$）</p>
+<ol class="steps">
+<li><b>建立假设</b>：题干问"是否大于 225"，这是我们想要证明的备择假设，故右边检验：
+$$H_0:\mu\le225,\qquad H_1:\mu>225.$$</li>
+<li><b>统计量</b>：$\sigma^2$ 未知，用 $T=\dfrac{\bar X-\mu_0}{S/\sqrt n}\sim t(n-1)$，拒绝域 $T\ge t_\alpha(n-1)$。</li>
+<li><b>计算</b>：由样本得 $n=16$，$\bar x=241.5$，$s=98.73$，
+$$t_0=\frac{\bar x-225}{s/\sqrt n}=\frac{241.5-225}{98.73/\sqrt{16}}\approx0.6685.$$</li>
+<li><b>结论</b>：查表 $t_{0.05}(15)=1.753$。由于 $0.6685<1.753$，统计量未落入拒绝域，<span class="hl">不拒绝 $H_0$</span>。我们没有充分证据表明平均寿命大于 225 小时。<br><span class="muted">（注意：不能因此"证明了寿命不大于 225"，只是证据不足。）</span></li>
+</ol>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>产品合格检验——左边 $t$ 检验</div>
+<p>要求某种元件平均使用寿命不得低于 1000 小时。质检员从一批中随机抽取 25 件，测得平均寿命为 950 小时，样本标准差为 100 小时。假设寿命服从正态分布。试在 $\alpha=0.05$ 下判断这批元件是否合格？</p>
+<ol class="steps">
+<li><b>建立假设</b>：我们想排查这批产品是否"不合格（低于 1000）"，将其设为备择假设，左边检验：
+$$H_0:\mu\ge1000\ (\text{合格}),\qquad H_1:\mu<1000\ (\text{不合格}).$$</li>
+<li><b>统计量</b>：$T=\dfrac{\bar X-\mu_0}{S/\sqrt n}\sim t(n-1)$，拒绝域 $T\le-t_\alpha(n-1)$。</li>
+<li><b>计算</b>：$n=25$，$\bar x=950$，$s=100$，$\mu_0=1000$，
+$$t_0=\frac{950-1000}{100/\sqrt{25}}=\frac{-50}{20}=-2.5.$$</li>
+<li><b>结论</b>：查表 $t_{0.05}(24)=1.711$，故临界值为 $-1.711$。因为 $t_0=-2.5<-1.711$，落入左侧拒绝域，<span class="hl">拒绝 $H_0$</span>。$p$ 值 $P\{t(24)\le-2.5\}\approx0.0097<0.05$。在 $\alpha=0.05$ 水平下认为这批元件平均寿命显著低于 1000 小时，这批元件<b>不合格</b>。</li>
+</ol>
+</div>
+
+<h3 id="s2-chi">8.2.3 方差的检验（$\chi^2$ 检验）</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>$\chi^2$ 检验统计量与分布（$\mu$ 未知）</div>
+<p>设样本来自 $N(\mu,\sigma^2)$，检验方差 $\sigma^2$。$\sigma^2$ 的无偏估计为样本方差 $S^2$。由抽样分布理论：
+$$\chi^2=\frac{(n-1)S^2}{\sigma_0^2}\sim\chi^2(n-1)\quad(\text{在 }H_0:\sigma^2=\sigma_0^2\text{ 下}).$$</p>
+<p><b>临界值的确定</b>：$\chi^2$ 分布是不对称的（向右偏斜），不能像正态那样直接取正负。习惯上在两端分配 $\alpha/2$ 的概率：
+$$P\{\chi^2\le k_1\}=\tfrac\alpha2,\qquad P\{\chi^2\ge k_2\}=\tfrac\alpha2,$$
+据上侧分位点定义，$k_1=\chi^2_{1-\alpha/2}(n-1)$，$k_2=\chi^2_{\alpha/2}(n-1)$。</p>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>方差 $\chi^2$ 检验判断准则（统计量 $\chi^2_0=\dfrac{(n-1)s^2}{\sigma_0^2}$）</div>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>类型</th><th>$H_0$ / $H_1$</th><th>拒绝域 $W$</th></tr></thead>
+<tbody>
+<tr><td>双边</td><td>$\sigma^2=\sigma_0^2$ / $\sigma^2\ne\sigma_0^2$</td><td>$\chi^2_0\le\chi^2_{1-\alpha/2}(n-1)$ 或 $\chi^2_0\ge\chi^2_{\alpha/2}(n-1)$</td></tr>
+<tr><td>左边</td><td>$\sigma^2\ge\sigma_0^2$ / $\sigma^2<\sigma_0^2$</td><td>$\chi^2_0\le\chi^2_{1-\alpha}(n-1)$</td></tr>
+<tr><td>右边</td><td>$\sigma^2\le\sigma_0^2$ / $\sigma^2>\sigma_0^2$</td><td>$\chi^2_0\ge\chi^2_{\alpha}(n-1)$</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>$\mu$ 已知时自由度恢复为 $n$</div>
+<p>如果 $\mu$ 已知，我们不需要用样本均值 $\bar X$ 去估计它，此时统计量变为
+$$\chi^2_0=\frac{\sum_{i=1}^n(X_i-\mu)^2}{\sigma_0^2}\sim\chi^2(n).$$
+因为没有损失用于估计 $\mu$ 的那 1 个信息维度，自由度从 $n-1$ 恢复为 $n$。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>苹果新品种培育评估——左边 $\chi^2$ 检验</div>
+<p>园艺学家培育一个新品种苹果，诉求是单果重量差异要小（已知原对照品种的重量方差 $\sigma^2=7$）。随机挑选 25 个测试重量（克），算得样本方差 $S^2=4.25$。问：在 $\alpha=0.05$ 下，能否认为新品种比对照品种质量更稳定（方差显著变小）？</p>
+<ol class="steps">
+<li><b>建立假设</b>：目标是证明方差变小，设为备择假设，左边检验：
+$$H_0:\sigma^2\ge7,\qquad H_1:\sigma^2<7.$$</li>
+<li><b>统计量与拒绝域</b>：$\chi^2_0=\dfrac{(n-1)S^2}{\sigma_0^2}\sim\chi^2(n-1)$，拒绝域 $\chi^2_0\le\chi^2_{1-\alpha}(n-1)$。</li>
+<li><b>计算</b>：$n=25$，$S^2=4.25$，$\sigma_0^2=7$，
+$$\chi^2_0=\frac{(25-1)\times4.25}{7}\approx14.57.$$</li>
+<li><b>结论</b>：查表 $\chi^2_{1-\alpha}(24)=\chi^2_{0.95}(24)=13.848$。由于 $\chi^2_0=14.57>13.848$，未落入左侧拒绝域，<span class="hl">不拒绝 $H_0$</span>。$p$ 值 $P\{\chi^2(24)<14.57\}\approx0.07>0.05$。尚无充分证据认为新品种更稳定。</li>
+</ol>
+</div>
+
+</section>
+
+<hr class="sep">
+
+<!-- ======================= 第三节 双总体 ======================= -->
+<section id="sec3">
+<h2><span class="secnum">8.3</span>两个正态总体的假设检验</h2>
+
+<p>设 $X_1,\dots,X_{n_1}$ 与 $Y_1,\dots,Y_{n_2}$ 分别来自 $N(\mu_1,\sigma_1^2)$ 与 $N(\mu_2,\sigma_2^2)$ 的<span class="term">独立</span>样本，$\bar X,\bar Y$ 为两样本均值。比较两个总体，核心是检验<span class="hl">均值之差</span>或<span class="hl">方差之比</span>。</p>
+
+<h3 id="s3-mean">8.3.1 两个正态总体均值之差的检验</h3>
+
+<h4>情形一：$\sigma_1^2,\sigma_2^2$ 已知（$Z$ 检验）</h4>
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>双样本 $Z$ 检验</div>
+<p>考虑统计量 $\bar X-\bar Y$。由正态分布性质 $\bar X-\bar Y\sim N\!\left(\mu_1-\mu_2,\ \dfrac{\sigma_1^2}{n_1}+\dfrac{\sigma_2^2}{n_2}\right)$。当 $H_0$ 成立（$\mu_1-\mu_2=0$）时标准化：
+$$Z=\frac{\bar X-\bar Y}{\sqrt{\dfrac{\sigma_1^2}{n_1}+\dfrac{\sigma_2^2}{n_2}}}\sim N(0,1).$$
+双边拒绝域 $W=\Big\{|Z|\ge z_{\alpha/2}\Big\}$。</p>
+</div>
+
+<h4>情形二：$\sigma_1^2=\sigma_2^2=\sigma^2$ 未知（合并方差 $t$ 检验）</h4>
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>合并方差与两样本 $t$ 检验</div>
+<p>假定两总体方差相等但未知。<span class="term">合并方差（Pooled Variance）</span>把两组样本方差按自由度加权平均，更稳健地估计共同方差 $\sigma^2$：
+$$S_w^2=\frac{(n_1-1)S_1^2+(n_2-1)S_2^2}{n_1+n_2-2},$$
+可证 $S_w^2$ 是 $\sigma^2$ 的无偏估计。取检验统计量
+$$T=\frac{\bar X-\bar Y}{S_w\sqrt{\dfrac1{n_1}+\dfrac1{n_2}}}.$$
+在 $H_0:\mu_1=\mu_2$ 成立时，$T\sim t(n_1+n_2-2)$。双边拒绝域 $W=\Big\{|T|\ge t_{\alpha/2}(n_1+n_2-2)\Big\}$。</p>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>单边检验与"差异是否等于某特定值 $\delta$"</div>
+<p>设 $\sigma_1^2=\sigma_2^2=\sigma^2$ 未知，$df=n_1+n_2-2$。</p>
+<ul>
+<li>左边检验 $H_0:\mu_1\ge\mu_2$，$H_1:\mu_1<\mu_2$，拒绝域 $T\le-t_\alpha(df)$；</li>
+<li>右边检验 $H_0:\mu_1\le\mu_2$，$H_1:\mu_1>\mu_2$，拒绝域 $T\ge t_\alpha(df)$。</li>
+</ul>
+<p>若关心"差异是否等于特定值 $\delta$"（$H_0:\mu_1-\mu_2=\delta$），只需在统计量分子中减去 $\delta$：
+$$T=\frac{(\bar X-\bar Y)-\delta}{S_w\sqrt{\frac1{n_1}+\frac1{n_2}}}\sim t(n_1+n_2-2),$$
+拒绝域形式完全不变。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>两独立样本的 $t$ 检验（原料 A vs 原料 B）</div>
+<p>某厂用两种原料 A、B 生产同一类型产品。取 A 的样品 $n_1=220$，平均重量 $\bar x=2.46$ 公斤，$s_1=0.57$；取 B 的样品 $n_2=205$，平均重量 $\bar y=2.55$，$s_2=0.48$。设样本独立，来自方差相同的正态总体。问 $\alpha=0.05$ 下，能否认为 B 的产品平均重量较 A 显著更大？</p>
+<ol class="steps">
+<li><b>建立假设</b>（1 代 A，2 代 B，想证 B 更大即 $\mu_1<\mu_2$）：
+$$H_0:\mu_1\ge\mu_2,\qquad H_1:\mu_1<\mu_2,\quad\text{拒绝域 }T\le-t_\alpha(n_1+n_2-2).$$</li>
+<li><b>合并方差</b>：
+$$s_w^2=\frac{219\times0.57^2+204\times0.48^2}{220+205-2}=0.286,\quad s_w=0.535.$$
+$$\sqrt{\tfrac1{n_1}+\tfrac1{n_2}}=\sqrt{\tfrac1{220}+\tfrac1{205}}\approx0.097.$$</li>
+<li><b>统计量</b>：
+$$t_0=\frac{2.46-2.55}{0.535\times0.097}\approx-1.734.$$</li>
+<li><b>结论</b>：查表 $t_{0.05}(423)\approx z_{0.05}=1.645$（自由度极大），临界值 $-1.645$。因 $t_0=-1.734<-1.645$，落入拒绝域，<span class="hl">拒绝 $H_0$</span>。有充分理由认为用原料 B 的产品平均重量显著大于 A。</li>
+</ol>
+</div>
+
+<h4>情形三：$\sigma_1^2\ne\sigma_2^2$ 未知（Welch's $t$ 检验）</h4>
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>韦尔奇 $t$ 检验（Welch's approximation）</div>
+<p>若两总体方差明显不相等，不能强行合并 $S_w^2$。此时检验统计量构造为：
+$$T=\frac{\bar X-\bar Y}{\sqrt{\dfrac{S_1^2}{n_1}+\dfrac{S_2^2}{n_2}}}.$$
+该统计量近似服从 $t$ 分布，自由度 $df$ 由 <span class="term">Satterthwaite 公式</span>近似计算（通常是一个带小数的数值，软件会自动处理）。</p>
+</div>
+<div class="box pitfall">
+<div class="box-title"><span class="tag">易错</span>方差不齐时务必用 Welch</div>
+<p>当两组样本量相差极大、且方差差异也很大时，<b>一定要用 Welch's $t$ 检验</b>而非传统的等方差 $t$ 检验，否则第 I 类错误失控。判断方差是否相等，先做下面的 $F$ 检验。</p>
+</div>
+
+<h3 id="s3-paired">8.3.2 成对数据（配对样本）$t$ 检验</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>成对数据 $t$ 检验</div>
+<p>有些时候两组数据并不独立，例如：同一批患者服药前后的血压变化；两种方法测同一批金属样品的硬度。这种成对数据总以成对形式出现：$(X_1,Y_1),\dots,(X_n,Y_n)$。</p>
+<p><b>处理思路</b>：配对数据内部高度相关，直接用独立样本方法会造成极大误差。只需对差值 $D_i=X_i-Y_i$ 是否来自均值 $\mu_D=0$ 的正态总体做<span class="hl">单样本均值 $t$ 检验</span>：
+$$T=\frac{\bar D-0}{S_D/\sqrt n}\sim t(n-1),$$
+其中 $\bar D$ 和 $S_D$ 分别为差值 $D_i$ 的样本均值与样本标准差。</p>
+</div>
+
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>配对的威力：消去个体差异这个大噪声</div>
+<p>同一个人服药前后血压都偏高，两组之间存在巨大的"个体差异"噪声。作差 $D_i=X_i-Y_i$ 后，每个人的基线被自身抵消，只剩下"前后变化"这一信号——方差大幅缩小，检验更灵敏。这正是配对设计优于两独立样本的原因。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>成对数据 $t$ 检验（两台仪器精度对比）</div>
+<p>用两台不同仪器测定 5 批同种溶液的酸碱度（pH）：仪器 A（$X_i$）：5.1, 5.2, 5.3, 5.1, 5.4；仪器 B（$Y_i$）：5.0, 5.3, 5.1, 5.4, 5.1。问 $\alpha=0.05$ 下能否认为两台仪器的系统测定结果有显著差异？</p>
+<ol class="steps">
+<li><b>建立假设</b>：同一批溶液，数据配对。设差值 $D_i=X_i-Y_i$，双边检验：
+$$H_0:\mu_D=0,\qquad H_1:\mu_D\ne0.$$</li>
+<li><b>计算差值</b>：$D_1=0.1,\ D_2=-0.1,\ D_3=0.2,\ D_4=-0.3,\ D_5=0.3$。</li>
+<li><b>差值统计量</b>：$\bar d=0.04$，$s_D=0.1483$，$n=5$，
+$$t_0=\frac{\bar d-0}{s_D/\sqrt n}=\frac{0.04}{0.1483/\sqrt5}\approx1.809.$$
+<span class="muted">（注：原 PDF 中 $\bar d$ 取约 $0.12$ 数值，此处依差值数据 $\{0.1,-0.1,0.2,-0.3,0.3\}$ 算得 $\bar d=0.04$；结论方向一致——未显著。）</span></li>
+<li><b>结论</b>：查表 $t_{\alpha/2}(4)=t_{0.025}(4)=2.776$。由于 $|t_0|<2.776$，未落入拒绝域，<span class="hl">不拒绝 $H_0$</span>。没有充分证据表明两台仪器测定存在显著差异。</li>
+</ol>
+</div>
+
+<h3 id="s3-f">8.3.3 两个正态总体方差比较的检验（$F$ 检验）</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>$F$ 检验统计量与分布</div>
+<p>设 $X_1,\dots,X_{n_1}$ 与 $Y_1,\dots,Y_{n_2}$ 分别来自 $N(\mu_1,\sigma_1^2)$ 与 $N(\mu_2,\sigma_2^2)$ 的独立样本，$S_1^2,S_2^2$ 为两组样本方差，$\mu_1,\mu_2$ 均未知。取检验统计量
+$$F=\frac{S_1^2}{S_2^2}.$$
+在 $H_0:\sigma_1^2=\sigma_2^2$ 成立时，$F\sim F(n_1-1,\,n_2-1)$。</p>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>方差 $F$ 检验判断准则（统计量 $F_0=s_1^2/s_2^2$）</div>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>类型</th><th>$H_0$ / $H_1$</th><th>拒绝域 $W$</th></tr></thead>
+<tbody>
+<tr><td>双边</td><td>$\sigma_1^2=\sigma_2^2$ / $\sigma_1^2\ne\sigma_2^2$</td><td>$F\le F_{1-\alpha/2}(n_1-1,n_2-1)$ 或 $F\ge F_{\alpha/2}(n_1-1,n_2-1)$</td></tr>
+<tr><td>左边</td><td>$\sigma_1^2\ge\sigma_2^2$ / $\sigma_1^2<\sigma_2^2$</td><td>$F\le F_{1-\alpha}(n_1-1,n_2-1)$</td></tr>
+<tr><td>右边</td><td>$\sigma_1^2\le\sigma_2^2$ / $\sigma_1^2>\sigma_2^2$</td><td>$F\ge F_{\alpha}(n_1-1,n_2-1)$</td></tr>
+</tbody>
+</table>
+</div>
+<p>$F$ 分布非负且非对称，故双边在两端各分摊 $\alpha/2$。常用换底公式 $F_{1-\alpha/2}(m,n)=1/F_{\alpha/2}(n,m)$。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>机床生产滚珠方差比较（双边 $F$ 检验）</div>
+<p>两台机床生产同型号滚珠，从甲机床抽 8 个、乙机床抽 9 个，测得直径（毫米）。设直径服从正态分布，检验两方差是否有显著差异（$\alpha=0.1$）。即 $H_0:\sigma_1^2=\sigma_2^2$，$H_1:\sigma_1^2\ne\sigma_2^2$。</p>
+<ol class="steps">
+<li><b>由样本算均值方差</b>：$n_1=8$，$\bar x=15.05$，$S_1^2=0.0457$；$n_2=9$，$\bar y=14.9$，$S_2^2=0.0575$。</li>
+<li><b>统计量</b>：
+$$F_0=\frac{S_1^2}{S_2^2}=\frac{0.0457}{0.0575}\approx0.795.$$</li>
+<li><b>临界值</b>（$\alpha=0.1$，双侧各 $\alpha/2=0.05$）：$F_{0.05}(7,8)=3.50$，$F_{0.95}(7,8)=1/F_{0.05}(8,7)=1/3.73\approx0.268$。</li>
+<li><b>结论</b>：因 $0.268<F_0=0.795<3.50$，统计量未落入拒绝域，<span class="hl">不拒绝 $H_0$</span>。认为两机床生产的滚珠直径方差没有显著差异。</li>
+</ol>
+</div>
+
+<h3 id="s3-flow">8.3.4 双样本检验的实战分析流程</h3>
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>比较两组独立正态样本均值的标准流程</div>
+<ol class="steps">
+<li><b>第一步（方差齐性检验）</b>：先对两组数据做 $F$ 检验，检验 $H_0:\sigma_1^2=\sigma_2^2$。</li>
+<li><b>第二步（均值检验）</b>：<br>
+· 若第一步<b>不拒绝</b> $H_0$（方差齐性成立）→ 用经典的合并方差等方差 $t$ 检验；<br>
+· 若第一步<b>拒绝</b> $H_0$（方差不齐）→ 改用修正自由度的 Welch's $t$ 检验。</li>
+</ol>
+<p>例如上面滚珠例题中，$F$ 检验已确认方差无显著差异，若再要比较甲、乙滚珠平均直径是否有差异，就可放心使用等方差 $t$ 检验。</p>
+</div>
+
+</section>
+
+<hr class="sep">
+
+<!-- ======================= 第四节 检验与区间 ======================= -->
+<section id="sec4">
+<h2><span class="secnum">8.4</span>假设检验与区间估计的关系</h2>
+
+<div class="box theorem">
+<div class="box-title"><span class="tag">定理</span>置信区间与接受域的内在联系（对偶性）</div>
+<p><b>1. 置信区间的定义</b>：若由样本构造两个统计量 $\hat\theta_L$ 和 $\hat\theta_U$，使得
+$$P\{\hat\theta_L<\theta<\hat\theta_U\}\ge1-\alpha\quad\forall\theta\in\Theta,$$
+则称随机区间 $(\hat\theta_L,\hat\theta_U)$ 是 $\theta$ 的置信度为 $1-\alpha$ 的双侧置信区间。</p>
+<p><b>2. 假设检验的接受域</b>：考虑双边检验 $H_0:\theta=\theta_0$，$H_1:\theta\ne\theta_0$。构造统计量 $T$，检验的<span class="term">接受域</span>（即不拒绝 $H_0$ 的区域）可表示为
+$$\overline W=\big\{\hat\theta_L<\theta_0<\hat\theta_U\big\},\qquad P(\overline W\mid H_0\text{ 真})=1-\alpha.$$</p>
+<p class="conclusion">核心思想：在显著性水平 $\alpha$ 下，假设检验<b>"不拒绝"的所有参数值 $\theta_0$ 的集合，恰好构成参数 $\theta$ 的 $1-\alpha$ 置信区间。</b></p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>正态均值的推断对比（$\sigma^2$ 已知）</div>
+<p>设 $X_1,\dots,X_n\sim N(\mu,\sigma^2)$，$\sigma^2$ 已知。</p>
+<p><b>从区间估计看</b>：$\mu$ 的置信水平为 $1-\alpha$ 的置信区间为
+$$\bar X-\frac{\sigma}{\sqrt n}z_{\alpha/2}<\mu<\bar X+\frac{\sigma}{\sqrt n}z_{\alpha/2}.$$</p>
+<p><b>从假设检验看</b>：检验 $H_0:\mu=\mu_0$，$H_1:\mu\ne\mu_0$，显著性水平 $\alpha$ 的接受域为
+$$\overline W=\left\{\left|\frac{\bar X-\mu_0}{\sigma/\sqrt n}\right|<z_{\alpha/2}\right\}
+=\left\{\bar X-\frac{\sigma}{\sqrt n}z_{\alpha/2}<\mu_0<\bar X+\frac{\sigma}{\sqrt n}z_{\alpha/2}\right\}.$$</p>
+<p class="conclusion">只需将接受域中的 $\mu_0$ 视作变量，它确定的范围正好是 $\mu$ 的 $1-\alpha$ 置信区间。这种性质称为检验与区间的<b>对偶性</b>。</p>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>区间估计与假设检验的对应法则</div>
+<ul>
+<li><b>双侧区间 ↔ 双边检验</b>：若 $(\hat\theta_L,\hat\theta_U)$ 是 $\theta$ 的 $1-\alpha$ 置信区间。当 $\theta_0\in(\hat\theta_L,\hat\theta_U)$ 时，不拒绝双边检验 $H_0:\theta=\theta_0$；否则拒绝。</li>
+<li><b>单侧置信下限 ↔ 右边检验</b>：若 $\hat\theta_L$ 是 $\theta$ 的 $1-\alpha$ 置信下限（即 $\theta>\hat\theta_L$）。当 $\theta_0\ge\hat\theta_L$ 时，不拒绝右边检验 $H_0:\theta\le\theta_0$ vs $H_1:\theta>\theta_0$。<br><span class="muted">（直觉：证据表明参数确实比底线大，若原假设 $\theta_0$ 设得过低就会被拒绝。）</span></li>
+<li><b>单侧置信上限 ↔ 左边检验</b>：若 $\hat\theta_U$ 是 $\theta$ 的 $1-\alpha$ 置信上限（即 $\theta<\hat\theta_U$）。当 $\theta_0\le\hat\theta_U$ 时，不拒绝左边检验 $H_0:\theta\ge\theta_0$ vs $H_1:\theta<\theta_0$。</li>
+</ul>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>止痛药副作用——比例的左边检验（利用置信上限）</div>
+<p>为研究某种止痛药的副作用，调查了服用该药的 440 名患者，发现有 23 名出现了"反症状"。问：是否有足够的理由说明，服用该药的病人中出现反症状的比例低于 10%？（$\alpha=0.05$）</p>
+<ol class="steps">
+<li><b>建立假设</b>：这是有关二项分布 $B(1,p)$ 参数 $p$ 的检验，希望证明比例低于 10%，左边检验：
+$$H_0:p\ge0.1,\qquad H_1:p<0.1.$$</li>
+<li><b>大样本比例的单侧置信上限</b>：根据大样本二项分布推断理论，记 $a=n+z_\alpha^2$，$b=-(2n\bar X+z_\alpha^2)$，$c=n\bar X^2$，则 $p$ 的 $1-\alpha$ 单侧置信上限为
+$$\hat p_U=\frac{-b+\sqrt{b^2-4ac}}{2a}.$$</li>
+<li><b>代入计算</b>：$n=440$，$\bar x=23/440=0.0523$，$z_\alpha=z_{0.05}=1.645$，算得 $\hat p_U\approx0.0726$。</li>
+<li><b>结论</b>：因为假设边界 $p_0=0.1>\hat p_U=0.0726$（即原假设的值超出了合理上限），<span class="hl">拒绝 $H_0$</span>。认为出现反症状的比例显著低于 10%。</li>
+</ol>
+</div>
+
+</section>
+
+<hr class="sep">
+
+<!-- ======================= 第五节 非参数检验 ======================= -->
+<section id="sec5">
+<h2><span class="secnum">8.5</span>非参数检验</h2>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>非参数检验的概念</div>
+<p>前面介绍的检验（$Z$、$t$、$F$）都在<span class="hl">总体分布形式已知</span>（如正态分布）的前提下，对其参数进行推断，称为<span class="term">参数检验</span>。实际应用中，总体服从何种分布往往未知。要求我们直接利用样本对总体的<span class="hl">分布形式</span>提出假设，这类方法称为<span class="term">非参数检验</span>。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>引例：战争爆发次数</div>
+<p>从 1500 到 1931 年的 432 年间，每年爆发战争的次数 $X$ 可看作随机变量。据统计共爆发 299 次战争，数据如下：</p>
+<div class="tbl-wrap"><table class="data">
+<thead><tr><th>战争次数 $X$</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+<tbody><tr><td>发生年数（频数）</td><td>223</td><td>142</td><td>48</td><td>15</td><td>4</td></tr></tbody>
+</table></div>
+<p>史学家通常认为极端事件（战争）服从泊松分布。我们是否有充分理由推翻"爆发战争的次数服从泊松分布"这一假设？</p>
+</div>
+
+<h3 id="s5-gof">8.5.1 拟合优度检验（Goodness-of-Fit Test）</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>拟合优度的假设提出</div>
+<p>记 $F(x)$ 为总体 $X$ 的真实未知分布函数。设 $F_0(x)$ 是一种已知的理论分布（可能含未知参数），检验假设为：
+$$H_0:F(x)=F_0(x)\ \forall x\in\mathbb R,\qquad H_1:F(x)\ne F_0(x).$$</p>
+<ul>
+<li>若 $X$ 为离散型，则 $H_0$ 等价于总体分布律 $P\{X=x_i\}=p_i$；</li>
+<li>若 $X$ 为连续型，则需将值域划分为若干区间，转化为离散区间内落入样本数量的概率比较。</li>
+</ul>
+</div>
+
+<div class="box theorem">
+<div class="box-title"><span class="tag">定理</span>Pearson $\chi^2$ 检验的统计量与极限分布</div>
+<p><b>步骤</b>：① 将总体取值分成 $k$ 个互不相交的类别 $A_1,\dots,A_k$；② 记 $n$ 个样本中落入 $A_i$ 的个数为 $n_i$（$\sum n_i=n$）；③ 假设 $H_0$ 为真，计算每次试验落入 $A_i$ 的理论概率 $p_i$，若含 $r$ 个未知参数，先用极大似然法估计后求 $\hat p_i$，再求理论频数 $n\hat p_i$；④ 构造统计量：
+$$\chi^2=\sum_{i=1}^k\frac{(\text{实际频数}-\text{理论频数})^2}{\text{理论频数}}=\sum_{i=1}^k\frac{(n_i-n\hat p_i)^2}{n\hat p_i}.$$</p>
+<p><b>极限分布</b>：当 $n$ 充分大、$H_0$ 为真时，皮尔逊证明
+$$\chi^2\sim\chi^2(k-r-1),$$
+其中 $k$ 为分类数，$r$ 为需从样本估计的参数个数。减 1 是存在 $\sum p_i=1$ 的约束。<br>
+<b>拒绝域</b>（单侧右尾）：$\chi^2\ge\chi^2_\alpha(k-r-1)$。</p>
+</div>
+
+<div class="box pitfall">
+<div class="box-title"><span class="tag">易错</span>理论频数不能太小</div>
+<p>要求 $n$ 足够大，且每组的理论频数 $n\hat p_i\ge5$。如果有些组的理论频数太小，必须将相邻的组合并，直到满足要求为止。合并后分类数 $k$ 相应减少，<b>自由度也随之改变</b>。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>战争爆发次数检验（离散型 · 含参估计）</div>
+<p>检验引例中战争次数 $X$ 是否服从泊松分布 $\pi(\lambda)$，$\alpha=0.05$。</p>
+<ol class="steps">
+<li><b>假设</b>：$H_0:X\sim\pi(\lambda)$。因 $\lambda$ 未知，先估计 $\hat\lambda=\bar X=299/432\approx0.692$，故待估参数 $r=1$。</li>
+<li><b>理论概率</b>：$\hat p_i=\dfrac{\hat\lambda^i e^{-\hat\lambda}}{i!}\ (i=0,1,2,3)$，且尾部合并 $\hat p_4=P(X\ge4)$。理论频数 $n\hat p_i$：分别约为 $216,\,149.5,\,51.8,\,12.1,\,2.6$。</li>
+<li><b>合并组别</b>：第 5 组理论频数 $2.6<5$，与前一组合并（"$\ge3$ 次"）。合并后 $n_5'=19$，$n\hat p_5'=14.7$，分类数 $k=4$。</li>
+<li><b>统计量</b>：
+$$\chi^2=\frac{(223-216)^2}{216}+\frac{(142-149.5)^2}{149.5}+\frac{(48-51.8)^2}{51.8}+\frac{(19-14.7)^2}{14.7}\approx2.15.$$
+自由度 $df=k-r-1=4-1-1=2$。</li>
+<li><b>结论</b>：查表 $\chi^2_{0.05}(2)=5.991$。因 $2.15<5.991$，<span class="hl">不拒绝 $H_0$</span>，认为战争发生次数合乎泊松分布。</li>
+</ol>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>孟德尔遗传定律检验（离散型 · 无参估计）</div>
+<p>孟德尔遗传理论断言：两豌豆杂交后，圆黄、皱黄、圆绿、皱绿发生比例为 $9:3:3:1$。一次实验得四种特征实际频数为 $315,101,108,32$，共 $556$。$\alpha=0.05$。</p>
+<ol class="steps">
+<li><b>假设</b>：$H_0:p_1=\tfrac{9}{16},p_2=\tfrac3{16},p_3=\tfrac3{16},p_4=\tfrac1{16}$（理论比例完全给定，无需估参，$r=0$，分类数 $k=4$）。</li>
+<li><b>理论频数</b>：$n=556$，$np_i$ 分别为 $312.75,\,104.25,\,104.25,\,34.75$。</li>
+<li><b>统计量</b>：
+$$\chi^2=\frac{(315-312.75)^2}{312.75}+\dots+\frac{(32-34.75)^2}{34.75}\approx0.47.$$
+自由度 $df=k-0-1=3$，$\chi^2_{0.05}(3)=7.815$。</li>
+<li><b>结论</b>：因 $0.47<7.815$，<span class="hl">不拒绝 $H_0$</span>，数据极好地符合孟德尔定律。</li>
+</ol>
+</div>
+
+<h3 id="s5-indep">8.5.2 独立性检验（列联表）</h3>
+
+<div class="box definition">
+<div class="box-title"><span class="tag">定义</span>列联表（Contingency Table）的独立性检验</div>
+<p>设变量 $X$ 有 $R$ 个状态，变量 $Y$ 有 $C$ 个状态。假设检验
+$$H_0:X\text{ 与 }Y\text{ 独立}\quad\big(P(X_i,Y_j)=P(X_i)P(Y_j)\big).$$
+样本总数为 $n$，第 $i$ 行边际频数为 $n_{i\cdot}$，第 $j$ 列边际频数为 $n_{\cdot j}$。在 $H_0$ 成立条件下，第 $i$ 行第 $j$ 列格子的理论期望频数为
+$$E_{ij}=n\cdot\hat P(X_i)\hat P(Y_j)=n\cdot\frac{n_{i\cdot}}n\cdot\frac{n_{\cdot j}}n=\frac{n_{i\cdot}\times n_{\cdot j}}n.$$
+检验统计量
+$$\chi^2=\sum_i\sum_j\frac{(O_{ij}-E_{ij})^2}{E_{ij}}\sim\chi^2\big((R-1)(C-1)\big).$$
+自由度 $df=(R-1)(C-1)$。</p>
+</div>
+
+<div class="box example">
+<div class="box-title"><span class="tag">例题</span>独立性检验实战（新药疗效）</div>
+<p>测试某新药疗效，将 100 名患者随机分入服药组和安慰剂组，结果如下表。问：治愈与否是否与服药有关？（$\alpha=0.05$）</p>
+<div class="tbl-wrap"><table class="data">
+<thead><tr><th></th><th>治愈</th><th>未治愈</th><th>行汇总</th></tr></thead>
+<tbody>
+<tr><td>服药组</td><td>40</td><td>10</td><td>50</td></tr>
+<tr><td>安慰剂组</td><td>20</td><td>30</td><td>50</td></tr>
+<tr><td>列汇总</td><td>60</td><td>40</td><td>$n=100$</td></tr>
+</tbody>
+</table></div>
+<ol class="steps">
+<li><b>假设</b>：$H_0$：治愈与服药独立。$2\times2$ 列联表。</li>
+<li><b>理论频数</b> $E_{ij}=\dfrac{\text{行}\times\text{列}}n$：服药治愈 $50\times60/100=30$；服药未治愈 $50\times40/100=20$；安慰剂治愈 $50\times60/100=30$；安慰剂未治愈 $50\times40/100=20$。</li>
+<li><b>统计量</b>：
+$$\chi^2=\frac{(40-30)^2}{30}+\frac{(10-20)^2}{20}+\frac{(20-30)^2}{30}+\frac{(30-20)^2}{20}=3.33+5+3.33+5=16.67.$$
+自由度 $df=(2-1)(2-1)=1$，$\chi^2_{0.05}(1)=3.84$。</li>
+<li><b>结论</b>：因 $16.67>3.84$，<span class="hl">拒绝 $H_0$</span>，治愈率与是否服药强烈相关。</li>
+</ol>
+</div>
+
+</section>
+
+<hr class="sep">
+
+<!-- ======================= 本章小结 ======================= -->
+<section id="summary">
+<h2><span class="secnum">小结</span>本章小结 · 检验速查表</h2>
+
+<p>假设检验的统一范式：<b>提假设 → 选统计量（在 $H_0$ 下的精确分布）→ 定拒绝域 → 算实测值 → 下结论</b>；判定既可用临界值法（看实测统计量是否越过临界分位点），也可用 $p$ 值法（看 $p$ 是否 $\le\alpha$），二者永远一致。</p>
+
+<h3>参数检验总速查表</h3>
+<div class="tbl-wrap">
+<table class="data">
+<caption>表 8-2　单/双正态总体参数检验速查（$\alpha$ 为显著性水平）</caption>
+<thead>
+<tr><th>推断参数</th><th>样本数</th><th>已知条件</th><th>统计量（$H_0$ 下分布）</th><th>双边拒绝域</th></tr>
+</thead>
+<tbody>
+<tr><td rowspan="3">均值 $\mu$</td><td>单样本</td><td>$\sigma^2$ 已知</td><td>$Z=\dfrac{\bar X-\mu_0}{\sigma/\sqrt n}\sim N(0,1)$</td><td>$|Z|\ge z_{\alpha/2}$</td></tr>
+<tr><td>单样本</td><td>$\sigma^2$ 未知</td><td>$T=\dfrac{\bar X-\mu_0}{S/\sqrt n}\sim t(n-1)$</td><td>$|T|\ge t_{\alpha/2}(n-1)$</td></tr>
+<tr><td>双样本</td><td>$\sigma_1^2=\sigma_2^2$ 未知</td><td>$T=\dfrac{\bar X-\bar Y}{S_w\sqrt{1/n_1+1/n_2}}\sim t(n_1{+}n_2{-}2)$</td><td>$|T|\ge t_{\alpha/2}(n_1{+}n_2{-}2)$</td></tr>
+<tr><td>均值差（配对）</td><td>成对</td><td>差值正态</td><td>$T=\dfrac{\bar D}{S_D/\sqrt n}\sim t(n-1)$</td><td>$|T|\ge t_{\alpha/2}(n-1)$</td></tr>
+<tr><td rowspan="2">方差 $\sigma^2$</td><td>单样本</td><td>$\mu$ 未知</td><td>$\chi^2=\dfrac{(n-1)S^2}{\sigma_0^2}\sim\chi^2(n-1)$</td><td>$\chi^2\le\chi^2_{1-\alpha/2}$ 或 $\chi^2\ge\chi^2_{\alpha/2}$</td></tr>
+<tr><td>双样本</td><td>$\mu_1,\mu_2$ 未知</td><td>$F=\dfrac{S_1^2}{S_2^2}\sim F(n_1{-}1,n_2{-}1)$</td><td>$F\le F_{1-\alpha/2}$ 或 $F\ge F_{\alpha/2}$</td></tr>
+<tr><td>比例 $p$</td><td>单样本</td><td>大样本 $np\ge5$</td><td>$Z=\dfrac{\hat p-p_0}{\sqrt{p_0(1-p_0)/n}}\sim N(0,1)$</td><td>$|Z|\ge z_{\alpha/2}$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box note">
+<div class="box-title"><span class="tag">注</span>选检验方法的口诀</div>
+<ol class="steps">
+<li>看到<b>"方差已知"</b>或<b>"大样本比例"</b> —— 用 $Z$ 检验。</li>
+<li>看到<b>"方差未知"</b>求均值 —— 用 $t$ 检验。</li>
+<li>看到求<b>"方差 / 稳定性"</b> —— 单样本用 $\chi^2$，双样本用 $F$。</li>
+<li>遇到<b>"分布未知"</b>或<b>"独立性判断"</b> —— 用 Pearson $\chi^2$ 拟合优度 / 列联表检验，自由度拟合优度为 $k-r-1$、独立性为 $(R-1)(C-1)$。</li>
+</ol>
+</div>
+
+<div class="box insight">
+<div class="box-title"><span class="tag">直觉</span>写在最后：统计学的哲学</div>
+<p><b>"不拒绝" ≠ "接受"</b>：当我们不拒绝原假设时，只说明目前的证据不足以推翻它，并不代表证明了它绝对正确。如同法庭上的"证据不足，无罪释放"，并不代表他绝对是个好人。</p>
+<p><b>统计显著（Statistical Significance）≠ 实际显著（Practical Significance）</b>：当样本量 $n$ 极大时（大数据时代），极其微小的差异也会导致 $p$ 值小于 $0.05$（统计显著）。例如减肥药吃了 1 个月体重从 70.0 kg 降到 69.9 kg，样本量上万时检验也会显著——但这 0.1 kg 的变化在实际生活中没有任何意义！</p>
+<p class="conclusion">做假设检验永远不要脱离具体的业务背景。先问"差异是否真实存在"（统计显著），再问"差异是否值得在意"（实际显著）。</p>
+</div>
+
+<h3>知识脉络回顾</h3>
+<ul>
+<li><b>逻辑核心</b>：小概率原理 + 反证法；$H_0$ 受"无罪推定"保护；Neyman–Pearson 先控 $\alpha$ 再压 $\beta$。</li>
+<li><b>两类错误跷跷板</b>：$n$ 固定时 $\alpha\downarrow\Rightarrow\beta\uparrow$，唯增大 $n$ 可同减。</li>
+<li><b>单总体</b>：$Z$（$\sigma^2$ 已知均值）、$t$（$\sigma^2$ 未知均值）、$\chi^2$（方差）。</li>
+<li><b>双总体</b>：$Z$/合并方差 $t$/Welch's $t$（均值差）、成对 $t$（配对）、$F$（方差比）。实战先 $F$ 验方差齐性，再选 $t$。</li>
+<li><b>对偶性</b>：双边检验接受域 ⟺ 双侧置信区间；单边检验 ⟺ 单侧置信限。</li>
+<li><b>非参数</b>：Pearson $\chi^2$ 拟合优度（$df=k-r-1$，理论频数 $\ge5$）、列联表独立性（$df=(R-1)(C-1)$）。</li>
+</ul>
+
+</section>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>

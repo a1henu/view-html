@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概率统计 · 学习报告总目录</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  /* 首页专属：去掉侧边栏，居中布局 */
+  .home-wrap { max-width: 960px; margin: 0 auto; padding: 0 32px 100px; }
+  .hero {
+    background: linear-gradient(135deg, #94070a 0%, #6d0508 100%);
+    color: #fff; padding: 60px 32px 52px; text-align: center;
+  }
+  .hero .eyebrow { letter-spacing: 4px; font-size: 13px; opacity: .82; text-transform: uppercase; }
+  .hero h1 { font-size: 38px; margin: 14px 0 12px; font-weight: 700; }
+  .hero p { max-width: 640px; margin: 0 auto; opacity: .92; font-size: 16px; }
+  .hero .meta { margin-top: 22px; font-size: 13.5px; opacity: .8; }
+  .lead { font-size: 16px; color: var(--ink-soft); margin: 34px 0 6px; }
+  .flow { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin: 14px 0 8px; font-size:14px; }
+  .flow .node { background:#fff; border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-weight:600; }
+  .flow .arrow { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">PROBABILITY &amp; STATISTICS · PEKING UNIVERSITY</div>
+  <h1>概率统计 · 数理统计学习报告</h1>
+  <p>第六 ~ 九章完整精读笔记。比课件更详尽：每个定义讲透直觉、每个定理给出完整逐步证明、每道例题给出逐步解答与「为什么这样做」。</p>
+  <div class="meta">共 4 章 · 62 道例题全解 · 全程 MathJax 公式渲染</div>
+</header>
+
+<div class="home-wrap">
+
+  <p class="lead">这四章构成了<strong>数理统计</strong>的主干，逻辑环环相扣，建议按顺序学习：</p>
+  <div class="flow">
+    <span class="node">第6章 抽样分布</span>
+    <span class="arrow">→ 提供分布工具 →</span>
+    <span class="node">第7章 参数估计</span>
+    <span class="arrow">→ 对偶 →</span>
+    <span class="node">第8章 假设检验</span>
+    <span class="arrow">→ 推广 →</span>
+    <span class="node">第9章 方差分析与回归</span>
+  </div>
+  <p class="muted">第6章打造 $\chi^2,\,t,\,F$ 三大分布与抽样分布定理这套"工具箱"；第7、8章是同一枚硬币的两面（区间估计 ↔ 假设检验）；第9章把检验思想推广到多组比较与变量关系建模。</p>
+
+  <h2 style="border-bottom:3px solid var(--pku-red);">章节导航</h2>
+  <div class="chap-grid">
+
+    <a class="chap-card" href="chap6.html">
+      <div class="cnum">CHAPTER 6</div>
+      <h3>数理统计的基本概念与抽样分布</h3>
+      <p>从概率论过渡到统计推断的桥梁，建立采样与分布的语言。</p>
+      <ul>
+        <li>总体、样本、统计量、经验分布函数</li>
+        <li>$\chi^2$ / $t$ / $F$ 三大抽样分布（定义·密度·性质）</li>
+        <li>正态总体抽样分布定理 + Fisher 引理证明</li>
+        <li>单/双正态总体抽样分布速查表</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap7.html">
+      <div class="cnum">CHAPTER 7 · 内容最丰富</div>
+      <h3>参数估计</h3>
+      <p>如何用样本"猜"出未知参数，并评判一个估计好不好。</p>
+      <ul>
+        <li>矩估计法 &amp; 极大似然估计（含边界法、不变性）</li>
+        <li>四大评价标准：无偏 · 有效 · MSE · 相合</li>
+        <li>Cramér-Rao 不等式与 Fisher 信息（含完整证明）</li>
+        <li>区间估计：枢轴量法 + 正态总体全套置信区间</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap8.html">
+      <div class="cnum">CHAPTER 8</div>
+      <h3>假设检验</h3>
+      <p>用"带概率的反证法"判断一个关于总体的论断是否成立。</p>
+      <ul>
+        <li>两类错误、显著性水平、$p$ 值、Neyman-Pearson 原则</li>
+        <li>单总体：$Z$ / $t$ / $\chi^2$ 检验</li>
+        <li>双总体：均值差 / 成对 $t$ / 方差比 $F$ 检验</li>
+        <li>检验与区间估计的对偶性 + 非参数检验</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap9.html">
+      <div class="cnum">CHAPTER 9</div>
+      <h3>方差分析与回归分析</h3>
+      <p>把检验思想推广到多组比较与变量间关系建模。</p>
+      <ul>
+        <li>一元线性回归：最小二乘法完整推导 + 性质</li>
+        <li>平方和分解 $S_T=S_R+S_E$（交叉项为零证明）</li>
+        <li>显著性检验：$F$ / $t$ 检验、决定系数 $R^2$</li>
+        <li>单因素方差分析表（ANOVA）逐格解读</li>
+      </ul>
+    </a>
+
+  </div>
+
+  <h2 style="border-bottom:3px solid var(--pku-red);">如何使用这份报告</h2>
+  <div class="box note">
+    <div class="box-title"><span class="tag">注</span> 阅读建议</div>
+    <ul>
+      <li><strong>彩色盒子</strong>：<span class="term">蓝色=定义</span>、<span class="term">紫色=定理</span>、<span class="term">青色=例题</span>、灰色=证明、橙色=注记、红色=直觉/易错。看到「易错」盒子务必停下细读。</li>
+      <li><strong>步骤圆圈</strong>：例题解答用带编号的步骤呈现，跟着每一步走即可，不会有跳步。</li>
+      <li><strong>「展开详细推导」</strong>：点开折叠块可看到最完整的代数细节；主线读不卡壳时可先略过。</li>
+      <li><strong>左侧目录</strong>：每章页面左侧有粘性导航，随滚动高亮当前小节；点「← 返回首页目录」可回到本页。</li>
+      <li><strong>公式</strong>：所有数学由 MathJax 实时渲染，需联网加载一次脚本；公式可横向滚动查看。</li>
+    </ul>
+  </div>
+
+  <p class="conclusion">学习主线一句话：第 6 章给"分布工具"，第 7 章用它做<strong>点估计 + 区间估计</strong>，第 8 章把区间估计翻译成<strong>假设检验</strong>，第 9 章再推广到<strong>多组与回归</strong>。理解这条主线，四章就串成了一个整体。</p>
+
+  <p class="muted" style="margin-top:40px; text-align:center;">概率统计学习报告 · 由课程 slides（chap6–chap9）精读整理而成</p>
+</div>
+
+</body>
+</html>

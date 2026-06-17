@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第九章 方差分析与回归分析 · 概率统计学习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">概率统计<small>学习报告 · 第九章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <div class="nav-group">导读</div>
+      <a href="#intro">本章导读</a>
+      <div class="nav-group">方差分析</div>
+      <a href="#anova-model">9.1 方差分析模型</a>
+      <a class="lvl2" href="#anova-bg">背景与基本概念</a>
+      <a class="lvl2" href="#anova-setup">模型设定与假设</a>
+      <a href="#anova-ss">9.2 平方和分解</a>
+      <a class="lvl2" href="#anova-ss-def">三个偏差平方和</a>
+      <a class="lvl2" href="#anova-ss-proof">分解恒等式的证明</a>
+      <a href="#anova-exp">9.3 平方和的期望</a>
+      <a href="#anova-dist">9.4 平方和的分布与独立性</a>
+      <a class="lvl2" href="#anova-cochran">Cochran 定理</a>
+      <a href="#anova-F">9.5 F 检验与方差分析表</a>
+      <a class="lvl2" href="#anova-ex">例题：日光灯 / 麻疹药</a>
+      <div class="nav-group">回归分析</div>
+      <a href="#reg-bg">9.6 回归分析背景</a>
+      <a href="#reg-model">9.7 一元线性回归模型</a>
+      <a href="#reg-lse">9.8 最小二乘法</a>
+      <a class="lvl2" href="#reg-normal-eq">正规方程推导</a>
+      <a class="lvl2" href="#reg-unbias">无偏性与方差</a>
+      <a href="#reg-residual">9.9 残差与 σ² 估计</a>
+      <a class="lvl2" href="#reg-mle">极大似然估计</a>
+      <a class="lvl2" href="#reg-ex">例题：父子身高</a>
+      <a href="#reg-test">9.10 回归方程显著性检验</a>
+      <a class="lvl2" href="#reg-ss">平方和分解与 ANOVA</a>
+      <a class="lvl2" href="#reg-F">F 检验</a>
+      <div class="nav-group">总结</div>
+      <a href="#unify">9.11 统一视角</a>
+      <a href="#summary">本章小结与速查表</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">PROBABILITY &amp; STATISTICS · CHAPTER 9</div>
+      <h1>第九章　方差分析与回归分析</h1>
+      <p>从"比较若干总体的均值"到"刻画变量间的趋势关系"——本章用同一把钥匙（平方和分解 + F 检验）打开两扇看似不同的门。</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ===================== 导读 ===================== -->
+<h2 id="intro"><span class="secnum">导读</span>本章导读</h2>
+
+<p>本章讲两件事：<span class="term">方差分析（ANOVA）</span>与<span class="term">回归分析（Regression）</span>。表面上它们处理的问题不同——</p>
+<ul>
+<li><b>方差分析</b>回答：几个总体（如几种药、几种灯管）的均值是否真的有差异？自变量是<span class="hl">离散的"类别/水平"</span>。</li>
+<li><b>回归分析</b>回答：因变量 $Y$ 如何随一个<span class="hl">连续自变量 $x$</span>（如身高、温度）变化？我们要拟合出一条直线 $\hat y=\hat\alpha+\hat\beta x$。</li>
+</ul>
+
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 两者的内在统一</div>
+<p>它们其实是同一套思想的两个面孔，核心都是<b>平方和分解（Partition of Sum of Squares）</b>：</p>
+<p>$$\underbrace{S_T}_{\text{数据总波动}}=\underbrace{S_{\text{模型解释}}}_{\text{由因素/回归引起}}+\underbrace{S_{\text{残余}}}_{\text{随机误差引起}}$$</p>
+<p>然后构造一个 <b>$F$ 统计量</b>：把"模型解释的波动"和"随机误差的波动"各自折算成<span class="term">均方</span>（除以自由度），取比值。若模型真的有用，分子会显著偏大，$F$ 值就大，我们据此拒绝"无效"的原假设。方差分析里它检验"各水平均值相等"，回归里它检验"斜率 $\beta=0$"。<b>本章末我们会证明：一元回归的 $F$ 检验正是只有两组（自由度 $1,n-2$）的方差分析。</b></p>
+</div>
+
+<p>下面先讲方差分析（更接近"假设检验"的延续），再讲回归（带参数估计），最后把两者串起来。</p>
+
+<hr class="sep">
+
+<!-- ===================== 方差分析模型 ===================== -->
+<h2 id="anova-model"><span class="secnum">9.1</span>方差分析模型与假设</h2>
+
+<h3 id="anova-bg">背景：Fisher 与一个比较寿命的问题</h3>
+<p><span class="term">方差分析（Analysis of Variance，简称 ANOVA）</span>由英国统计学家费歇尔（R. A. Fisher）于 20 世纪 20 年代提出，用于推断两个或两个以上总体的均值是否有显著差异。</p>
+
+<div class="box example"><div class="box-title"><span class="tag">例题</span> 引例：三种日光灯管的寿命</div>
+<p>为比较三种不同类型日光灯管的寿命（小时），从每种类型中抽取 8 个，共 24 只，进行老化试验，记录其寿命，试判断三种类型灯管的寿命是否有差异。</p>
+<p><b>引起寿命不同的原因有两方面：</b></p>
+<ul>
+<li>其一，由于<b>灯管类型不同</b>而引起寿命不同——这是我们关心的<span class="hl">系统性差异</span>；</li>
+<li>其二，<b>同一类型</b>的灯管，由于其它随机因素的影响，寿命也不同——这是<span class="hl">随机波动</span>。</li>
+</ul>
+<p>方差分析的任务，就是把这两种波动从总波动里"分离"出来，比较它们的相对大小。</p>
+</div>
+
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 试验指标、因素与水平</div>
+<ul>
+<li><span class="term">试验指标</span>：所考察的特征值（如灯管的寿命）。</li>
+<li><span class="term">因素（factor）</span>：对试验指标产生影响的原因（如"日光灯管类型"）。</li>
+<li><span class="term">水平（level）</span>：因素的各个不同状态（如灯管的三个不同类型，即三个水平）。</li>
+</ul>
+<p class="conclusion"><span class="term">单因素方差分析</span>：仅考虑<b>一个</b>因素对试验指标的影响。其目的是比较同一因素的 $r$ 个水平下试验指标理论均值的差异，即比较这 $r$ 个总体的均值差异。</p>
+</div>
+
+<h3 id="anova-setup">模型设定与假设检验</h3>
+
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 单因素方差分析模型（形式一）</div>
+<p>设第 $j$ 个水平下有 $n_j$ 个观测 $X_{1j},\dots,X_{n_j j}$，模型为</p>
+<p>$$X_{ij}=\mu_j+\varepsilon_{ij},\qquad \varepsilon_{ij}\sim N(0,\sigma^2)\ \text{且各 }\varepsilon_{ij}\text{ 独立},$$</p>
+<p>$$i=1,2,\dots,n_j,\quad j=1,2,\dots,r.$$</p>
+<p>即第 $j$ 个水平是一个均值为 $\mu_j$、方差同为 $\sigma^2$ 的正态总体。假设检验为</p>
+<p>$$H_0:\mu_1=\mu_2=\cdots=\mu_r \qquad\text{对}\qquad H_1:\mu_1,\mu_2,\dots,\mu_r\ \text{不全相等}.$$</p>
+</div>
+
+<div class="box note"><div class="box-title"><span class="tag">注</span> 三条前提假定，逐条体会</div>
+<ul>
+<li><b>独立性</b>：样本的独立性对方差分析非常重要，是推导分布的基础。</li>
+<li><b>正态性</b>：方差分析依赖于正态性假设。不过经验表明，方差分析检验对正态性的偏离<span class="hl">不太敏感</span>（稳健）。</li>
+<li><b>方差齐性（各组 $\sigma^2$ 相同）</b>：这一条非常重要，因此方差分析之前往往要做方差齐性的诊断。经验法则：<span class="hl">当最大样本标准差不超过最小样本标准差的两倍时，方差分析结果仍然近似正确。</span></li>
+</ul>
+</div>
+
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 单因素方差分析模型（形式二：效应分解）</div>
+<p>引入<span class="term">总平均</span> $\mu$ 与<span class="term">水平效应</span> $\delta_j$，让模型的"基准 + 偏移"结构更清楚。记</p>
+<p>$$\mu=\frac1n\sum_{j=1}^{r}n_j\mu_j,\quad \text{其中 } \sum_{j=1}^{r}n_j=n;\qquad \delta_j=\mu_j-\mu,\ j=1,\dots,r.$$</p>
+<p>由定义可立刻验证一个重要约束（加权效应和为零）：</p>
+<p>$$n_1\delta_1+n_2\delta_2+\cdots+n_r\delta_r=\sum_j n_j(\mu_j-\mu)=\Big(\sum_j n_j\mu_j\Big)-n\mu=n\mu-n\mu=0.$$</p>
+<p>于是模型改写为</p>
+<p>$$X_{ij}=\mu+\delta_j+\varepsilon_{ij},\qquad \varepsilon_{ij}\sim N(0,\sigma^2)\text{ 独立},\quad \sum_{j=1}^{r}n_j\delta_j=0.$$</p>
+<p>原假设等价地写成</p>
+<p>$$H_0:\delta_1=\delta_2=\cdots=\delta_r=0 \qquad\text{对}\qquad H_1:\delta_1,\dots,\delta_r\ \text{不全为零}.$$</p>
+</div>
+
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 为什么要引入效应 $\delta_j$？</div>
+<p>$\mu$ 是"大家共有的基准水平"，$\delta_j$ 是"第 $j$ 个水平偏离基准的特有效应"。原假设"均值都相等"就翻译成"所有特有效应都为零"——即因素根本没起作用，所有差异都只是随机噪声。这个写法让"因素效应"和"随机误差"在模型里各占一项，为下一节的平方和分解埋下伏笔。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 平方和分解 ===================== -->
+<h2 id="anova-ss"><span class="secnum">9.2</span>平方和分解</h2>
+
+<h3 id="anova-ss-def">三个偏差平方和</h3>
+<p>先约定两类平均（"$\bullet$"表示对该下标求平均）：</p>
+<p>$$\bar X=\frac1n\sum_{j=1}^{r}\sum_{i=1}^{n_j}X_{ij}\quad(\text{总平均}),\qquad \bar X_{\bullet j}=\frac1{n_j}\sum_{i=1}^{n_j}X_{ij}\quad(\text{第 }j\text{ 组组内平均}).$$</p>
+
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 总 / 效应 / 误差 偏差平方和</div>
+<p>$$\text{总偏差平方和}\quad S_T=\sum_{j=1}^{r}\sum_{i=1}^{n_j}\big(X_{ij}-\bar X\big)^2,$$</p>
+<p>$$\text{效应平方和（组间）}\quad S_A=\sum_{j=1}^{r}n_j\big(\bar X_{\bullet j}-\bar X\big)^2=\sum_{j=1}^{r}n_j\bar X_{\bullet j}^2-n\bar X^2,$$</p>
+<p>$$\text{误差平方和（组内）}\quad S_E=\sum_{j=1}^{r}\sum_{i=1}^{n_j}\big(X_{ij}-\bar X_{\bullet j}\big)^2.$$</p>
+<ul>
+<li>$S_A$ 描述了由<b>不同水平</b>引起的差异（各组均值相对总均值的离散程度）；</li>
+<li>$S_E$ 描述了由<b>随机误差</b>引起的差异（每个数据相对其所在组均值的离散程度）。</li>
+</ul>
+</div>
+
+<h3 id="anova-ss-proof">分解恒等式 $S_T=S_A+S_E$</h3>
+
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> 平方和分解</div>
+<p>$$S_T=S_A+S_E=\sum_{j=1}^{r}n_j\big(\bar X_{\bullet j}-\bar X\big)^2+\sum_{j=1}^{r}\sum_{i=1}^{n_j}\big(X_{ij}-\bar X_{\bullet j}\big)^2.$$</p>
+</div>
+
+<div class="box proof"><div class="box-title"><span class="tag">证明</span> 关键在于交叉项为零</div>
+<p>在每个 $X_{ij}-\bar X$ 中"加一项减一项"插入组内均值 $\bar X_{\bullet j}$，再展开平方：</p>
+<p>$$S_T=\sum_{j=1}^{r}\sum_{i=1}^{n_j}\big(X_{ij}-\bar X\big)^2=\sum_{j}\sum_{i}\Big[(X_{ij}-\bar X_{\bullet j})+(\bar X_{\bullet j}-\bar X)\Big]^2$$</p>
+<p>$$=\underbrace{\sum_{j}\sum_{i}(X_{ij}-\bar X_{\bullet j})^2}_{=S_E}+\underbrace{\sum_{j}\sum_{i}(\bar X_{\bullet j}-\bar X)^2}_{=S_A}+2\underbrace{\sum_{j}\sum_{i}(X_{ij}-\bar X_{\bullet j})(\bar X_{\bullet j}-\bar X)}_{=\,0}.$$</p>
+<p>中间项中 $\sum_i(\bar X_{\bullet j}-\bar X)^2=n_j(\bar X_{\bullet j}-\bar X)^2$，求和即 $S_A$。关键是交叉项为零：固定 $j$ 时 $(\bar X_{\bullet j}-\bar X)$ 是常数，可提到内层求和外面，而</p>
+<p>$$\sum_{j=1}^{r}\sum_{i=1}^{n_j}\big(X_{ij}-\bar X_{\bullet j}\big)\big(\bar X_{\bullet j}-\bar X\big)=\sum_{j=1}^{r}\big(\bar X_{\bullet j}-\bar X\big)\underbrace{\sum_{i=1}^{n_j}\big(X_{ij}-\bar X_{\bullet j}\big)}_{=\,n_j\bar X_{\bullet j}-n_j\bar X_{\bullet j}=0}=0.$$</p>
+<p>内层和为零是因为<span class="hl">数据对其自身组均值的偏差之和恒为零</span>。故 $S_T=S_A+S_E$。<span class="qed">∎</span></p>
+</div>
+
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 自由度从哪来？</div>
+<p>把每个平方和看成"若干个互相约束的偏差的平方和"，<b>自由度 = 数据个数 − 线性约束个数</b>：</p>
+<ul>
+<li>$S_T$：$n$ 个偏差 $X_{ij}-\bar X$，受一个约束（它们之和为 0），故自由度 $n-1$。</li>
+<li>$S_A$：$r$ 个组均值偏差 $\bar X_{\bullet j}-\bar X$，受一个约束（加权和为 0），故自由度 $r-1$。</li>
+<li>$S_E$：每组内 $n_j$ 个偏差受 1 个约束，每组贡献 $n_j-1$，合计 $\sum_j(n_j-1)=n-r$。</li>
+</ul>
+<p>正好 $(n-1)=(r-1)+(n-r)$，自由度也满足分解——这绝非巧合，是 Cochran 定理的体现。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 平方和的期望 ===================== -->
+<h2 id="anova-exp"><span class="secnum">9.3</span>平方和的期望</h2>
+
+<p>要判断 $S_A$ 与 $S_E$ 的相对大小是否"异常"，需先知道它们的期望——这能告诉我们"在 $H_0$ 下它们各自该多大"。</p>
+
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> 三个平方和的期望</div>
+<p>$$E(S_T)=\sum_{j=1}^{r}n_j\delta_j^2+(n-1)\sigma^2,\quad E(S_A)=\sum_{j=1}^{r}n_j\delta_j^2+(r-1)\sigma^2,\quad E(S_E)=(n-r)\sigma^2.$$</p>
+</div>
+
+<details class="derive"><summary>展开 $E(S_T)$ 的完整推导</summary>
+<div>
+<p>把 $S_T$ 写成"平方和减去 $n\bar X^2$"的形式（与样本方差同样的技巧）：</p>
+<p>$$E(S_T)=E\Big[\sum_{j}\sum_{i}(X_{ij}-\bar X)^2\Big]=E\Big[\sum_{j}\sum_{i}X_{ij}^2-n\bar X^2\Big]=\sum_{j}\sum_{i}E(X_{ij}^2)-nE(\bar X^2).$$</p>
+<p>由 $X_{ij}=\mu+\delta_j+\varepsilon_{ij}$，$E(X_{ij})=\mu+\delta_j$，$D(X_{ij})=\sigma^2$，所以</p>
+<p>$$E(X_{ij}^2)=D(X_{ij})+[E(X_{ij})]^2=\sigma^2+(\mu+\delta_j)^2.$$</p>
+<p>又 $\bar X$ 是 $n$ 个独立观测的平均，$E(\bar X)=\frac1n\sum_j n_j(\mu+\delta_j)=\mu$（因 $\sum_j n_j\delta_j=0$），$D(\bar X)=\sigma^2/n$，故 $E(\bar X^2)=\sigma^2/n+\mu^2$。代入：</p>
+<p>$$E(S_T)=\sum_{j}\sum_{i}\big[\sigma^2+(\mu+\delta_j)^2\big]-n\Big[\tfrac{\sigma^2}{n}+\mu^2\Big]$$</p>
+<p>$$=n\sigma^2+\sum_{j}n_j(\mu+\delta_j)^2-\sigma^2-n\mu^2.$$</p>
+<p>展开 $\sum_j n_j(\mu+\delta_j)^2=n\mu^2+2\mu\sum_j n_j\delta_j+\sum_j n_j\delta_j^2=n\mu^2+0+\sum_j n_j\delta_j^2$，于是</p>
+<p>$$E(S_T)=n\sigma^2+n\mu^2+\sum_{j}n_j\delta_j^2-\sigma^2-n\mu^2=\sum_{j}n_j\delta_j^2+(n-1)\sigma^2.$$</p>
+</div>
+</details>
+
+<div class="box proof"><div class="box-title"><span class="tag">证明</span> $E(S_E)$ 与 $E(S_A)$</div>
+<p><b>$E(S_E)$：</b>固定第 $j$ 组，$\sum_{i=1}^{n_j}(X_{ij}-\bar X_{\bullet j})^2$ 正是这组 $n_j$ 个同分布正态变量的"样本离差平方和"，其期望为 $(n_j-1)\sigma^2$。对各组求和：</p>
+<p>$$E(S_E)=\sum_{j=1}^{r}E\Big[\sum_{i=1}^{n_j}(X_{ij}-\bar X_{\bullet j})^2\Big]=\sum_{j=1}^{r}(n_j-1)\sigma^2=(n-r)\sigma^2.$$</p>
+<p><b>$E(S_A)$：</b>由分解 $S_A=S_T-S_E$，取期望相减：</p>
+<p>$$E(S_A)=E(S_T)-E(S_E)=\Big[\sum_j n_j\delta_j^2+(n-1)\sigma^2\Big]-(n-r)\sigma^2=\sum_{j}n_j\delta_j^2+(r-1)\sigma^2.\quad$$<span class="qed">∎</span></p>
+</div>
+
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 期望式直接告诉我们用什么检验</div>
+<p>把期望除以各自自由度，得到<span class="term">均方（mean square）</span>的期望：</p>
+<p>$$E\Big(\frac{S_E}{n-r}\Big)=\sigma^2,\qquad E\Big(\frac{S_A}{r-1}\Big)=\sigma^2+\frac{1}{r-1}\sum_{j}n_j\delta_j^2.$$</p>
+<ul>
+<li>$\dfrac{S_E}{n-r}$ <b>无论 $H_0$ 真假</b>都是 $\sigma^2$ 的无偏估计——它只反映纯随机误差，是"参照基准"。</li>
+<li>$\dfrac{S_A}{r-1}$ 在 $H_0$（所有 $\delta_j=0$）下也等于 $\sigma^2$；但若 $H_0$ 不真，多出一项 $\frac{1}{r-1}\sum n_j\delta_j^2>0$，会被<b>放大</b>。</li>
+</ul>
+<p>所以只要看比值 $F=\dfrac{S_A/(r-1)}{S_E/(n-r)}$ 是否显著大于 1，就能判断因素是否起作用。这就是 $F$ 检验的思想来源。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 平方和的分布 ===================== -->
+<h2 id="anova-dist"><span class="secnum">9.4</span>平方和的分布与独立性</h2>
+
+<p>有了期望还不够——要做检验必须知道分布。下面给出三个关键结论及其依据。</p>
+
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> 卡方分布与独立性</div>
+<p>在前述模型下：</p>
+<ol>
+<li>$\dfrac{S_E}{\sigma^2}\sim\chi^2(n-r)$（恒成立，不需要 $H_0$）；</li>
+<li>当 $H_0$ 为真时，$\dfrac{S_T}{\sigma^2}\sim\chi^2(n-1)$，$\dfrac{S_A}{\sigma^2}\sim\chi^2(r-1)$；</li>
+<li>$S_A$ 与 $S_E$ <b>相互独立</b>。</li>
+</ol>
+</div>
+
+<div class="box proof"><div class="box-title"><span class="tag">证明</span> 逐条说明</div>
+<p><b>(1) $S_E$ 的分布：</b>记 $S_E^j=\sum_{i=1}^{n_j}(X_{ij}-\bar X_{\bullet j})^2$，则 $S_E=\sum_{j=1}^{r}S_E^j$。每一组内部是 $n_j$ 个独立同分布 $N(\mu_j,\sigma^2)$ 样本，由抽样分布基本定理知 $S_E^j/\sigma^2\sim\chi^2(n_j-1)$，且各组相互独立。由<span class="hl">卡方分布的可加性</span>：</p>
+<p>$$\frac{S_E}{\sigma^2}=\sum_{j=1}^{r}\frac{S_E^j}{\sigma^2}\sim\chi^2\Big(\sum_{j}(n_j-1)\Big)=\chi^2(n-r).$$</p>
+<p>注意这一步<b>不依赖 $H_0$</b>，因为组内离差与各组均值 $\mu_j$ 无关。</p>
+<p><b>(2) $S_T$、$S_A$ 的分布（在 $H_0$ 下）：</b>当 $H_0$ 为真，所有 $\mu_j=\mu$，则全部 $n$ 个数据 $X_{ij}$ 是来自同一个 $N(\mu,\sigma^2)$ 的独立样本，故 $S_T/\sigma^2=\sum(X_{ij}-\bar X)^2/\sigma^2\sim\chi^2(n-1)$。进一步可证 $S_A=\sum_j n_j\bar X_{\bullet j}^2-n\bar X^2$ 满足 $S_A/\sigma^2\sim\chi^2(r-1)$。</p>
+<p><b>(3) 独立性：</b>注意到 $S_A$ 完全由各组均值 $\{\bar X_{\bullet j}\}$ 决定，而 $S_E$ 由组内离差决定。由正态总体中"样本均值与样本离差独立"的性质，可证 $S_A$ 与 $S_E$ 相互独立。<span class="qed">∎</span></p>
+</div>
+
+<div class="box example"><div class="box-title"><span class="tag">例题</span> 复习：用正交变换证 $(n-1)S^2/\sigma^2\sim\chi^2(n-1)$</div>
+<p>设总体 $X\sim N(\mu,\sigma^2)$，$\mu,\sigma^2$ 已知，$(X_1,\dots,X_n)$ 为样本，$\bar X=\frac1n\sum_i X_i$，$S^2=\frac1{n-1}\sum_i(X_i-\bar X)^2$。求 (1) $\bar X$ 与 $S^2$ 是否独立；(2) $(n-1)S^2/\sigma^2$ 的分布。</p>
+<ol class="steps">
+<li><b>构造正交矩阵。</b>取 $\boldsymbol Y=A\boldsymbol X$，其中 $A$ 的第一行为 $\big(\tfrac1{\sqrt n},\dots,\tfrac1{\sqrt n}\big)$，其余各行为相互正交的单位向量（Helmert 矩阵）。$A$ 为正交矩阵。</li>
+<li><b>化简离差平方和。</b>由正交性 $\sum_i Y_i^2=\sum_i X_i^2$，且 $Y_1=\sqrt n\,\bar X$，可得 $(n-1)S^2=\sum_i X_i^2-n\bar X^2=\sum_{i=2}^{n}Y_i^2$。</li>
+<li><b>判定独立性。</b>因 $A$ 正交，$Y_1=\sqrt n\,\bar X$ 与 $Y_i\ (i\ge2)$ 不相关；又同为正态分布，故相互独立。于是 $\bar X$（即 $Y_1$）与 $(n-1)S^2$（即 $\sum_{i\ge2}Y_i^2$）独立。</li>
+<li><b>得到分布。</b>对 $i\ge2$，$Y_i\sim N(0,\sigma^2)$ 且相互独立，故 $\sum_{i=2}^n Y_i^2/\sigma^2$ 是 $n-1$ 个独立标准正态平方和，即 $(n-1)S^2/\sigma^2\sim\chi^2(n-1)$。</li>
+</ol>
+<p class="muted">$S_A\sim\chi^2(r-1)$ 的证明可类似地构造一个矩阵 $A$（令 $Y_{rj}=\sum_i A^j_{ri}X_{ij}$）来完成。</p>
+</div>
+
+<h3 id="anova-cochran">Cochran 定理</h3>
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> Cochran 定理</div>
+<p>设 $X_1,X_2,\dots,X_n$ 为 $n$ 个独立标准正态随机变量，则 $Q=\sum_{i=1}^{n}X_i^2\sim\chi^2(n)$。设 $Q=Q_1+Q_2+\cdots+Q_k$，其中 $Q_i$ 是某些随机变量 $\{Y_j\}$ 的平方和，且这些 $Y_j$ 是 $\{X_i\}$ 的线性组合。设 $Q_i$ 的自由度为 $f_i$，则 <span class="hl">$Q_i$ 相互独立且各 $Q_i\sim\chi^2(f_i)$ 的充要条件为 $\sum_{i=1}^{k}f_i=n$</span>。</p>
+</div>
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> Cochran 定理是分布结论的"总开关"</div>
+<p>方差分析里 $\dfrac{S_T}{\sigma^2}=\dfrac{S_A}{\sigma^2}+\dfrac{S_E}{\sigma^2}$，自由度 $(n-1)=(r-1)+(n-r)$ 恰好相加等于总自由度。Cochran 定理一举保证：两部分各自服从相应卡方分布<b>且相互独立</b>。这就是为什么"自由度能相加"如此重要——它是独立性的充要条件。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== F 检验 ===================== -->
+<h2 id="anova-F"><span class="secnum">9.5</span>F 检验与方差分析表</h2>
+
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> 单因素方差分析的 F 检验</div>
+<p>由上一节：(1) $\dfrac{S_E}{\sigma^2}\sim\chi^2(n-r)$；(2) 当 $H_0$ 为真时 $\dfrac{S_A}{\sigma^2}\sim\chi^2(r-1)$，且 $S_A$ 与 $S_E$ 相互独立。由 $F$ 分布的定义（两个独立卡方各除以自由度之比），当 $H_0$ 为真时：</p>
+<p>$$F=\frac{S_A/(r-1)}{S_E/(n-r)}=\frac{\sigma^2\cdot\chi^2(r-1)/(r-1)}{\sigma^2\cdot\chi^2(n-r)/(n-r)}\sim F(r-1,\,n-r).$$</p>
+<p class="conclusion">给定显著性水平 $\alpha$，拒绝域为 $W=\{F>F_\alpha(r-1,\,n-r)\}$。$F$ 越大越倾向于拒绝 $H_0$（认为各水平均值有显著差异）。</p>
+</div>
+
+<div class="box note"><div class="box-title"><span class="tag">注</span> 单因素方差分析表（模板）</div>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>方差来源</th><th>平方和</th><th>自由度</th><th>均方</th><th>F 比</th></tr></thead>
+<tbody>
+<tr><td>因素 A（组间）</td><td>$S_A$</td><td>$r-1$</td><td>$MS_A=\dfrac{S_A}{r-1}$</td><td rowspan="2" style="vertical-align:middle">$F=\dfrac{MS_A}{MS_E}$</td></tr>
+<tr><td>误差（组内）</td><td>$S_E$</td><td>$n-r$</td><td>$MS_E=\dfrac{S_E}{n-r}$</td></tr>
+<tr><td>总和</td><td>$S_T$</td><td>$n-1$</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h3 id="anova-ex">例题：五种治疗麻疹的药</h3>
+<div class="box example"><div class="box-title"><span class="tag">例题</span> 比较 5 种药的疗效（$\alpha=0.05$）</div>
+<p>有 5 种治疗荨麻疹的药，要比较它们的疗效。将 30 个病人随机分成 5 组，每组 6 人，令同组病人使用一种药，记录从用药到痊愈所需天数 $x$：</p>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>药物类型</th><th colspan="6">痊愈所需天数 $x$</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>5</td><td>8</td><td>7</td><td>7</td><td>10</td><td>8</td></tr>
+<tr><td>2</td><td>4</td><td>6</td><td>6</td><td>3</td><td>5</td><td>6</td></tr>
+<tr><td>3</td><td>6</td><td>4</td><td>4</td><td>5</td><td>4</td><td>3</td></tr>
+<tr><td>4</td><td>7</td><td>4</td><td>6</td><td>6</td><td>3</td><td>5</td></tr>
+<tr><td>5</td><td>9</td><td>3</td><td>5</td><td>7</td><td>7</td><td>6</td></tr>
+</tbody>
+</table>
+</div>
+<p>此处 $r=5$（5 个水平），每组 $n_j=6$，总样本 $n=30$。</p>
+<ol class="steps">
+<li><b>明确假设。</b>$H_0:\mu_1=\cdots=\mu_5$（5 种药疗效相同）对 $H_1$：不全相等。</li>
+<li><b>计算各组均值与总均值。</b>分别对每行求和除以 6 得 $\bar X_{\bullet j}$，再对全部 30 个数据求总均值 $\bar X$。（组 1 的痊愈天数明显偏大，是差异的主要来源。）</li>
+<li><b>算效应平方和 $S_A$。</b>$S_A=\sum_{j=1}^{5}6\,(\bar X_{\bullet j}-\bar X)^2=36.467$，自由度 $r-1=4$，均方 $MS_A=36.467/4=9.117$。</li>
+<li><b>算误差平方和 $S_E$。</b>$S_E=\sum_j\sum_i(X_{ij}-\bar X_{\bullet j})^2=58.500$，自由度 $n-r=25$，均方 $MS_E=58.500/25=2.334$。</li>
+<li><b>验证总和。</b>$S_T=S_A+S_E=36.467+58.500=94.967$，自由度 $n-1=29$。✔</li>
+<li><b>算 F 比。</b>$F=\dfrac{MS_A}{MS_E}=\dfrac{9.117}{2.334}=3.90$。</li>
+<li><b>查表判定。</b>查 $F_{0.05}(4,25)=2.76$。因 $F=3.90>2.76$，落入拒绝域。</li>
+</ol>
+<p>方差分析表如下：</p>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>方差来源</th><th>平方和</th><th>自由度</th><th>均方</th><th>F 比</th></tr></thead>
+<tbody>
+<tr><td>因素 A</td><td>36.467</td><td>4</td><td>9.117</td><td rowspan="2" style="vertical-align:middle">3.90</td></tr>
+<tr><td>误差</td><td>58.500</td><td>25</td><td>2.334</td></tr>
+<tr><td>总和</td><td>94.967</td><td>29</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p class="conclusion">因为 $F=3.90>F_{0.05}(4,25)=2.76$，拒绝 $H_0$，认为 <b>5 种药的疗效有显著差异</b>。</p>
+</div>
+
+<div class="box pitfall"><div class="box-title"><span class="tag">易错</span> 方差分析的三个常见坑</div>
+<ul>
+<li><b>查表自由度别写反。</b>$F_\alpha(r-1,\,n-r)$：第一自由度（分子）是 $r-1$，第二（分母）是 $n-r$，顺序不能颠倒。</li>
+<li><b>$F$ 检验只回答"有没有差异"，不回答"谁和谁不同"。</b>拒绝 $H_0$ 后若要找出具体哪些水平不同，需做多重比较。</li>
+<li><b>均方不是平方和。</b>$F$ 比是<span class="hl">均方之比</span>（平方和÷自由度），不是平方和之比，务必先除自由度。</li>
+</ul>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 回归背景 ===================== -->
+<h2 id="reg-bg"><span class="secnum">9.6</span>回归分析：背景</h2>
+<p>变量之间的关系并不总是确定的函数关系，而常表现为带随机性的一种<span class="term">"趋势"</span>。即对自变量 $x$ 的同一取值，因变量 $Y$ 在不同观测中可取不同值，且取值是随机的，但落在某一范围内；对 $Y$ 反复观测，可以看到 $Y$ 随 $x$ 变化呈现的趋势性变化。</p>
+<div class="box note"><div class="box-title"><span class="tag">注</span> 两个例子</div>
+<ul>
+<li><b>身高与体重</b>：不存在用身高精确算出体重的函数；但统计意义上，身高者体重也偏重（趋势）。</li>
+<li><b>父子身高</b>：父亲身高与儿子身高有联系，通常父亲高、儿子也高，但并非一一对应。</li>
+</ul>
+</div>
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 回归 = 确定性趋势 + 随机扰动</div>
+<p>回归分析的基本世界观：$Y=$（关于 $x$ 的确定性函数，描述趋势）$+$（随机误差，描述个体偏离趋势的随机性）。我们的目标是从含噪数据中把那条"趋势线"找出来。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 一元线性回归模型 ===================== -->
+<h2 id="reg-model"><span class="secnum">9.7</span>一元线性回归模型</h2>
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 一元线性回归模型</div>
+<p>对 $x$ 的一组不全相同的值，得到样本 $(x_1,Y_1),(x_2,Y_2),\dots,(x_n,Y_n)$，一元线性回归模型为</p>
+<p>$$\begin{cases}Y_i=\alpha+\beta x_i+\varepsilon_i,& i=1,2,\dots,n,\\[2pt] \varepsilon_i\sim N(0,\sigma^2),\ \text{且相互独立},\\[2pt] \alpha,\beta\ (\text{回归系数}),\ \sigma^2\ \text{未知}.\end{cases}$$</p>
+<p>在此设定下 $y_i$（即 $Y_i$）也相互独立，服从正态分布 $N(\alpha+\beta x_i,\ \sigma^2)$。由样本可给出未知参数 $\alpha,\beta$ 的点估计 $\hat\alpha,\hat\beta$，称</p>
+<p>$$\hat y=\hat\alpha+\hat\beta x$$</p>
+<p>为 $y$ 关于 $x$ 的<span class="term">一元线性回归方程</span>。</p>
+</div>
+<div class="box pitfall"><div class="box-title"><span class="tag">易错</span> $x$ 不是随机变量</div>
+<p>在这个模型里 $x_i$ 被当作<b>已知的、固定的</b>设计点（不带随机性），随机性全在误差 $\varepsilon_i$ 上，因此 $Y_i$ 才随机。这与"两个随机变量的相关分析"角度不同，做推导时要牢记 $x_i$、$\bar x$、$s_{xx}$ 都是常数。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 最小二乘法 ===================== -->
+<h2 id="reg-lse"><span class="secnum">9.8</span>最小二乘法估计 $\hat\alpha,\hat\beta$</h2>
+
+<h3 id="reg-normal-eq">从偏差平方和到正规方程</h3>
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 最小二乘准则</div>
+<p>样本取值 $(x_1,y_1),\dots,(x_n,y_n)$，模型给出的预测 $\hat y_i=\hat\alpha+\hat\beta x_i$。定义<span class="term">偏差平方和（残差平方和）</span></p>
+<p>$$Q(\alpha,\beta)=\sum_{i=1}^{n}(y_i-\alpha-\beta x_i)^2.$$</p>
+<p>最小二乘估计 $\hat\alpha,\hat\beta$ 由最小化过程 $Q(\hat\alpha,\hat\beta)=\min_{\alpha,\beta}Q(\alpha,\beta)$ 决定。</p>
+</div>
+
+<div class="box proof"><div class="box-title"><span class="tag">证明</span> 求导得正规方程并解出估计</div>
+<p>$Q$ 是 $(\alpha,\beta)$ 的二次函数（开口向上），最小值在偏导为零处取得。分别对 $\alpha,\beta$ 求偏导并令其为零：</p>
+<p>$$\frac{\partial Q}{\partial\alpha}=-2\sum_{i=1}^{n}(y_i-\alpha-\beta x_i)=0,\qquad \frac{\partial Q}{\partial\beta}=-2\sum_{i=1}^{n}(y_i-\alpha-\beta x_i)x_i=0.$$</p>
+<p>整理得<span class="term">正规方程组（normal equations）</span>：</p>
+<p>$$\begin{cases} n\alpha+\Big(\sum_{i=1}^{n}x_i\Big)\beta=\sum_{i=1}^{n}y_i,\\[4pt] \Big(\sum_{i=1}^{n}x_i\Big)\alpha+\Big(\sum_{i=1}^{n}x_i^2\Big)\beta=\sum_{i=1}^{n}x_iy_i.\end{cases}$$</p>
+<p>引入记号 $\displaystyle\bar y=\frac1n\sum_i y_i,\ \bar x=\frac1n\sum_i x_i$，以及三个"离差积/平方和"：</p>
+<p>$$s_{xx}=\sum_i(x_i-\bar x)^2,\quad s_{xy}=\sum_i(x_i-\bar x)(y_i-\bar y),\quad s_{yy}=\sum_i(y_i-\bar y)^2.$$</p>
+<p>把正规方程组两式分别除以 $n$，利用 $\frac1n\sum x_i=\bar x$、$\frac1n\sum y_i=\bar y$、$\frac1n\sum x_iy_i=\overline{xy}$、$\frac1n\sum x_i^2=\overline{x^2}$，得</p>
+<p>$$\hat\alpha+\bar x\,\hat\beta=\bar y,\qquad \bar x\,\hat\alpha+\overline{x^2}\,\hat\beta=\overline{xy}.$$</p>
+<p>用第一式 $\hat\alpha=\bar y-\bar x\hat\beta$ 代入第二式，并利用恒等式 $s_{xx}/n=\overline{x^2}-(\bar x)^2$ 与 $s_{xy}/n=\overline{xy}-\bar x\cdot\bar y$，可化简为</p>
+<p>$$\hat\alpha+\bar x\,\hat\beta=\bar y,\qquad s_{xx}\,\hat\beta=s_{xy}.$$</p>
+<p class="conclusion">$\hat\beta=\dfrac{s_{xy}}{s_{xx}},\qquad \hat\alpha=\bar y-\bar x\,\hat\beta.$ <span class="qed">∎</span></p>
+</div>
+
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 几何与统计两重含义</div>
+<ul>
+<li><b>几何上</b>：最小二乘就是找一条直线，使所有数据点到直线的<b>竖直距离</b>的平方和最小（注意是竖直方向 $y$，不是垂直距离）。正规方程第一式 $\hat\alpha+\bar x\hat\beta=\bar y$ 说明<span class="hl">回归直线必过样本中心 $(\bar x,\bar y)$</span>。</li>
+<li><b>统计上</b>：$\hat\beta=s_{xy}/s_{xx}=\dfrac{\operatorname{Cov}(x,y)\text{ 的样本类比}}{\operatorname{Var}(x)\text{ 的样本类比}}$，斜率就是"$x,y$ 协同变动量"除以"$x$ 自身变动量"，与协方差/方差的结构一致。</li>
+</ul>
+</div>
+
+<h3 id="reg-unbias">无偏性与方差</h3>
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> $\hat\alpha,\hat\beta$ 的无偏性与分布</div>
+<p>$$E(\hat\beta)=\beta,\quad E(\hat\alpha)=\alpha;\qquad \hat\beta\sim N\Big(\beta,\ \frac{\sigma^2}{s_{xx}}\Big),\quad \hat\alpha\sim N\Big(\alpha,\ \Big(\frac1n+\frac{\bar x^2}{s_{xx}}\Big)\sigma^2\Big).$$</p>
+</div>
+
+<div class="box proof"><div class="box-title"><span class="tag">证明</span> 把 $\hat\beta$ 写成 $Y_i$ 的线性组合</div>
+<p>关键恒等式：因 $\sum_i(x_i-\bar x)=0$，所以 $s_{xy}=\sum_i(x_i-\bar x)(Y_i-\bar Y)=\sum_i(x_i-\bar x)Y_i$（减 $\bar Y$ 的项消失）。于是</p>
+<p>$$\hat\beta=\frac{s_{xy}}{s_{xx}}=\frac{\sum_i(x_i-\bar x)Y_i}{s_{xx}}\quad\text{是 }Y_i\text{ 的线性组合}.$$</p>
+<p><b>无偏性（$\hat\beta$）：</b>代入 $E(Y_i)=\alpha+\beta x_i$：</p>
+<p>$$E(\hat\beta)=\frac{\sum_i(x_i-\bar x)E(Y_i)}{s_{xx}}=\frac{\sum_i(x_i-\bar x)(\alpha+\beta x_i)}{s_{xx}}=\frac{\alpha\sum_i(x_i-\bar x)+\beta\sum_i(x_i-\bar x)x_i}{s_{xx}}.$$</p>
+<p>第一项 $\sum(x_i-\bar x)=0$；第二项 $\sum(x_i-\bar x)x_i=\sum(x_i-\bar x)^2=s_{xx}$（同样因为减 $\bar x$ 的项消失）。故 $E(\hat\beta)=\beta$。</p>
+<p><b>无偏性（$\hat\alpha$）：</b>$E(\hat\alpha)=E(\bar Y-\bar x\hat\beta)=E(\bar Y)-\bar x E(\hat\beta)=(\alpha+\beta\bar x)-\bar x\beta=\alpha$。</p>
+<p><b>方差（$\hat\beta$）：</b>各 $Y_i$ 独立、$D(Y_i)=\sigma^2$，对线性组合求方差（系数平方加权）：</p>
+<p>$$D(\hat\beta)=D\Big(\frac1{s_{xx}}\sum_i(x_i-\bar x)Y_i\Big)=\frac1{s_{xx}^2}\sum_i(x_i-\bar x)^2 D(Y_i)=\frac{s_{xx}}{s_{xx}^2}\sigma^2=\frac{\sigma^2}{s_{xx}}.$$</p>
+<p><b>方差（$\hat\alpha$）：</b>把 $\hat\alpha=\bar Y-\bar x\hat\beta$ 写成 $Y_i$ 的线性组合，$\hat\alpha=\sum_i\big(\frac1n-\bar x\frac{x_i-\bar x}{s_{xx}}\big)Y_i$，于是</p>
+<p>$$D(\hat\alpha)=\sum_i\Big(\frac1n-\bar x\frac{x_i-\bar x}{s_{xx}}\Big)^2\sigma^2=\Big(\frac1n+\frac{\bar x^2}{s_{xx}}\Big)\sigma^2.$$</p>
+<p>（交叉项 $-\frac{2\bar x}{n\,s_{xx}}\sum_i(x_i-\bar x)=0$。）因 $\hat\alpha,\hat\beta$ 都是独立正态变量的线性组合，故仍为正态分布，得证。<span class="qed">∎</span></p>
+</div>
+
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> $s_{xx}$ 越大，斜率估得越准</div>
+<p>$D(\hat\beta)=\sigma^2/s_{xx}$：自变量 $x$ 取值越"分散"（$s_{xx}$ 大），杠杆越长，斜率估计越稳定。这提示实验设计时应让 $x$ 拉开取值范围。$\hat\alpha$ 的方差里有 $\bar x^2/s_{xx}$ 一项：若 $\bar x$ 离原点很远，截距估计会变得不稳定。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 残差 ===================== -->
+<h2 id="reg-residual"><span class="secnum">9.9</span>残差与误差方差 $\sigma^2$ 的估计</h2>
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 残差</div>
+<p>记 $e_i=y_i-\hat y_i$，称 $e_i$ 为<span class="term">残差</span>。残差可看成不可观测的误差 $\varepsilon_i$ 的估计。采用残差平方和 $\sum_{i=1}^n(y_i-\hat y_i)^2$ 构造 $\sigma^2$ 的估计：</p>
+<p>$$s^2=\frac{1}{n-2}\sum_{i=1}^{n}(y_i-\hat y_i)^2=\frac{1}{n-2}\sum_{i=1}^{n}(y_i-\hat\alpha-\hat\beta x_i)^2.$$</p>
+<p>代入 $\hat\alpha=\bar y-\bar x\hat\beta$ 整理（$y_i-\hat\alpha-\hat\beta x_i=(y_i-\bar y)-\hat\beta(x_i-\bar x)$）：</p>
+<p>$$s^2=\frac{1}{n-2}\sum_{i=1}^{n}\big[(y_i-\bar y)-\hat\beta(x_i-\bar x)\big]^2=\frac{s_{yy}-\hat\beta s_{xy}}{n-2}.$$</p>
+</div>
+<div class="box note"><div class="box-title"><span class="tag">注</span> 为什么分母是 $n-2$？</div>
+<p>残差里估计了<b>两个</b>参数 $\hat\alpha,\hat\beta$，相当于用掉两个自由度，故残差平方和的自由度为 $n-2$。除以 $n-2$ 才能保证 $s^2$ 无偏。</p>
+</div>
+
+<div class="box proof"><div class="box-title"><span class="tag">证明</span> $s^2$ 是 $\sigma^2$ 的无偏估计</div>
+<p>残差平方和 $=s_{yy}-\hat\beta s_{xy}$，只需求 $E(s_{yy})$ 与 $E(\hat\beta s_{xy})$。</p>
+<p><b>先算 $E(s_{yy})$：</b>$s_{yy}=\sum_i(Y_i-\bar Y)^2=\sum_i Y_i^2-n\bar Y^2$，取期望 $E(s_{yy})=\sum_iE(Y_i^2)-nE(\bar Y^2)$。其中 $E(Y_i^2)=D(Y_i)+[E(Y_i)]^2=\sigma^2+(\alpha+\beta x_i)^2$。对 $\bar Y$：</p>
+<p>$$nE(\bar Y^2)=\frac1n\sum_{i,j}E(Y_iY_j)=\frac1n\sum_{i,j}E\big[(\alpha+\beta x_i+\varepsilon_i)(\alpha+\beta x_j+\varepsilon_j)\big].$$</p>
+<p>当 $i\ne j$，$E(\varepsilon_i\varepsilon_j)=0$；当 $i=j$，$E(\varepsilon_i^2)=\sigma^2$。合并得</p>
+<p>$$E(s_{yy})=n\sigma^2+\sum_i(\alpha+\beta x_i)^2-\frac1n\sum_{i,j}(\alpha+\beta x_i)(\alpha+\beta x_j)-\frac1n\sum_{i,j}E(\varepsilon_i\varepsilon_j)=(n-1)\sigma^2+\beta^2 s_{xx}.$$</p>
+<p>（确定性部分 $\sum_i(\alpha+\beta x_i)^2-\frac1n(\sum_i(\alpha+\beta x_i))^2=\beta^2 s_{xx}$，正是它们的离差平方和；误差项贡献 $n\sigma^2-\frac1n\cdot n\sigma^2=(n-1)\sigma^2$。）</p>
+<p><b>再算 $E(\hat\beta s_{xy})$：</b>注意 $s_{xy}=s_{xx}\hat\beta$，故 $\hat\beta s_{xy}=s_{xx}\hat\beta^2$，</p>
+<p>$$E(\hat\beta s_{xy})=s_{xx}E(\hat\beta^2)=s_{xx}\big[D(\hat\beta)+(E\hat\beta)^2\big]=s_{xx}\Big(\frac{\sigma^2}{s_{xx}}+\beta^2\Big)=\sigma^2+\beta^2 s_{xx}.$$</p>
+<p><b>相减：</b></p>
+<p>$$E\Big[\sum_i(Y_i-\hat Y_i)^2\Big]=E(s_{yy})-E(\hat\beta s_{xy})=\big[(n-1)\sigma^2+\beta^2 s_{xx}\big]-\big[\sigma^2+\beta^2 s_{xx}\big]=(n-2)\sigma^2.$$</p>
+<p>故 $E(s^2)=\dfrac{(n-2)\sigma^2}{n-2}=\sigma^2$，$s^2$ 是 $\sigma^2$ 的无偏估计。<span class="qed">∎</span></p>
+</div>
+
+<h3 id="reg-mle">极大似然估计</h3>
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> MLE 与 LSE 的关系</div>
+<p>在误差为正态分布的假定下，$\alpha,\beta$ 的最小二乘估计<b>等价于</b>极大似然估计。似然函数</p>
+<p>$$L(\alpha,\beta)=\frac{1}{(2\pi\sigma^2)^{n/2}}\exp\Big\{-\frac{1}{2\sigma^2}\sum_{i=1}^{n}(y_i-\alpha-\beta x_i)^2\Big\}.$$</p>
+<p>对 $L$ 最大化等价于对指数中的 $\sum_{i=1}^{n}(y_i-\alpha-\beta x_i)^2$ 最小化——这正是最小二乘准则。因此<span class="hl">MLE 给出的 $\hat\alpha,\hat\beta$ 与 LSE 完全一致</span>。</p>
+<p>对 $\sigma^2$ 的极大似然估计为</p>
+<p>$$\hat\sigma^2=\frac1n\sum_{i=1}^{n}(y_i-\hat y_i)^2.$$</p>
+</div>
+<div class="box pitfall"><div class="box-title"><span class="tag">易错</span> MLE 的 $\hat\sigma^2$ 是有偏的</div>
+<p>$\hat\sigma^2=\frac1n\sum(y_i-\hat y_i)^2$ 分母是 $n$，<b>不是</b> $\sigma^2$ 的无偏估计（偏小）。无偏估计是分母为 $n-2$ 的 $s^2$。考试中要分清"极大似然估计 $\hat\sigma^2$（÷$n$）"与"无偏估计 $s^2$（÷$n-2$）"。</p>
+</div>
+
+<h3 id="reg-ex">例题：父子身高的回归方程</h3>
+<div class="box example"><div class="box-title"><span class="tag">例题</span> 父子身高十对资料，求 $Y$ 关于 $x$ 的线性回归方程</div>
+<p>父亲身高 $x$ 与儿子身高 $Y$ 的十对资料如下（单位略）：</p>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>父亲身高 $x$</th><td>60</td><td>62</td><td>64</td><td>65</td><td>66</td><td>67</td><td>68</td><td>70</td><td>72</td><td>74</td></tr></thead>
+<tbody>
+<tr><th>儿子身高 $y$</th><td>63.6</td><td>65.2</td><td>66</td><td>65.5</td><td>66.9</td><td>67</td><td>67.4</td><td>68.3</td><td>70.1</td><td>70</td></tr>
+</tbody>
+</table>
+</div>
+<ol class="steps">
+<li><b>算两个均值。</b>$\bar x=66.8$，$\bar y=67.01$。</li>
+<li><b>算辅助和。</b>$\sum_i x_i^2=44794,\quad \sum_i x_iy_i=44842.4$。</li>
+<li><b>算离差平方和与离差积。</b>用 $s_{xx}=\sum x_i^2-n\bar x^2$、$s_{xy}=\sum x_iy_i-n\bar x\bar y$：
+$$s_{xx}=44794-10\times66.8^2=171.6,\qquad s_{xy}=44842.4-10\times66.8\times67.01=79.72.$$</li>
+<li><b>算斜率与截距。</b>$\hat\beta=\dfrac{s_{xy}}{s_{xx}}=\dfrac{79.72}{171.6}=0.4646$，$\hat\alpha=\bar y-\bar x\hat\beta=67.01-66.8\times0.4646=35.9768$。</li>
+<li><b>写出回归方程。</b></li>
+</ol>
+<p class="conclusion">$\hat y=35.9768+0.4646\,x$，也可写成中心化形式 $\hat y=67.01+0.4646\,(x-66.8)$。斜率 $0.4646<1$，呈现"回归均值"现象——父亲越高，儿子也偏高，但偏离平均的幅度变小。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 回归显著性检验 ===================== -->
+<h2 id="reg-test"><span class="secnum">9.10</span>回归方程的显著性检验</h2>
+<p>采用最小二乘法估计 $\alpha,\beta$ 时，并不需要事先知道 $Y$ 与 $x$ 一定具有相关关系。$Y$ 是否为 $x$ 的线性函数：一要靠专业知识与实践判断，二要根据观测数据用假设检验判断。即检验</p>
+<p>$$H_0:\beta=0\qquad\text{对}\qquad H_1:\beta\ne0.$$</p>
+<div class="box note"><div class="box-title"><span class="tag">注</span> 拒绝 / 接受的含义</div>
+<p>若拒绝 $H_0$，说明回归效果显著（$Y$ 确实随 $x$ 线性变化）；若接受 $H_0$，说明 $Y$ 与 $x$ 没有线性关系，回归方程无意义。回归效果不显著可能有几种原因：(1) 影响 $Y$ 的除 $x$ 外还有其他不可忽略的因素；(2) $Y$ 与 $x$ 的关系不是线性，而是其他形式；(3) $Y$ 与 $x$ 根本不存在关系。</p>
+</div>
+
+<h3 id="reg-ss">平方和分解（与方差分析统一）</h3>
+<div class="box definition"><div class="box-title"><span class="tag">定义</span> 总 / 回归 / 残差 平方和</div>
+<p>与方差分析方法类似，仍采用平方和分解。一般地用</p>
+<p>$$SST\triangleq\sum_{i=1}^{n}(y_i-\bar y)^2\quad(\text{总平方和})$$</p>
+<p>描述 $y_1,\dots,y_n$ 之间总的差异大小。可分解为两部分：</p>
+<p>$$\sum_i(y_i-\bar y)^2=\underbrace{\sum_i(y_i-\hat y_i)^2}_{SSE\ \text{残差平方和}}+\underbrace{\sum_i(\hat y_i-\bar y)^2}_{SSR\ \text{回归平方和}}.$$</p>
+<p class="conclusion">$SST=SSR+SSE.$（交叉项 $2\sum_i(y_i-\hat y_i)(\hat y_i-\bar y)=0$，证明与方差分析的分解同理，依赖于残差与拟合值正交。）</p>
+</div>
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> $SSR$ 是回归"解释掉"的波动，决定系数 $R^2$</div>
+<p>$SSR=\sum(\hat y_i-\bar y)^2$ 是拟合直线相对均值线的波动——这部分波动被 $x$"解释"了；$SSE$ 是回归解释不了的残余。定义<span class="term">决定系数</span></p>
+<p>$$R^2=\frac{SSR}{SST}=1-\frac{SSE}{SST}\in[0,1].$$</p>
+<p>它表示总波动中被回归解释的比例，$R^2$ 越接近 1，拟合越好。一元回归中 $R^2$ 恰等于样本相关系数的平方。</p>
+</div>
+
+<details class="derive"><summary>$SSR=\hat\beta^2 s_{xx}$ 的推导</summary>
+<div>
+<p>由 $\hat y_i-\bar y=\hat\alpha+\hat\beta x_i-\bar y$，代入 $\hat\alpha=\bar y-\bar x\hat\beta$ 得 $\hat y_i-\bar y=\hat\beta(x_i-\bar x)$。于是</p>
+<p>$$SSR=\sum_i(\hat y_i-\bar y)^2=\hat\beta^2\sum_i(x_i-\bar x)^2=\hat\beta^2 s_{xx}.$$</p>
+<p>又 $\hat\beta=s_{xy}/s_{xx}$，故也可写成 $SSR=\dfrac{s_{xy}^2}{s_{xx}}$。</p>
+</div>
+</details>
+
+<h3 id="reg-F">F 检验（与方差分析表）</h3>
+<div class="box theorem"><div class="box-title"><span class="tag">定理</span> 回归的分布结论与 F 检验</div>
+<p>可以证明：</p>
+<p>$$\frac{SSE}{\sigma^2}=\frac{(n-2)s^2}{\sigma^2}\sim\chi^2(n-2);\qquad SSR=\sum_i(\hat y_i-\bar y)^2=\hat\beta^2\sum_i(x_i-\bar x)^2=\hat\beta^2 s_{xx}.$$</p>
+<p>由参数估计的性质，<b>当 $\beta=0$ 时</b></p>
+<p>$$\frac{SSR}{\sigma^2}=\frac{\hat\beta^2 s_{xx}}{\sigma^2}\sim\chi^2(1).$$</p>
+<p>（因 $\hat\beta\sim N(0,\sigma^2/s_{xx})$，故 $\hat\beta/\sqrt{\sigma^2/s_{xx}}\sim N(0,1)$，其平方服从 $\chi^2(1)$。）于是构造</p>
+<p>$$F=\frac{SSR/1}{SSE/(n-2)}=\frac{\hat\beta^2 s_{xx}}{s^2}\sim F(1,\,n-2).$$</p>
+<p class="conclusion">假设 $H_0:\beta=0$ 对 $H_1:\beta\ne0$。当 $H_0$ 为真时 $F=\dfrac{\hat\beta^2 s_{xx}}{s^2}\sim F(1,n-2)$。给定显著性水平 $\alpha$，拒绝域为 $W=\{F>F_\alpha(1,\,n-2)\}$。</p>
+</div>
+
+<div class="box note"><div class="box-title"><span class="tag">注</span> 回归方差分析表（模板）</div>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>来源</th><th>平方和</th><th>自由度</th><th>均方</th><th>F 比</th></tr></thead>
+<tbody>
+<tr><td>回归</td><td>$SSR=s_{xy}^2/s_{xx}$</td><td>$f_R=1$</td><td>$\dfrac{SSR}{1}$</td><td rowspan="2" style="vertical-align:middle">$F=\dfrac{SSR/1}{SSE/(n-2)}$</td></tr>
+<tr><td>残差</td><td>$SSE=(n-2)s^2$</td><td>$f_E=n-2$</td><td>$\dfrac{SSE}{n-2}$</td></tr>
+<tr><td>总和</td><td>$SST=s_{yy}$</td><td>$f_T=n-1$</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="box note"><div class="box-title"><span class="tag">注</span> 与 $t$ 检验的等价</div>
+<p>检验 $H_0:\beta=0$ 也可用 $t$ 统计量：$t=\dfrac{\hat\beta}{s/\sqrt{s_{xx}}}\sim t(n-2)$。由于 $[t(n-2)]^2=F(1,n-2)$，<b>$t$ 检验与上面的 $F$ 检验完全等价</b>（且 $t^2=F$）。$t$ 检验的好处是能给出 $\beta$ 的置信区间和单边检验，$F$ 检验天然对应方差分析表。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 统一视角 ===================== -->
+<h2 id="unify"><span class="secnum">9.11</span>统一视角：回归是"两组"的方差分析</h2>
+<div class="box insight"><div class="box-title"><span class="tag">直觉</span> 同一套机器</div>
+<p>把本章两半并排看，结构完全平行：</p>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th></th><th>方差分析（单因素）</th><th>一元线性回归</th></tr></thead>
+<tbody>
+<tr><td>原假设</td><td>$\mu_1=\cdots=\mu_r$（因素无效）</td><td>$\beta=0$（$x$ 无解释力）</td></tr>
+<tr><td>总平方和</td><td>$S_T=\sum(X_{ij}-\bar X)^2$</td><td>$SST=\sum(y_i-\bar y)^2$</td></tr>
+<tr><td>"模型解释"项</td><td>$S_A$（组间），自由度 $r-1$</td><td>$SSR$（回归），自由度 $1$</td></tr>
+<tr><td>"残余"项</td><td>$S_E$（组内），自由度 $n-r$</td><td>$SSE$（残差），自由度 $n-2$</td></tr>
+<tr><td>$\sigma^2$ 无偏估计</td><td>$S_E/(n-r)$</td><td>$SSE/(n-2)=s^2$</td></tr>
+<tr><td>F 统计量</td><td>$\dfrac{S_A/(r-1)}{S_E/(n-r)}\sim F(r-1,n-r)$</td><td>$\dfrac{SSR/1}{SSE/(n-2)}\sim F(1,n-2)$</td></tr>
+</tbody>
+</table>
+</div>
+<p>当回归中只把 $x$ 当作"两个水平"的指示变量时，回归的 $F$ 检验就退化为两组的方差分析。这就是为什么两套理论用的是同一把钥匙：<b>平方和分解 + 卡方可加性（Cochran）+ F 比</b>。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ===================== 小结 ===================== -->
+<h2 id="summary"><span class="secnum">小结</span>本章小结与速查表</h2>
+
+<h3>一、核心思路一句话</h3>
+<p>把数据的总波动 $S_T$ 分解成"模型能解释的"与"纯随机误差的"两部分，比较两者各自的<b>均方</b>（÷自由度），构造 $F$ 比做检验。$F$ 大 ⇒ 模型有用 ⇒ 拒绝"无效"原假设。</p>
+
+<h3>二、回归公式速查表</h3>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>量</th><th>公式</th><th>说明 / 分布</th></tr></thead>
+<tbody>
+<tr><td>记号</td><td>$s_{xx}=\sum(x_i-\bar x)^2,\ s_{xy}=\sum(x_i-\bar x)(y_i-\bar y),\ s_{yy}=\sum(y_i-\bar y)^2$</td><td>常用 $s_{xx}=\sum x_i^2-n\bar x^2$ 等</td></tr>
+<tr><td>斜率</td><td>$\hat\beta=s_{xy}/s_{xx}$</td><td>$\hat\beta\sim N(\beta,\sigma^2/s_{xx})$</td></tr>
+<tr><td>截距</td><td>$\hat\alpha=\bar y-\bar x\hat\beta$</td><td>$\hat\alpha\sim N\big(\alpha,(\tfrac1n+\tfrac{\bar x^2}{s_{xx}})\sigma^2\big)$</td></tr>
+<tr><td>回归方程</td><td>$\hat y=\hat\alpha+\hat\beta x$</td><td>必过点 $(\bar x,\bar y)$</td></tr>
+<tr><td>$\sigma^2$ 无偏估计</td><td>$s^2=\dfrac{s_{yy}-\hat\beta s_{xy}}{n-2}=\dfrac{SSE}{n-2}$</td><td>$SSE/\sigma^2\sim\chi^2(n-2)$</td></tr>
+<tr><td>$\sigma^2$ 极大似然</td><td>$\hat\sigma^2=\frac1n\sum(y_i-\hat y_i)^2$</td><td>有偏（偏小）</td></tr>
+<tr><td>平方和分解</td><td>$SST=SSR+SSE$，$SSR=\hat\beta^2 s_{xx}=s_{xy}^2/s_{xx}$</td><td>$SST=s_{yy}$</td></tr>
+<tr><td>决定系数</td><td>$R^2=SSR/SST=1-SSE/SST$</td><td>解释比例，越接近 1 越好</td></tr>
+<tr><td>显著性检验</td><td>$F=\dfrac{\hat\beta^2 s_{xx}}{s^2}\sim F(1,n-2)$；等价 $t=\dfrac{\hat\beta}{s/\sqrt{s_{xx}}}\sim t(n-2)$</td><td>拒绝域 $F>F_\alpha(1,n-2)$</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>三、方差分析表模板（单因素，$r$ 个水平，总样本 $n$）</h3>
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>方差来源</th><th>平方和</th><th>自由度</th><th>均方</th><th>F 比</th><th>分布（$H_0$ 下）</th></tr></thead>
+<tbody>
+<tr><td>因素 A（组间）</td><td>$S_A=\sum_j n_j(\bar X_{\bullet j}-\bar X)^2$</td><td>$r-1$</td><td>$MS_A=\dfrac{S_A}{r-1}$</td><td rowspan="2" style="vertical-align:middle">$F=\dfrac{MS_A}{MS_E}$</td><td rowspan="2" style="vertical-align:middle">$F\sim F(r-1,n-r)$</td></tr>
+<tr><td>误差（组内）</td><td>$S_E=\sum_j\sum_i(X_{ij}-\bar X_{\bullet j})^2$</td><td>$n-r$</td><td>$MS_E=\dfrac{S_E}{n-r}$</td></tr>
+<tr><td>总和</td><td>$S_T=\sum_j\sum_i(X_{ij}-\bar X)^2$</td><td>$n-1$</td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>四、关键期望（记结论）</h3>
+<p>$$E\Big(\frac{S_E}{n-r}\Big)=\sigma^2\ \text{（恒）},\qquad E\Big(\frac{S_A}{r-1}\Big)=\sigma^2+\frac{1}{r-1}\sum_j n_j\delta_j^2\ \ (\ge\sigma^2,\ H_0\text{ 真时取等}).$$</p>
+
+<div class="box pitfall"><div class="box-title"><span class="tag">易错</span> 临考速记</div>
+<ul>
+<li>回归残差自由度 $n-2$（估了 $\alpha,\beta$ 两个参数）；方差分析误差自由度 $n-r$（估了 $r$ 个组均值）。</li>
+<li>$F$ 比一律是<b>均方之比</b>，分子分母都要先除以各自自由度。</li>
+<li>$F$ 检验是<b>单侧右尾</b>检验（$F$ 越大越拒绝），不要做成双侧。</li>
+<li>查表时第一个自由度是分子（模型项）的，第二个是分母（误差项）的，别写反。</li>
+<li>极大似然 $\hat\sigma^2$ 除以 $n$，是有偏的；无偏估计 $s^2$ 除以 $n-2$（回归）或 $n-r$（方差分析）。</li>
+</ul>
+</div>
+
+<p class="muted" style="margin-top:40px">— 本章完。建议配合第八章（假设检验、抽样分布、卡方/F 分布）一起复习，本章的全部分布结论都建立在那些基础之上。</p>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>
