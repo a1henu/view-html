@@ -1,0 +1,373 @@
+/* ===================================================================
+   概率统计学习报告 — 共享样式表
+   适用于 index.html 与 chap6/7/8/9.html
+   设计目标：清晰、学术、易读，适合长时间学习
+   =================================================================== */
+
+:root {
+  --pku-red: #94070a;
+  --pku-red-light: #c0392b;
+  --ink: #1f2328;
+  --ink-soft: #3b424a;
+  --muted: #6b7280;
+  --line: #e4e7eb;
+  --bg: #ffffff;
+  --bg-soft: #f7f8fa;
+  --sidebar-bg: #1d2430;
+  --sidebar-ink: #c8cdd6;
+  --sidebar-active: #ffd166;
+
+  --def: #2563eb;       /* 定义 蓝 */
+  --def-bg: #eff5ff;
+  --thm: #7c3aed;       /* 定理 紫 */
+  --thm-bg: #f5f0ff;
+  --ex: #0d9488;        /* 例题 青 */
+  --ex-bg: #ecfdf9;
+  --proof: #475569;     /* 证明 灰 */
+  --proof-bg: #f4f6f8;
+  --note: #d97706;      /* 注记 橙 */
+  --note-bg: #fff8ec;
+  --insight: #be123c;   /* 洞察/直觉 红 */
+  --insight-bg: #fff1f3;
+  --pitfall: #dc2626;   /* 易错点 */
+  --pitfall-bg: #fef2f2;
+
+  --radius: 10px;
+  --maxw: 880px;
+  --sidebar-w: 280px;
+  --font-cn: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC", sans-serif;
+  --font-serif: Georgia, "Times New Roman", "Songti SC", serif;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-cn);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.78;
+  font-size: 16.5px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 布局：侧边栏 + 内容 ---------- */
+.layout { display: flex; align-items: flex-start; }
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-ink);
+  padding: 26px 18px 60px;
+}
+.sidebar .brand {
+  font-weight: 700;
+  font-size: 17px;
+  color: #fff;
+  letter-spacing: .5px;
+  margin-bottom: 4px;
+}
+.sidebar .brand small { display:block; font-weight:400; color:#8b93a3; font-size:12px; margin-top:4px;}
+.sidebar .home-link {
+  display: inline-block;
+  margin: 14px 0 18px;
+  padding: 7px 14px;
+  background: var(--pku-red);
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 13.5px;
+  transition: background .2s;
+}
+.sidebar .home-link:hover { background: var(--pku-red-light); }
+.sidebar nav a {
+  display: block;
+  color: var(--sidebar-ink);
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+}
+.sidebar nav a:hover { background: rgba(255,255,255,.07); color:#fff; }
+.sidebar nav a.lvl2 { padding-left: 24px; font-size: 13px; color: #99a1b0; }
+.sidebar nav a.active { color: var(--sidebar-active); border-left-color: var(--sidebar-active); background: rgba(255,255,255,.06); }
+.sidebar .nav-group { margin-top: 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color:#6b7385; padding-left: 10px;}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 120px;
+}
+.content-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ---------- 顶部页头 ---------- */
+.page-header {
+  background: linear-gradient(135deg, #94070a 0%, #6d0508 100%);
+  color: #fff;
+  padding: 46px 40px 38px;
+  margin-bottom: 38px;
+}
+.page-header .inner { max-width: var(--maxw); margin: 0 auto; }
+.page-header .eyebrow { font-size: 13px; opacity: .8; letter-spacing: 3px; text-transform: uppercase; }
+.page-header h1 { margin: 8px 0 10px; font-size: 30px; font-weight: 700; line-height: 1.3; }
+.page-header p { margin: 0; opacity: .9; font-size: 15px; max-width: 640px; }
+
+/* ---------- 标题 ---------- */
+h2 {
+  font-size: 25px;
+  margin: 52px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--pku-red);
+  color: var(--ink);
+  scroll-margin-top: 20px;
+}
+h2 .secnum {
+  display: inline-block;
+  background: var(--pku-red);
+  color: #fff;
+  font-size: 15px;
+  padding: 2px 11px;
+  border-radius: 6px;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+h3 {
+  font-size: 20px;
+  margin: 36px 0 14px;
+  color: var(--pku-red);
+  scroll-margin-top: 20px;
+}
+h4 { font-size: 17px; margin: 24px 0 10px; color: var(--ink-soft); }
+p { margin: 12px 0; }
+
+a { color: var(--def); }
+
+/* ---------- 通用卡片盒子 ---------- */
+.box {
+  border-radius: var(--radius);
+  padding: 16px 20px 16px 22px;
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-left-width: 5px;
+  background: var(--bg-soft);
+  position: relative;
+}
+.box .box-title {
+  font-weight: 700;
+  font-size: 15.5px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.box .box-title .tag {
+  font-size: 12px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.definition { border-left-color: var(--def); background: var(--def-bg); }
+.definition .tag { background: var(--def); }
+.theorem    { border-left-color: var(--thm); background: var(--thm-bg); }
+.theorem .tag { background: var(--thm); }
+.example    { border-left-color: var(--ex);  background: var(--ex-bg); }
+.example .tag { background: var(--ex); }
+.proof      { border-left-color: var(--proof); background: var(--proof-bg); }
+.proof .tag { background: var(--proof); }
+.note       { border-left-color: var(--note); background: var(--note-bg); }
+.note .tag  { background: var(--note); }
+.insight    { border-left-color: var(--insight); background: var(--insight-bg); }
+.insight .tag { background: var(--insight); }
+.pitfall    { border-left-color: var(--pitfall); background: var(--pitfall-bg); }
+.pitfall .tag { background: var(--pitfall); }
+
+/* 证明结束符 */
+.qed { display:inline-block; float:right; color: var(--proof); font-weight:700;}
+
+/* 步骤式解析 */
+.steps { counter-reset: step; padding-left: 0; list-style: none; margin: 14px 0; }
+.steps > li {
+  position: relative;
+  padding: 4px 0 14px 44px;
+  margin: 0;
+}
+.steps > li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0; top: 2px;
+  width: 28px; height: 28px;
+  background: var(--pku-red);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.steps > li::after {
+  content: "";
+  position: absolute;
+  left: 13px; top: 32px; bottom: 4px;
+  width: 2px; background: #e7d3d4;
+}
+.steps > li:last-child::after { display: none; }
+
+/* ---------- 表格 ---------- */
+.tbl-wrap { overflow-x: auto; margin: 20px 0; }
+table.data {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 15px;
+}
+table.data th, table.data td {
+  border: 1px solid var(--line);
+  padding: 9px 12px;
+  text-align: center;
+}
+table.data thead th { background: var(--pku-red); color: #fff; font-weight: 600; }
+table.data tbody tr:nth-child(even) { background: var(--bg-soft); }
+table.data caption { caption-side: top; font-size: 13px; color: var(--muted); margin-bottom: 6px; text-align:left;}
+
+/* ---------- 行内强调 ---------- */
+.hl { background: linear-gradient(transparent 60%, #ffe69955 60%); padding: 0 2px; font-weight:600;}
+.term { color: var(--pku-red); font-weight: 600; }
+code { background: #f1f3f5; padding: 1px 6px; border-radius: 4px; font-size: 14px; color: #b91c1c; }
+.muted { color: var(--muted); font-size: 14px; }
+
+/* 关键结论条 */
+.conclusion {
+  background: #fff;
+  border: 2px solid var(--pku-red);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin: 22px 0;
+  font-weight: 500;
+}
+.conclusion::before { content: "📌 关键结论　"; font-weight: 700; color: var(--pku-red); }
+
+/* MathJax 块级公式留白 */
+mjx-container[display="true"] { margin: 14px 0 !important; overflow-x: auto; overflow-y: hidden; }
+
+/* 折叠：详细推导 */
+details.derive {
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+}
+details.derive > summary {
+  cursor: pointer;
+  padding: 11px 16px;
+  background: var(--bg-soft);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  list-style: none;
+}
+details.derive > summary::before { content: "▶ "; color: var(--pku-red); }
+details.derive[open] > summary::before { content: "▼ "; }
+details.derive > div { padding: 4px 18px 14px; }
+
+/* 章节间分隔 */
+hr.sep { border: none; border-top: 1px dashed var(--line); margin: 40px 0; }
+
+/* ---------- index 首页卡片 ---------- */
+.chap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin: 28px 0; }
+.chap-card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  transition: all .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.chap-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(148,7,10,.13); border-color: var(--pku-red); }
+.chap-card .cnum { font-size: 13px; color: var(--pku-red); font-weight: 700; letter-spacing: 1px; }
+.chap-card h3 { margin: 6px 0 10px; color: var(--ink); font-size: 20px; }
+.chap-card p { margin: 0; font-size: 14px; color: var(--muted); }
+.chap-card ul { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-soft); }
+.chap-card ul li { margin: 3px 0; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 980px) {
+  .layout { display: block; }
+  .sidebar { position: static; width: auto; min-width: 0; height: auto; max-height: none; }
+  .sidebar nav { display: flex; flex-wrap: wrap; gap: 4px; }
+  .sidebar nav a { border-left: none; }
+  .content-inner, .page-header .inner { padding-left: 22px; padding-right: 22px; }
+  .chap-grid { grid-template-columns: 1fr; }
+}
+
+/* 滚动条美化 */
+.sidebar::-webkit-scrollbar { width: 7px; }
+.sidebar::-webkit-scrollbar-thumb { background: #3a4555; border-radius: 4px; }
+
+/* 顶部进度回到顶部 */
+.back-top {
+  position: fixed; right: 26px; bottom: 26px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--pku-red); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  text-decoration:none; font-size:20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.2); opacity:.85;
+}
+.back-top:hover { opacity: 1; }
+
+/* ===================================================================
+   往年真题组件（exam-chapN.html / exam-index.html 使用）
+   =================================================================== */
+
+/* 真题盒子（靛蓝色，区别于例题的青色） */
+.box.exam { border-left-color: #4f46e5; background: #f0f1fe; }
+.box.exam .tag { background: #4f46e5; }
+
+/* 题目出处 / 题型 / 考点 / 难度 徽章行 */
+.exam-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; align-items: center; }
+.exam-badge { font-size: 12px; padding: 2px 10px; border-radius: 6px; font-weight: 600; line-height: 1.6; }
+.exam-badge.year   { background: #4f46e5; color: #fff; }                 /* 年份/出处 */
+.exam-badge.type   { background: #ddd6fe; color: #5b21b6; }              /* 题型：计算/证明/选择… */
+.exam-badge.kaodian{ background: #fff; border: 1px solid #c7d2fe; color: #4338ca; } /* 考点标签 */
+.exam-badge.diff   { background: #fef3c7; color: #92400e; }              /* 难度 ★ */
+.exam-badge.freq   { background: #fee2e2; color: #b91c1c; }              /* 高频提示 */
+
+/* 题面区 */
+.exam .stem { margin: 4px 0 6px; }
+.exam .stem::before { content: "【题目】"; font-weight: 700; color: #4338ca; }
+
+/* 「先做后看」可折叠解答（默认收起，便于自测） */
+details.solution { margin: 10px 0 4px; border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; }
+details.solution > summary { cursor: pointer; padding: 9px 15px; background: #eef2ff; font-weight: 600; font-size: 14.5px; color: #3730a3; list-style: none; }
+details.solution > summary::before { content: "📝 展开详细解答与解析"; }
+details.solution[open] > summary::before { content: "📝 收起解答"; }
+details.solution[open] > summary { border-bottom: 1px solid var(--line); }
+details.solution > div { padding: 8px 16px 14px; }
+
+/* 标准答案高亮条 */
+.final-answer { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 8px 14px; margin: 12px 0; }
+.final-answer::before { content: "✅ 最终答案　"; font-weight: 700; color: #047857; }
+
+/* 真题矩阵表：年份×章节 命中标记 */
+table.matrix td.hit { background: #e0e7ff; color: #3730a3; font-weight: 700; }
+table.matrix td.none { color: #cbd5e1; }
+
+/* 真题首页卡片配色（与知识卡片区分） */
+.chap-card.exam-card:hover { box-shadow: 0 10px 26px rgba(79,70,229,.16); border-color: #4f46e5; }
+.chap-card.exam-card .cnum { color: #4f46e5; }

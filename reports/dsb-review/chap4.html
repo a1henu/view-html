@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第四章 图 · 数据结构与算法B 复习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">数据结构与算法B<small>复习报告 · 第四章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <div class="nav-group">知识点</div>
+      <a href="#sec-concept">4.1 图的基本概念</a>
+      <a href="#sec-degree" class="lvl2">度与边数关系</a>
+      <a href="#sec-connect" class="lvl2">连通性</a>
+      <a href="#sec-storage">4.2 图的存储结构</a>
+      <a href="#sec-adj-matrix" class="lvl2">邻接矩阵</a>
+      <a href="#sec-adj-list" class="lvl2">邻接表</a>
+      <a href="#sec-inv-list" class="lvl2">逆邻接表</a>
+      <a href="#sec-traversal">4.3 图的遍历</a>
+      <a href="#sec-dfs" class="lvl2">DFS 深度优先</a>
+      <a href="#sec-bfs" class="lvl2">BFS 广度优先</a>
+      <a href="#sec-mst">4.4 最小生成树</a>
+      <a href="#sec-prim" class="lvl2">Prim 算法</a>
+      <a href="#sec-kruskal" class="lvl2">Kruskal 算法</a>
+      <a href="#sec-shortest">4.5 最短路径</a>
+      <a href="#sec-dijkstra" class="lvl2">Dijkstra 算法</a>
+      <a href="#sec-topo">4.6 拓扑排序</a>
+      <a href="#sec-connectivity">4.7 连通性专题</a>
+      <div class="nav-group">往年真题</div>
+      <a href="#sec-exam-choice">选择题精选</a>
+      <a href="#sec-exam-judge">判断题精选</a>
+      <a href="#sec-exam-fill">填空题精选</a>
+      <a href="#sec-exam-short">简答题精选</a>
+      <a href="#sec-exam-algo">算法填空题</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">DATA STRUCTURES · GRAPHS</div>
+      <h1>第四章 图</h1>
+      <p>图是最一般的非线性结构，网络路由、社交关系、路径规划、任务调度等问题都依赖图论模型。本章覆盖图的基本概念、两种存储方式、DFS/BFS 遍历、最小生成树（Prim/Kruskal）、最短路径（Dijkstra）、拓扑排序，以及连通性分析。</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ============================================================ -->
+<h2 id="sec-concept"><span class="secnum">4.1</span>图的基本概念</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>图 (Graph)</div>
+  <p><strong>图</strong>是由<span class="term">顶点集</span> $V$ 和<span class="term">边集</span> $E$ 组成的二元组，记为 $G = (V, E)$。</p>
+  <ul>
+    <li><strong>无向图</strong>：边是无序对 $(v_i, v_j)$，表示 $v_i$ 和 $v_j$ 之间有一条双向的连接。</li>
+    <li><strong>有向图</strong>：边是有序对 $\langle v_i, v_j \rangle$（称为<strong>弧</strong>），表示从 $v_i$ 到 $v_j$ 的单向连接。$v_i$ 称为弧尾（始点），$v_j$ 称为弧头（终点）。</li>
+  </ul>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>图与树、线性表的关系</div>
+  <p>从"元素之间关系的复杂度"来看：</p>
+  <ul>
+    <li><strong>线性表</strong>：一对一（前驱/后继）</li>
+    <li><strong>树</strong>：一对多（父/子）</li>
+    <li><strong>图</strong>：多对多（任意顶点之间都可能有边）</li>
+  </ul>
+  <p>树是图的特例（连通无环图），线性表可以看作退化的树。图是最一般的结构。</p>
+</div>
+
+<h3 id="sec-degree">度与边数的关系</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>顶点的度</div>
+  <ul>
+    <li><strong>无向图</strong>：顶点 $v$ 的<strong>度</strong> $\text{deg}(v)$ = 与 $v$ 关联的边数。</li>
+    <li><strong>有向图</strong>：
+      <ul>
+        <li><strong>入度</strong> $\text{ID}(v)$ = 以 $v$ 为终点的弧的数目</li>
+        <li><strong>出度</strong> $\text{OD}(v)$ = 以 $v$ 为起点的弧的数目</li>
+        <li><strong>度</strong> $\text{TD}(v) = \text{ID}(v) + \text{OD}(v)$</li>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>握手定理（度数和公式）</div>
+  <p>对于有 $n$ 个顶点、$m$ 条边的<strong>无向图</strong>：</p>
+  $$\sum_{i=1}^{n} \text{deg}(v_i) = 2m$$
+  <p>即所有顶点的度数之和等于边数的两倍。</p>
+  <p><strong>直觉</strong>：每条边贡献两个"端点"，所以被计算了两次。</p>
+  <p>对于<strong>有向图</strong>：$\sum \text{ID}(v_i) = \sum \text{OD}(v_i) = m$（每条弧贡献一个入度和一个出度）。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>完全图</div>
+  <ul>
+    <li><strong>无向完全图</strong>：$n$ 个顶点的任意两点之间都有边，共 $\dfrac{n(n-1)}{2}$ 条边。</li>
+    <li><strong>有向完全图</strong>：任意两点之间都有方向相反的两条弧，共 $n(n-1)$ 条弧。</li>
+  </ul>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>子图与生成子图</div>
+  <ul>
+    <li><strong>子图</strong>：$G' = (V', E')$，其中 $V' \subseteq V$，$E' \subseteq E$，且 $E'$ 中的边的端点都在 $V'$ 中。</li>
+    <li><strong>生成子图</strong>（Spanning Subgraph）：$V' = V$（包含原图所有顶点），$E' \subseteq E$。</li>
+  </ul>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>路径与回路</div>
+  <ul>
+    <li><strong>路径</strong>：从顶点 $v_i$ 到 $v_j$ 经过的顶点序列 $v_i, v_1, v_2, \ldots, v_j$，其中相邻顶点之间有边。</li>
+    <li><strong>简单路径</strong>：路径中<strong>顶点不重复</strong>（除起点终点外）。</li>
+    <li><strong>回路/环</strong>（Cycle）：起点和终点相同的路径。</li>
+    <li><strong>简单回路</strong>：除起点终点相同外，其余顶点不重复。</li>
+  </ul>
+</div>
+
+<h3 id="sec-connect">连通性</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>连通图与连通分量（无向图）</div>
+  <ul>
+    <li><strong>连通图</strong>：无向图中任意两个顶点之间都有路径。</li>
+    <li><strong>连通分量</strong>：非连通图的<span class="term">极大连通子图</span>。
+      <ul>
+        <li>"极大"：不能再加入任何顶点/边使其仍然连通。</li>
+        <li>一个连通图只有一个连通分量（即它自身）。</li>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>强连通图与强连通分量（有向图）</div>
+  <ul>
+    <li><strong>强连通图</strong>：有向图中任意两个顶点 $v_i, v_j$，<strong>既有</strong>从 $v_i$ 到 $v_j$ 的路径，<strong>也有</strong>从 $v_j$ 到 $v_i$ 的路径。</li>
+    <li><strong>强连通分量</strong>：有向图的极大强连通子图。</li>
+  </ul>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>连通分量 vs 生成树</div>
+  <ul>
+    <li><strong>连通分量</strong>是<span class="term">极大</span>连通子图（尽可能多地包含顶点和边）。</li>
+    <li><strong>生成树</strong>是<span class="term">极小</span>连通子图（尽可能少地使用边，但保持所有顶点连通，即恰好 $n-1$ 条边）。</li>
+    <li>生成树<strong>不是</strong>连通分量！（2021 选择题10 考点）</li>
+  </ul>
+</div>
+
+<div class="conclusion">
+本节核心公式：无向图度之和 $= 2m$；无向完全图边数 $= n(n-1)/2$；$n$ 个顶点的树（连通无环图）恰有 $n-1$ 条边。
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-storage"><span class="secnum">4.2</span>图的存储结构</h2>
+
+<h3 id="sec-adj-matrix">邻接矩阵 (Adjacency Matrix)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>邻接矩阵</div>
+  <p>用一个 $n \times n$ 的二维数组 $A$ 表示图：</p>
+  $$A[i][j] = \begin{cases} 1 \text{（或权值 $w$）} & \text{若}(v_i, v_j) \in E \\ 0 \text{（或 $\infty$）} & \text{否则} \end{cases}$$
+  <ul>
+    <li><strong>无向图</strong>的邻接矩阵一定是<strong>对称矩阵</strong>（$A[i][j] = A[j][i]$）。</li>
+    <li><strong>空间复杂度</strong>：$O(n^2)$，与边数无关。</li>
+    <li><strong>适合</strong>：稠密图（边数接近 $n^2$）。</li>
+  </ul>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>邻接矩阵操作复杂度</caption>
+<thead><tr><th>操作</th><th>时间复杂度</th></tr></thead>
+<tbody>
+<tr><td>查询边 $(v_i, v_j)$ 是否存在</td><td>$O(1)$</td></tr>
+<tr><td>遍历顶点 $v_i$ 的所有邻居</td><td>$O(n)$（需扫描整行）</td></tr>
+<tr><td>计算顶点 $v_i$ 的度</td><td>$O(n)$（无向图：第 $i$ 行非零元素个数）</td></tr>
+<tr><td>添加/删除一条边</td><td>$O(1)$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>无向图的邻接矩阵</div>
+  <p>设无向图有 4 个顶点 $\{V_0, V_1, V_2, V_3\}$，边集为 $\{(V_0,V_1),(V_0,V_2),(V_1,V_3),(V_2,V_3)\}$。其邻接矩阵为：</p>
+  $$A = \begin{pmatrix} 0 & 1 & 1 & 0 \\ 1 & 0 & 0 & 1 \\ 1 & 0 & 0 & 1 \\ 0 & 1 & 1 & 0 \end{pmatrix}$$
+  <p>观察：矩阵关于主对角线对称；第 $i$ 行之和 = 顶点 $V_i$ 的度。</p>
+</div>
+
+<h3 id="sec-adj-list">邻接表 (Adjacency List)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>邻接表</div>
+  <p>为图中<strong>每个顶点</strong>建立一个单链表，链表中存放所有与该顶点相邻的顶点（及权值）。</p>
+  <ul>
+    <li><strong>空间复杂度</strong>：$O(n + m)$（无向图每条边存两次，所以是 $O(n + 2m)$）。</li>
+    <li><strong>适合</strong>：稀疏图（边数远小于 $n^2$）。</li>
+  </ul>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>邻接表操作复杂度</caption>
+<thead><tr><th>操作</th><th>时间复杂度</th></tr></thead>
+<tbody>
+<tr><td>查询边 $(v_i, v_j)$ 是否存在</td><td>$O(\text{deg}(v_i))$（遍历 $v_i$ 的链表）</td></tr>
+<tr><td>遍历顶点 $v_i$ 的所有邻居</td><td>$O(\text{deg}(v_i))$</td></tr>
+<tr><td>计算顶点 $v_i$ 的出度</td><td>$O(\text{deg}(v_i))$</td></tr>
+<tr><td>计算顶点 $v_i$ 的入度（有向图）</td><td>$O(n + m)$（需遍历所有链表）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>何时选邻接矩阵 vs 邻接表？</div>
+  <ul>
+    <li><strong>稠密图</strong>（$m$ 接近 $n^2$）：邻接矩阵。空间 $O(n^2)$ 与邻接表差不多，但查边 $O(1)$ 更快。</li>
+    <li><strong>稀疏图</strong>（$m \ll n^2$）：邻接表。空间节省巨大（$O(n+m)$ vs $O(n^2)$）。</li>
+    <li>需要频繁判断"两顶点之间有无边"→ 邻接矩阵。</li>
+    <li>需要遍历某顶点的所有邻居 → 邻接表（$O(\text{deg})$ vs $O(n)$）。</li>
+  </ul>
+</div>
+
+<h3 id="sec-inv-list">逆邻接表（入边表）</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>逆邻接表</div>
+  <p>对于<strong>有向图</strong>，逆邻接表为每个顶点存储所有<strong>指向该顶点</strong>的弧。</p>
+  <ul>
+    <li>邻接表（出边表）：顶点 $v$ 的链表存放 $v$ 能到达的顶点（出边）。</li>
+    <li>逆邻接表（入边表）：顶点 $v$ 的链表存放能到达 $v$ 的顶点（入边）。</li>
+    <li>逆邻接表方便计算每个顶点的<strong>入度</strong>。</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>从逆邻接表还原有向图</div>
+  <p>设逆邻接表如下（每个顶点记录指向它的顶点）：</p>
+  <pre><code>v0 → [1] → [3] → null   （v1→v0, v3→v0）
+v1 → [0] → [2] → null   （v0→v1, v2→v1）
+v2 → null                （无人指向 v2）
+v3 → [2] → [4] → null   （v2→v3, v4→v3）
+v4 → [1] → null          （v1→v4）</code></pre>
+  <p>还原出的边（即出边/邻接表）：</p>
+  <pre><code>v0 → {v1}        （v0→v1）
+v1 → {v0, v4}   （v1→v0, v1→v4）
+v2 → {v1, v3}   （v2→v1, v2→v3）
+v3 → {v0}       （v3→v0）
+v4 → {v3}       （v4→v3）</code></pre>
+  <p><strong>方法</strong>：遍历逆邻接表中每个顶点 $u$ 的列表 $[w_1, w_2, \ldots]$，则存在边 $w_i \to u$。转换为出边表就是：对每个 $w_i$，把 $u$ 加入 $w_i$ 的出边列表。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-traversal"><span class="secnum">4.3</span>图的遍历</h2>
+
+<p>图的遍历是从某个顶点出发，按照某种规则访问图中所有顶点且每个顶点只访问一次。图的遍历是很多图算法的基础。</p>
+
+<h3 id="sec-dfs">深度优先搜索 DFS (Depth-First Search)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>DFS 算法思想</div>
+  <p>类似于树的前序遍历，DFS 使用<strong>栈</strong>（通常用递归实现）：</p>
+  <ol class="steps">
+    <li>访问起始顶点 $v$，标记为已访问。</li>
+    <li>选择 $v$ 的一个<strong>未访问的</strong>邻接顶点 $w$，对 $w$ 递归执行 DFS。</li>
+    <li>若 $v$ 的所有邻接顶点都已访问，则回退（backtrack）到上一个顶点。</li>
+    <li>重复直到所有可达顶点都被访问。</li>
+  </ol>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>DFS 伪代码</div>
+<pre><code>def DFS(G, v, visited):
+    visited[v] = True
+    print(v)                    # 访问顶点
+    for w in G.neighbors(v):    # 遍历 v 的所有邻居
+        if not visited[w]:
+            DFS(G, w, visited)
+
+# 处理非连通图：对所有顶点检查
+for v in G.vertices():
+    if not visited[v]:
+        DFS(G, v, visited)      # 每次调用发现一个连通分量</code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>DFS 时间复杂度</div>
+  <ul>
+    <li>邻接表存储：$O(n + m)$（每个顶点访问一次，每条边检查两次）。</li>
+    <li>邻接矩阵存储：$O(n^2)$（每个顶点需扫描整行寻找邻居）。</li>
+  </ul>
+</div>
+
+<h3 id="sec-bfs">广度优先搜索 BFS (Breadth-First Search)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>BFS 算法思想</div>
+  <p>类似于树的层序遍历，BFS 使用<strong>队列</strong>：</p>
+  <ol class="steps">
+    <li>访问起始顶点 $v$，标记已访问，入队。</li>
+    <li>队首顶点出队，访问其所有<strong>未访问的</strong>邻接顶点，标记并入队。</li>
+    <li>重复直到队列为空。</li>
+  </ol>
+  <p>BFS 按<strong>距离</strong>（层次）由近到远地访问顶点。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>BFS 伪代码</div>
+<pre><code>from collections import deque
+
+def BFS(G, v, visited):
+    queue = deque([v])
+    visited[v] = True
+    while queue:
+        u = queue.popleft()
+        print(u)                    # 访问顶点
+        for w in G.neighbors(u):
+            if not visited[w]:
+                visited[w] = True
+                queue.append(w)</code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>BFS 时间复杂度</div>
+  <ul>
+    <li>邻接表存储：$O(n + m)$</li>
+    <li>邻接矩阵存储：$O(n^2)$</li>
+  </ul>
+  <p>与 DFS 的时间复杂度<strong>完全相同</strong>。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>DFS vs BFS 的选择</div>
+  <ul>
+    <li><strong>DFS</strong>：适合寻找路径、检测环、拓扑排序、连通分量分解。空间 $O(n)$（递归栈深度）。</li>
+    <li><strong>BFS</strong>：适合求<strong>无权图的最短路径</strong>（层序 = 最短距离）、层次遍历。空间 $O(n)$（队列最大宽度）。</li>
+    <li>两者都<strong>既可用于有向图，也可用于无向图</strong>。</li>
+  </ul>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>DFS/BFS 不只用于无向图</div>
+  <p>DFS 和 BFS 对有向图和无向图<strong>都</strong>适用。区别仅在于："邻居"在无向图中是所有相连顶点，在有向图中是出边指向的顶点。（2024 判断题9 考点）</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-mst"><span class="secnum">4.4</span>最小生成树 (MST)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>生成树与最小生成树</div>
+  <ul>
+    <li><strong>生成树</strong>：连通图 $G$ 的一个生成子图，它是<strong>树</strong>（连通且无环），包含 $G$ 的所有 $n$ 个顶点和恰好 $n-1$ 条边。</li>
+    <li><strong>最小生成树</strong>（Minimum Spanning Tree, MST）：所有生成树中<strong>边权之和最小</strong>的那棵。</li>
+  </ul>
+  <p><strong>性质</strong>：</p>
+  <ul>
+    <li>$n$ 个顶点的生成树恰有 $n-1$ 条边。</li>
+    <li>生成树是极小连通子图（去掉任何一条边就不连通）。</li>
+    <li>当所有边权<strong>互不相同</strong>时，MST 唯一。</li>
+  </ul>
+</div>
+
+<h3 id="sec-prim">Prim 算法</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">算法</span>Prim 算法</div>
+  <p><strong>思想</strong>：从一个顶点开始"生长"，每次选择连接已选集合和未选集合的<strong>最短边</strong>。</p>
+  <ol class="steps">
+    <li>初始化：选择任意一个顶点加入集合 $S$。</li>
+    <li>在所有连接 $S$ 和 $V \setminus S$ 的边中，选<strong>权值最小</strong>的边 $(u, v)$（$u \in S, v \notin S$）。</li>
+    <li>将 $v$ 加入 $S$，边 $(u, v)$ 加入 MST。</li>
+    <li>重复步骤 2-3，直到 $|S| = n$。</li>
+  </ol>
+  <p><strong>时间复杂度</strong>：朴素实现 $O(n^2)$，适合稠密图。（用优先队列可优化到 $O(m \log n)$）</p>
+  <p><strong>贪心正确性</strong>：每次加入的边一定在某棵 MST 中（切割性质/安全边定理）。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>Prim 算法执行过程（2021 简答题4）</div>
+  <p>图 $G$ 的邻接矩阵（$\infty$ 表示无边）：</p>
+  <div class="tbl-wrap">
+  <table class="data">
+  <thead><tr><th></th><th>V0</th><th>V1</th><th>V2</th><th>V3</th><th>V4</th></tr></thead>
+  <tbody>
+  <tr><td><strong>V0</strong></td><td>0</td><td>7</td><td>$\infty$</td><td>4</td><td>2</td></tr>
+  <tr><td><strong>V1</strong></td><td>7</td><td>0</td><td>9</td><td>1</td><td>5</td></tr>
+  <tr><td><strong>V2</strong></td><td>$\infty$</td><td>9</td><td>0</td><td>3</td><td>$\infty$</td></tr>
+  <tr><td><strong>V3</strong></td><td>4</td><td>1</td><td>3</td><td>0</td><td>10</td></tr>
+  <tr><td><strong>V4</strong></td><td>2</td><td>5</td><td>$\infty$</td><td>10</td><td>0</td></tr>
+  </tbody>
+  </table>
+  </div>
+  <p>从 V0 出发执行 Prim：</p>
+  <ol class="steps">
+    <li><strong>初始</strong>：$S = \{V_0\}$。候选边：V0-V1(7), V0-V3(4), V0-V4(2)。<br>
+        选最小：<strong>V0-V4(2)</strong>。$S = \{V_0, V_4\}$。</li>
+    <li>候选边（从 S 到 $V \setminus S$）：V0-V1(7), V0-V3(4), V4-V1(5), V4-V3(10)。<br>
+        选最小：<strong>V0-V3(4)</strong>。$S = \{V_0, V_4, V_3\}$。</li>
+    <li>候选边：V0-V1(7), V4-V1(5), V3-V1(1), V3-V2(3)。<br>
+        选最小：<strong>V3-V1(1)</strong>。$S = \{V_0, V_4, V_3, V_1\}$。</li>
+    <li>候选边：V1-V2(9), V3-V2(3)。<br>
+        选最小：<strong>V3-V2(3)</strong>。$S = \{V_0, V_4, V_3, V_1, V_2\}$。</li>
+  </ol>
+  <p><strong>MST 的边</strong>：V0-V4(2), V0-V3(4), V3-V1(1), V3-V2(3)。<strong>总权值 = 10</strong>。</p>
+</div>
+
+<h3 id="sec-kruskal">Kruskal 算法</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">算法</span>Kruskal 算法</div>
+  <p><strong>思想</strong>：按边权从小到大排序，逐条加入不构成环的边。</p>
+  <ol class="steps">
+    <li>将所有边按权值<strong>从小到大排序</strong>。</li>
+    <li>依次取出最小边，若该边连接的两个顶点<strong>不在同一个连通分量</strong>中（即加入不形成环），则加入 MST。</li>
+    <li>重复直到 MST 有 $n-1$ 条边。</li>
+  </ol>
+  <p><strong>判断是否成环</strong>：使用<strong>并查集</strong>（Union-Find），判断两顶点是否在同一集合中。</p>
+  <p><strong>时间复杂度</strong>：$O(m \log m)$（排序为主），适合<strong>稀疏图</strong>。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>用 Kruskal 算法求上例的 MST</div>
+  <p>排序边：V3-V1(1), V0-V4(2), V3-V2(3), V0-V3(4), V4-V1(5), V0-V1(7), V1-V2(9), V4-V3(10)。</p>
+  <ol class="steps">
+    <li>V3-V1(1)：V3 和 V1 不连通，加入。MST = {V3-V1}。</li>
+    <li>V0-V4(2)：V0 和 V4 不连通，加入。MST = {V3-V1, V0-V4}。</li>
+    <li>V3-V2(3)：V3 和 V2 不连通，加入。MST = {V3-V1, V0-V4, V3-V2}。</li>
+    <li>V0-V3(4)：V0 所在连通分量 {V0,V4}，V3 所在 {V3,V1,V2}，不连通，加入。MST = {V3-V1, V0-V4, V3-V2, V0-V3}。已有 4 条边（$n-1=4$），结束。</li>
+  </ol>
+  <p>结果与 Prim 相同：总权值 = 1 + 2 + 3 + 4 = <strong>10</strong>。</p>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>Prim vs Kruskal 对比</caption>
+<thead><tr><th>特征</th><th>Prim</th><th>Kruskal</th></tr></thead>
+<tbody>
+<tr><td>策略</td><td>以顶点为中心，逐步扩展</td><td>以边为中心，逐条加入</td></tr>
+<tr><td>时间复杂度</td><td>$O(n^2)$（朴素）</td><td>$O(m \log m)$</td></tr>
+<tr><td>适用场景</td><td>稠密图</td><td>稀疏图</td></tr>
+<tr><td>数据结构</td><td>距离数组 dist[]</td><td>并查集</td></tr>
+</tbody>
+</table>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-shortest"><span class="secnum">4.5</span>最短路径</h2>
+
+<h3 id="sec-dijkstra">Dijkstra 算法</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">算法</span>Dijkstra 算法</div>
+  <p><strong>问题</strong>：求单源最短路径——从源点 $s$ 到图中所有其他顶点的最短路径长度。</p>
+  <p><strong>前提条件</strong>：所有边权为<span class="hl">非负值</span>。</p>
+  <p><strong>思想</strong>（贪心）：</p>
+  <ol class="steps">
+    <li>维护两个集合：$S$（已确定最短路径的顶点）和 $V \setminus S$（未确定的）。维护数组 $\text{dist}[v]$ 表示从 $s$ 经由 $S$ 中顶点到 $v$ 的当前最短距离。</li>
+    <li>每次从 $V \setminus S$ 中选择 $\text{dist}$ 值最小的顶点 $u$，将 $u$ 加入 $S$（$u$ 的最短路径已确定）。</li>
+    <li><strong>松弛</strong>（Relax）：对 $u$ 的每个邻居 $v$，若 $\text{dist}[u] + w(u,v) < \text{dist}[v]$，则更新 $\text{dist}[v]$。</li>
+    <li>重复直到所有顶点加入 $S$。</li>
+  </ol>
+  <p><strong>时间复杂度</strong>：$O(n^2)$（朴素），$O((n+m)\log n)$（优先队列）。</p>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>Dijkstra 不能处理负权边！</div>
+  <p>Dijkstra 的贪心假设是：当一个顶点 $u$ 被选出时，$\text{dist}[u]$ 已经是最终最短距离。但如果存在负权边，后续可能通过负权边找到更短的路径，违反贪心假设。</p>
+  <p>负权图应使用 Bellman-Ford 算法。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>Dijkstra 执行过程演示</div>
+  <p>设图有顶点 {1,2,3,4,5}，源点为 1。初始 dist[1]=0, dist[2]=30, dist[4]=60, dist[5]=10, 其余 $\infty$。</p>
+  <div class="tbl-wrap">
+  <table class="data">
+  <thead><tr><th>步骤</th><th>选中顶点</th><th>dist[1]</th><th>dist[2]</th><th>dist[3]</th><th>dist[4]</th><th>dist[5]</th></tr></thead>
+  <tbody>
+  <tr><td>初始</td><td>1</td><td>0</td><td>30</td><td>$\infty$</td><td>60</td><td>10</td></tr>
+  <tr><td>1</td><td>5(最小=10)</td><td>0</td><td>30</td><td>$\infty$</td><td>50*</td><td>10</td></tr>
+  <tr><td>2</td><td>2(最小=30)</td><td>0</td><td>30</td><td>55*</td><td>50</td><td>10</td></tr>
+  <tr><td>3</td><td>4(最小=50)</td><td>0</td><td>30</td><td>55</td><td>50</td><td>10</td></tr>
+  <tr><td>4</td><td>3(最小=55)</td><td>0</td><td>30</td><td>55</td><td>50</td><td>10</td></tr>
+  </tbody>
+  </table>
+  </div>
+  <p>*号表示该步骤中被更新（松弛）的距离值。每步选择 dist 最小的未确定顶点，然后对其邻居进行松弛。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>BFS 求无权图最短路径</div>
+  <p>如果图中所有边的权值都相同（或无权图），BFS 本身就能求最短路径！因为 BFS 按层次访问，第 $k$ 层的顶点距离源点恰好为 $k$。</p>
+  <p>Dijkstra 可以看作是 BFS 在<strong>加权图</strong>上的推广。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-topo"><span class="secnum">4.6</span>拓扑排序</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>拓扑排序 (Topological Sort)</div>
+  <p>对<strong>有向无环图</strong>（DAG）的所有顶点进行线性排序，使得对每条有向边 $\langle u, v \rangle$，$u$ 在序列中出现在 $v$ 之前。</p>
+  <ul>
+    <li><strong>前提条件</strong>：图必须是 DAG（有向无环图）。有环的图不存在拓扑排序。</li>
+    <li>拓扑排序的结果<strong>不唯一</strong>（可能有多个合法序列）。</li>
+  </ul>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">算法</span>Kahn 算法（BFS/入度法）</div>
+  <ol class="steps">
+    <li>计算所有顶点的入度。</li>
+    <li>将所有入度为 0 的顶点入队。</li>
+    <li>队首顶点出队，输出该顶点，删除该顶点及其所有出边（即对应邻居入度减 1）。</li>
+    <li>若有新的入度为 0 的顶点，入队。</li>
+    <li>重复直到队列为空。若输出的顶点数 $< n$，则<strong>图中有环</strong>。</li>
+  </ol>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">算法</span>DFS 法拓扑排序</div>
+  <p>对图进行 DFS，按照<strong>完成时间</strong>的逆序（即后序的逆序）排列顶点，就得到拓扑序列。</p>
+  <p>具体：DFS 中当一个顶点的所有后继都已访问完毕（即将返回时），将其压入栈。最终栈中从顶到底就是拓扑序。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>拓扑排序的典型应用</div>
+  <ul>
+    <li><strong>课程选修顺序</strong>：先修课必须排在后续课之前。</li>
+    <li><strong>编译依赖</strong>：被依赖的模块先编译。</li>
+    <li><strong>任务调度</strong>：前置任务完成后才能开始后续任务。</li>
+    <li><strong>判断有向图是否有环</strong>：若拓扑排序不能输出所有顶点，则有环。</li>
+  </ul>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>能判断有环的算法</div>
+  <p>"广度优先遍历、拓扑排序、求最短路径"三种算法中，能判断有向图是否有环的只有<strong>拓扑排序</strong>。</p>
+  <ul>
+    <li>BFS 本身不直接判环（虽然可以修改来判断无向图的环）。</li>
+    <li>Dijkstra 不判环。</li>
+    <li>拓扑排序：若不能输出所有顶点 → 有环。这是其核心特性。</li>
+  </ul>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-connectivity"><span class="secnum">4.7</span>连通性专题</h2>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>用 DFS/BFS 求连通分量</div>
+  <p>对无向图执行完整的 DFS（或 BFS）：每次从一个未访问的顶点启动遍历，所访问到的顶点集合构成一个<strong>连通分量</strong>。启动次数即为连通分量的个数。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>有向强连通图的最少边数</div>
+  <p>$n$ 个顶点的有向<strong>强连通图</strong>最少有 $n$ 条边。</p>
+  <p><strong>构造</strong>：$n$ 个顶点排成一个环 $v_1 \to v_2 \to \cdots \to v_n \to v_1$，恰好 $n$ 条边，任意两点互达。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>无向图边数 $\geq$ 顶点数则必有环</div>
+  <p>若无向图有 $n$ 个顶点、$m$ 条边，且 $m \geq n$，则图中<strong>一定存在回路</strong>。</p>
+  <p><strong>证明</strong>：$n$ 个顶点的无环连通图（树）最多有 $n-1$ 条边。即使非连通，$k$ 个连通分量构成的森林最多有 $n-k \leq n-1$ 条边。所以无环图最多 $n-1$ 条边。若 $m \geq n > n-1$，则必有环。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>连通无环无向图（树）的性质</div>
+  <p>对于连通、无环的无向图（即树）：</p>
+  <ul>
+    <li>恰有 $n-1$ 条边。</li>
+    <li><strong>每条边都是桥</strong>（删除任何一条边都会导致图不连通）。</li>
+    <li>任意两个顶点之间有且仅有一条简单路径。</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>非连通无向图的最少顶点数</div>
+  <p><strong>问题</strong>：拥有 $m$ 条边的非连通无向图，至少包括多少个顶点？</p>
+  <p><strong>分析</strong>：</p>
+  <ol class="steps">
+    <li>要使顶点数最少，应让尽可能多的边集中在尽量少的顶点之间。$k$ 个顶点的完全图有 $\dfrac{k(k-1)}{2}$ 条边。</li>
+    <li>找最小的 $k$ 使得 $\dfrac{k(k-1)}{2} \geq m$，即用 $k$ 个顶点构成的完全图能容纳 $m$ 条边。</li>
+    <li>要保证图<strong>非连通</strong>，至少需要多一个孤立顶点。所以答案为 $k + 1$。</li>
+  </ol>
+  <p><strong>例</strong>：$m = 21$。$k(k-1)/2 \geq 21 \Rightarrow k \geq 7$（因为 $7 \times 6 / 2 = 21$）。7 个顶点恰好构成完全图容纳 21 条边，但此时图连通。加一个孤立点使其非连通，答案为 <strong>8</strong>。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<!-- 往年真题部分 -->
+<!-- ============================================================ -->
+<h2 id="sec-exam-choice"><span class="secnum">真题</span>选择题精选</h2>
+
+<!-- 2021 选择9 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>无向完全图的边数</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">完全图 · 边数公式</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    n 个顶点的无向完全图的边数为（　）。<br>
+    A. $n(n-1)$　　B. $n(n+1)$　　C. $n(n-1)/2$　　D. $n(n+1)/2$
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">C. $n(n-1)/2$</div>
+      <p><strong>解析：</strong>无向完全图中每对顶点之间恰有一条边。$n$ 个顶点中选 2 个的组合数为 $\binom{n}{2} = \dfrac{n(n-1)}{2}$。</p>
+      <p>注意区分：<strong>有向</strong>完全图的边数为 $n(n-1)$（每对顶点间有正反两条弧）。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2021 选择10 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>生成树的性质辨析</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">生成树 · 连通分量</span>
+    <span class="exam-badge diff">★★☆</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    设无向图 $G=(V,E)$，$G'=(V',E')$，如果 $G'$ 是 $G$ 的生成树，则下面说法中<strong>错误</strong>的是（　）。<br>
+    A. $G'$ 是 $G$ 的子图<br>
+    B. $G'$ 是 $G$ 的连通分量<br>
+    C. $G'$ 是 $G$ 的极小连通子图且 $V'=V$<br>
+    D. $G'$ 是 $G$ 的一个无环子图
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">B</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li>A 正确：生成树的顶点集 $V'=V$，边集 $E' \subseteq E$，所以是子图。</li>
+        <li><strong>B 错误</strong>：连通分量是<span class="term">极大</span>连通子图（包含尽可能多的边）。而生成树是<span class="term">极小</span>连通子图（仅用 $n-1$ 条边保持连通）。如果 $G$ 本身连通，其连通分量就是 $G$ 自身（含所有边），不是只含 $n-1$ 条边的生成树。</li>
+        <li>C 正确：生成树的定义就是极小连通子图且顶点集等于原图顶点集。</li>
+        <li>D 正确：树是无环图。</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 选择8 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>由度数和边数求最少顶点</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">握手定理 · 度数和</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知一个无向图 G 含有 18 条边，其中度数为 4 的顶点个数为 3，度数为 3 的顶点个数为 4，其他顶点的度数均小于 3，请问图 G 所含的顶点个数至少是（　）。<br>
+    A. 10　　B. 11　　C. 13　　D. 15
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">C. 13</div>
+      <p><strong>解析：</strong></p>
+      <ol class="steps">
+        <li><strong>握手定理</strong>：度数之和 = $2m = 2 \times 18 = 36$。</li>
+        <li>已知顶点贡献的度数：$3 \times 4 + 4 \times 3 = 12 + 12 = 24$。</li>
+        <li>剩余度数需要由"其他顶点"提供：$36 - 24 = 12$。</li>
+        <li>其他顶点度数 $< 3$，即每个最多为 2。要使顶点数<strong>最少</strong>，让每个其他顶点度数尽量大（= 2）。</li>
+        <li>最少需要 $12 / 2 = 6$ 个其他顶点。</li>
+        <li>总顶点数至少 $3 + 4 + 6 = 13$。</li>
+      </ol>
+      <p><strong>验证</strong>：可以构造一个 13 个顶点、18 条边的无向图满足条件吗？3 个度4 + 4 个度3 + 6 个度2 = 12+12+12 = 36 = 2*18。确实可以构造。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 选择9 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>由 DFS 树判断图中不存在的边</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">DFS 树边分类</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    给定一个无向图 G，从顶点 V0 出发进行深度优先遍历，访问的边集合（树边）为：$\{(V_0,V_1),(V_0,V_4),(V_1,V_2),(V_1,V_3),(V_4,V_5),(V_5,V_6)\}$，则下面哪条边不能出现在 G 中？<br>
+    A. $(V_0, V_2)$　　B. $(V_4, V_6)$　　C. $(V_4, V_3)$　　D. $(V_0, V_6)$
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">C. $(V_4, V_3)$</div>
+      <p><strong>关键定理</strong>：在<strong>无向图</strong>的 DFS 中，所有非树边都是<strong>后向边</strong>（Back Edge），即连接一个顶点和它的<strong>祖先</strong>（或后代）。<span class="hl">无向图 DFS 中不存在交叉边</span>（Cross Edge）。</p>
+      <p><strong>DFS 树结构</strong>：</p>
+<pre><code>V0
+├── V1
+│   ├── V2
+│   └── V3
+└── V4
+    └── V5
+        └── V6</code></pre>
+      <p><strong>逐项分析</strong>：</p>
+      <ul>
+        <li>A. $(V_0, V_2)$：V0 是 V2 的祖先 → 合法后向边。可以存在。</li>
+        <li>B. $(V_4, V_6)$：V4 是 V6 的祖先 → 合法后向边。可以存在。</li>
+        <li><strong>C. $(V_4, V_3)$</strong>：V4 和 V3 <strong>不是祖先-后代关系</strong>（V3 在 V1 的子树中，V4 在 V0 的另一子树中）。这是一条<strong>交叉边</strong>。但无向图 DFS 中不可能出现交叉边！<br>
+        <strong>更直观的理解</strong>：DFS 访问 V3 时，V4 还未被访问。若 $(V_3, V_4)$ 是图中的边，则 DFS 在 V3 时发现未访问的邻居 V4，必然会从 V3 深入到 V4，使得 (V3,V4) 成为树边，而非 (V0,V4)。矛盾！</li>
+        <li>D. $(V_0, V_6)$：V0 是 V6 的祖先 → 合法后向边。可以存在。</li>
+      </ul>
+      <p>因此 <strong>C</strong> 不能出现。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 选择10 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>逆邻接表 DFS 遍历序列</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">逆邻接表 · DFS</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知一个有向图 G 的邻接入边表（逆邻接表）如下，从顶点 v0 出发对该图进行深度优先周游，得到的序列为？<br>
+<pre><code>v0 → [1] → [3] → null
+v1 → [0] → [2] → null
+v2 → null
+v3 → [2] → [4] → null
+v4 → [1] → null</code></pre>
+    A. V0V2V1V4V3　　B. V0V2V3V4V1　　C. V0V1V4V3V2　　D. V0V1V2V3V4
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">C. V0V1V4V3V2</div>
+      <p><strong>解题关键</strong>：逆邻接表记录的是指向每个顶点的边（入边）。我们需要<strong>还原出边（邻接表）</strong>才能做 DFS。</p>
+
+      <h4>第一步：从逆邻接表还原出边</h4>
+      <p>逆邻接表 "$v_i \to [a][b]\ldots$" 表示有边 $a \to v_i$ 和 $b \to v_i$。</p>
+      <ul>
+        <li>v0 的入边：v1→v0, v3→v0</li>
+        <li>v1 的入边：v0→v1, v2→v1</li>
+        <li>v2 的入边：无</li>
+        <li>v3 的入边：v2→v3, v4→v3</li>
+        <li>v4 的入边：v1→v4</li>
+      </ul>
+      <p>整理为<strong>出边表</strong>（按顶点编号排序）：</p>
+<pre><code>v0 → {v1}        （v0 的出边指向 v1）
+v1 → {v0, v4}   （v1 指向 v0 和 v4）
+v2 → {v1, v3}   （v2 指向 v1 和 v3）
+v3 → {v0}       （v3 指向 v0）
+v4 → {v3}       （v4 指向 v3）</code></pre>
+
+      <h4>第二步：从 v0 出发 DFS</h4>
+      <ol class="steps">
+        <li><strong>访问 v0</strong>。出边：v1。v1 未访问，递归到 v1。</li>
+        <li><strong>访问 v1</strong>。出边：v0, v4。v0 已访问；v4 未访问，递归到 v4。</li>
+        <li><strong>访问 v4</strong>。出边：v3。v3 未访问，递归到 v3。</li>
+        <li><strong>访问 v3</strong>。出边：v0。v0 已访问。回退。</li>
+        <li>回退到 v4（无更多出边），回退到 v1（无更多出边），回退到 v0（无更多出边）。</li>
+        <li>v2 从 v0 不可达。若做完整遍历，从 v2 重启：<strong>访问 v2</strong>。</li>
+      </ol>
+      <p>DFS 序列：<strong>V0, V1, V4, V3, V2</strong>。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 选择11 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>非连通无向图的最少顶点数</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">完全图 · 非连通</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    对于一个拥有 21 条边的非连通无向图，其至少包括（　）个顶点。<br>
+    A. 5　　B. 6　　C. 7　　D. 8
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">D. 8</div>
+      <p><strong>解析：</strong></p>
+      <ol class="steps">
+        <li>$k$ 个顶点的连通分量最多有 $\dfrac{k(k-1)}{2}$ 条边（完全图）。</li>
+        <li>要用<strong>尽可能少的顶点</strong>容纳 21 条边，把它们都放在一个连通分量中：$\dfrac{k(k-1)}{2} \geq 21$。</li>
+        <li>$k=7$ 时 $7 \times 6/2 = 21$，恰好。但此时 7 个顶点构成完全图，图是连通的。</li>
+        <li>要使图<strong>非连通</strong>，至少需要多一个孤立顶点（或把边分到两个连通分量中）。</li>
+        <li>最少顶点数 = $7 + 1 = 8$。</li>
+      </ol>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 选择13 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>邻接表存储的性质</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">存储结构 · 复杂度</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    有 n 个顶点 m 条边的无向图，下列说法中<strong>错误</strong>的是（　）。<br>
+    A. 采用邻接表储存，空间复杂度为 $O(m+n)$。<br>
+    B. 若为稠密图，更倾向于采用邻接矩阵存储。<br>
+    C. 采用邻接表储存，删除一个顶点的最坏情况时间复杂度为 $O(n+m)$。<br>
+    D. 若为稀疏图，深度优先遍历的时间复杂度低于广度优先周游的时间复杂度。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">D</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li>A 正确：邻接表空间 = $n$ 个顶点表头 + $2m$ 个边结点 = $O(n+m)$。</li>
+        <li>B 正确：稠密图中 $m$ 接近 $n^2$，邻接矩阵的 $O(n^2)$ 空间差不多，但查边 $O(1)$ 更快。</li>
+        <li>C 正确：删除顶点 $v$ 需要删除 $v$ 的邻接链表（$O(\text{deg}(v))$），还需要遍历所有其他顶点的链表，删除指向 $v$ 的边结点。最坏需要扫描整个邻接表 $O(n+m)$。</li>
+        <li><strong>D 错误</strong>：无论稀疏还是稠密，使用邻接表时 DFS 和 BFS 的时间复杂度<strong>都是 $O(n+m)$</strong>，二者相同，不存在"谁低于谁"。</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-judge"><span class="secnum">真题</span>判断题精选</h2>
+
+<!-- 2022 判断1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>连通无环无向图的边是桥</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">树的性质</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    对任意一个连通的、无环的无向图，从图中移除任何一条边得到的图均不连通。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">Y（正确）</div>
+      <p><strong>解析：</strong>连通且无环的无向图就是<strong>树</strong>。树有 $n$ 个顶点恰有 $n-1$ 条边，是<span class="term">极小连通图</span>——删除任何一条边都会导致不连通。换言之，树的每条边都是<strong>桥</strong>（cut edge）。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 判断6 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>拓扑排序可用 DFS 和 BFS 求解</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">拓扑排序实现</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    任一有向图的拓扑排列既可以通过深度优先搜索求解，也可以通过宽度优先搜索求解。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">Y（正确）</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li><strong>BFS 法</strong>（Kahn 算法）：反复选入度为 0 的顶点输出，删除其出边。</li>
+        <li><strong>DFS 法</strong>：对图做 DFS，按完成时间逆序排列顶点即得拓扑序。</li>
+      </ul>
+      <p>注意：前提是图必须是 DAG。如果图有环，两种方法都会检测到（BFS 输出不完全，DFS 发现后向边）。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 判断8 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>无向图至少有一个连通分量</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">连通分量</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    一个有 n 个结点的无向图，最少有一个连通分量。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">Y（正确）</div>
+      <p><strong>解析：</strong>即使所有顶点都是孤立的（无边），每个顶点自身也构成一个连通分量（只含一个顶点的子图是连通的）。所以 $n$ 个顶点至少有 1 个连通分量（实际是至少 1 个，最多 $n$ 个）。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 判断9 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>图的遍历算法只用于无向图</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">DFS/BFS 适用范围</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    图的遍历算法（如深度优先搜索 DFS 和广度优先搜索 BFS）都只能用于无向图。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">N（错误）</div>
+      <p><strong>解析：</strong>DFS 和 BFS 对有向图和无向图<strong>都适用</strong>。在有向图中，"邻居"指的是出边指向的顶点。两种算法的核心逻辑（标记+扩展）与图是否有向无关。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 判断10 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>边权互不相同时 MST 唯一</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">MST 唯一性</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    若连通无向图的边的权值互不相同，其最小生成树只有一个。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">Y（正确）</div>
+      <p><strong>解析：</strong>这是 MST 唯一性定理。当所有边权严格不同时，MST 唯一。</p>
+      <p><strong>直观理解</strong>：Kruskal 算法按权排序后逐条加入。若边权互不相同，排序唯一确定，每步的选择也唯一确定（没有"平手"需要打破的情况），因此结果唯一。</p>
+      <p>反之，若存在权值相同的边，可能有多棵 MST（在相同权值的边之间做不同选择）。</p>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-fill"><span class="secnum">真题</span>填空题精选</h2>
+
+<!-- 2021 填空10 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>稀疏图的存储选择</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">存储结构选择</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    如果一个图节点多而边少（稀疏图），适宜采用邻接矩阵和邻接表中的____方式进行存储。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">邻接表</div>
+      <p><strong>解析：</strong>稀疏图中 $m \ll n^2$。邻接矩阵需要 $O(n^2)$ 空间（大量存储 0/无穷），浪费严重。邻接表只需 $O(n+m)$ 空间，高效紧凑。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 填空8 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>能判断有向图有环的算法</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">拓扑排序 · 环检测</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    在广度优先遍历、拓扑排序、求最短路径三种算法中，可以判断出一个有向图是否有环（回路）的是____。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">拓扑排序</div>
+      <p><strong>解析：</strong>拓扑排序只能对 DAG（有向无环图）成功完成。若图中有环，入度法将无法输出所有顶点（因为环中所有顶点的入度永远无法降为 0）。所以<strong>拓扑排序失败 = 图有环</strong>。</p>
+      <p>BFS 本身不专门检测有向图的环；Dijkstra 也不检测环。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 填空9 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>强连通图最少边数</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">强连通图</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    有 n（n $\geq$ 2）个顶点的有向强连通图最少有____条边。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">$n$</div>
+      <p><strong>解析：</strong>$n$ 个顶点形成一个<strong>有向环</strong>：$v_1 \to v_2 \to \cdots \to v_n \to v_1$。恰好 $n$ 条边，任意两点之间沿环方向可达。这是满足强连通的最少边数。</p>
+      <p>若少于 $n$ 条边（即 $\leq n-1$ 条），则图连边的"总出度"$\leq n-1$，至少有一个顶点出度为 0，从该顶点出发无法到达其他顶点，不可能强连通。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 填空10 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>边数与回路的关系</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">边数 vs 环</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    一个无向图，如果边的数量 m ____ （填写数量关系）结点个数 n，那么该图一定存在回路。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">$m \geq n$</div>
+      <p><strong>解析：</strong>$n$ 个顶点的无环图（森林）最多有 $n-1$ 条边。因此若 $m \geq n > n-1$，则图中一定存在回路。</p>
+      <p>注意：$m = n-1$ 时可以无环（恰好是树），所以条件是 $m \geq n$ 而非 $m > n-1$（二者等价）。</p>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-short"><span class="secnum">真题</span>简答题精选</h2>
+
+<!-- 2021 简答4 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">简答</span>Prim 算法求最小生成树</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">Prim 算法 · 邻接矩阵</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知图 G 的顶点集 $V=\{V_0,V_1,V_2,V_3,V_4\}$，邻接矩阵如下。<br>
+    (1) 根据邻接矩阵画出图 G；<br>
+    (2) 用 Prim 算法从 V0 出发求最小生成树；<br>
+    (3) 画出每一步的生成过程。
+<pre><code>     V0  V1  V2  V3  V4
+V0 [  0   7   ∞   4   2 ]
+V1 [  7   0   9   1   5 ]
+V2 [  ∞   9   0   3   ∞ ]
+V3 [  4   1   3   0  10 ]
+V4 [  2   5   ∞  10   0 ]</code></pre>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <h4>(1) 画图</h4>
+      <p>无向加权图，边为：V0-V1(7), V0-V3(4), V0-V4(2), V1-V2(9), V1-V3(1), V1-V4(5), V2-V3(3), V3-V4(10)。</p>
+
+      <h4>(2)(3) Prim 从 V0 出发的逐步过程</h4>
+      <div class="tbl-wrap">
+      <table class="data">
+      <thead><tr><th>步骤</th><th>已选集合 $S$</th><th>候选边（S 到 V\S）</th><th>选中的最小边</th></tr></thead>
+      <tbody>
+      <tr><td>0</td><td>{V0}</td><td>V0-V1(7), V0-V3(4), V0-V4(2)</td><td><strong>V0-V4(2)</strong></td></tr>
+      <tr><td>1</td><td>{V0, V4}</td><td>V0-V1(7), V0-V3(4), V4-V1(5), V4-V3(10)</td><td><strong>V0-V3(4)</strong></td></tr>
+      <tr><td>2</td><td>{V0, V4, V3}</td><td>V0-V1(7), V4-V1(5), V3-V1(1), V3-V2(3)</td><td><strong>V3-V1(1)</strong></td></tr>
+      <tr><td>3</td><td>{V0, V4, V3, V1}</td><td>V1-V2(9), V3-V2(3)</td><td><strong>V3-V2(3)</strong></td></tr>
+      </tbody>
+      </table>
+      </div>
+
+      <div class="final-answer">
+        MST 的边：V0-V4(2), V0-V3(4), V3-V1(1), V3-V2(3)<br>
+        总权值 = 2 + 4 + 1 + 3 = <strong>10</strong>
+      </div>
+
+      <h4>生成树示意</h4>
+<pre><code>    V1
+    |  (1)
+    V3 ---- V2
+    |  (3)
+   (4)
+    |
+    V0
+    |  (2)
+    V4</code></pre>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 简答1 Dijkstra -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">简答</span>Dijkstra 算法求最短路径</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">Dijkstra · 逐步状态表</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    用 Dijkstra 算法求出图中顶点 1 到其余各顶点的最短路径。图有 8 个顶点，初始时顶点 1 到顶点 2 距离 30，到顶点 4 距离 60，到顶点 5 距离 10，其余为 $\infty$。写出算法执行过程中各步的状态。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <p><strong>Dijkstra 逐步执行要点：</strong></p>
+      <ol class="steps">
+        <li>初始化：源点 dist[1]=0 加入 S。设其他可达的初始距离。</li>
+        <li>每步选 dist 最小的未确定顶点，加入 S。</li>
+        <li>对该顶点的所有邻居做松弛：if dist[u] + w(u,v) &lt; dist[v] then update。</li>
+        <li>记录每步的 dist 数组状态和选中的顶点。</li>
+      </ol>
+      <p><strong>答题格式</strong>（需根据具体图填写）：</p>
+      <div class="tbl-wrap">
+      <table class="data">
+      <thead><tr><th>迭代</th><th>S 集合</th><th>选中顶点</th><th>dist[2]</th><th>dist[3]</th><th>dist[4]</th><th>dist[5]</th><th>...</th></tr></thead>
+      <tbody>
+      <tr><td>初始</td><td>{1}</td><td>1</td><td>30</td><td>$\infty$</td><td>60</td><td>10</td><td>...</td></tr>
+      <tr><td>1</td><td>{1,5}</td><td>5</td><td>30</td><td>...</td><td>50*</td><td>10</td><td>...</td></tr>
+      <tr><td>2</td><td>{1,5,2}</td><td>2</td><td>30</td><td>...</td><td>...</td><td>10</td><td>...</td></tr>
+      <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+      </tbody>
+      </table>
+      </div>
+      <p><strong>注意事项</strong>：</p>
+      <ul>
+        <li>每步的 dist 值只可能<strong>减小</strong>（松弛）或保持不变。</li>
+        <li>一旦顶点加入 S，其 dist 值不再改变。</li>
+        <li>每步标明是哪条边导致了松弛。</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 简答3 密码破解/拓扑排序 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">简答</span>密码破解与拓扑排序</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">拓扑排序应用</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    Dr. Stranger 的电脑感染了一种病毒。该病毒会将文档中的每种字母固定替换为另一种字母，且互不相同。给出还原文档的思路和具体步骤。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <p><strong>核心思路</strong>：这是一道将<strong>字母顺序问题转化为拓扑排序</strong>的应用题。</p>
+      <ol class="steps">
+        <li><strong>建立字母偏序关系</strong>：如果已知加密后的字典序排列，比较相邻单词，找到第一个不同的字符位置，可推断两个加密字母的先后顺序关系（类似于 LeetCode "Alien Dictionary" 问题）。</li>
+        <li><strong>构建有向图</strong>：每个字母是一个顶点。若字母 A 应排在字母 B 前面，加一条有向边 $A \to B$。</li>
+        <li><strong>拓扑排序</strong>：对该有向图做拓扑排序，得到字母的正确顺序。</li>
+        <li><strong>还原映射</strong>：将拓扑排序得到的加密字母顺序与标准字母表顺序 (a, b, c, ...) 对应，建立解密映射表。</li>
+        <li><strong>解密文档</strong>：按映射表将每个加密字母替换回原始字母。</li>
+      </ol>
+      <p><strong>关键洞察</strong>：替换是一一映射（双射），所以只要确定加密字母的相对顺序，就能恢复原始字母表映射。拓扑排序恰好解决"从偏序关系恢复全序"的问题。</p>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-algo"><span class="secnum">真题</span>算法填空题</h2>
+
+<!-- 2021 算法2 迷宫DFS -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">编程</span>迷宫 DFS 探索（2021 算法题2）</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">DFS · 图建模 · 回溯</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    用邻接表表示图，完成 DFS 实现的迷宫探索：
+<pre><code>def mazeGraph(mlist, rows, cols):
+    mGraph = Graph()
+    vstart = None
+    for row in range(rows):
+        for col in range(cols):
+            if mlist[row][col] != "+":
+                mGraph.addVertex((row, col), mlist[row][col])
+                if mlist[row][col] == "S":
+                    vstart = ___(1)___            # 1分
+    for v in mGraph:
+        row, col = v.getId()
+        for i in [(-1, 0), (1, 0), (0, -1), (0, +1)]:
+            if (0 &lt;= row + i[0] &lt; rows) and (0 &lt;= col + i[1] &lt; cols):
+                if (row + i[0], col + i[1]) in mGraph:
+                    mGraph.addEdge(___(2)___)     # 1分
+    return mGraph, vstart
+
+def searchMaze(path, vcurrent):
+    vcurrent.setColor('gray')
+    path.append(vcurrent.getId())
+    if vcurrent.getLabel() != "E":
+        done = False
+        for nbr in ___(3)___:                    # 2分
+            if nbr.getColor() == "white":
+                done = ___(4)___                  # 2分
+                if done:
+                    break
+        if not done:
+            ___(5)___                             # 2分
+            vcurrent.setColor("white")
+    else:
+        done = True
+    return done</code></pre>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">
+        (1) <code>mGraph.getVertex((row, col))</code><br>
+        (2) <code>(row, col), (row + i[0], col + i[1])</code><br>
+        (3) <code>vcurrent.getConnections()</code><br>
+        (4) <code>searchMaze(path, nbr)</code><br>
+        (5) <code>path.pop()</code>
+      </div>
+
+      <h4>逐空详解</h4>
+
+      <p><strong>(1) <code>mGraph.getVertex((row, col))</code></strong></p>
+      <p>当发现迷宫入口 "S" 时，需要获取对应的顶点对象赋给 vstart。<code>addVertex</code> 用坐标元组作为顶点 ID，所以通过 <code>getVertex((row, col))</code> 获取顶点。</p>
+
+      <p><strong>(2) <code>(row, col), (row + i[0], col + i[1])</code></strong></p>
+      <p><code>addEdge</code> 需要两个顶点的 ID。当前顶点坐标为 <code>(row, col)</code>，邻居坐标为 <code>(row + i[0], col + i[1])</code>。四个方向 i 分别是上(-1,0)、下(1,0)、左(0,-1)、右(0,1)。</p>
+
+      <p><strong>(3) <code>vcurrent.getConnections()</code></strong></p>
+      <p>获取当前顶点的所有<strong>邻接顶点</strong>（在图的邻接表中与当前顶点有边相连的顶点）。这是标准的图 ADT 方法，返回邻居列表。</p>
+
+      <p><strong>(4) <code>searchMaze(path, nbr)</code></strong></p>
+      <p>DFS 递归：对未访问的邻居 nbr 进行递归搜索。返回值 done 表示是否找到终点。若找到（done=True），立即 break 停止探索其他方向。</p>
+
+      <p><strong>(5) <code>path.pop()</code></strong></p>
+      <p><strong>回溯</strong>（Backtracking）：如果从当前顶点的所有方向都走不到终点（done 仍为 False），说明当前位置是死胡同。需要：
+        <ul>
+          <li>从路径中弹出当前顶点（<code>path.pop()</code>）</li>
+          <li>将颜色恢复为 white（下一行 <code>vcurrent.setColor("white")</code>），允许将来从其他路径再次访问</li>
+        </ul>
+      </p>
+
+      <h4>算法整体逻辑</h4>
+      <p>这是一个<strong>带回溯的 DFS</strong>：</p>
+      <ul>
+        <li>灰色（gray）= 当前路径上的顶点</li>
+        <li>白色（white）= 未访问或已回溯的顶点</li>
+        <li>找到终点 "E" → 返回 True，路径保留</li>
+        <li>走入死胡同 → pop + 恢复白色，返回 False</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 算法3 Prim -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">编程</span>Prim 算法实现（2024 算法题3）</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">Prim · 邻接矩阵</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    完成 Prim 算法的邻接矩阵实现：
+<pre><code>def prim(G):
+    INF = 1 &lt;&lt; 30
+    n = len(G)
+    dist = [INF for i in range(n)]
+    used = [False for i in range(n)]
+    prev = [None for i in range(n)]
+    doneNum = 0
+    edges = []
+    while ___(1)___:                       # 1分
+        if doneNum == 0:
+            x = minDist = 0
+        else:
+            x, minDist = None, INF
+            for i in range(n):
+                if not used[i] and ___(2)___:  # 1分
+                    x, minDist = i, dist[i]
+        ___(3)___                           # 1分
+        doneNum += 1
+        if doneNum > 1:
+            edges.append(___(4)___)         # 1分
+        for v in range(n):
+            if not used[v] and ___(5)___:   # 2分
+                dist[v] = G[x][v]
+                ___(6)___                   # 1分
+    return edges</code></pre>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">
+        (1) <code>doneNum &lt; n</code><br>
+        (2) <code>dist[i] &lt; minDist</code><br>
+        (3) <code>used[x] = True</code><br>
+        (4) <code>(x, prev[x])</code><br>
+        (5) <code>G[x][v] is not None and G[x][v] &lt; dist[v]</code><br>
+        (6) <code>prev[v] = x</code>
+      </div>
+
+      <h4>逐空详解</h4>
+
+      <p><strong>(1) <code>doneNum &lt; n</code></strong></p>
+      <p>循环条件：Prim 需要将 $n$ 个顶点全部加入 MST，所以循环执行 $n$ 次。当 doneNum 达到 $n$ 时停止。</p>
+
+      <p><strong>(2) <code>dist[i] &lt; minDist</code></strong></p>
+      <p>在未加入 MST 的顶点中找 dist 最小的。标准的"找最小值"模式：如果当前 dist[i] 比已知最小值还小，更新最小值。</p>
+
+      <p><strong>(3) <code>used[x] = True</code></strong></p>
+      <p>将选中的顶点 x 标记为已使用（加入 MST 集合 S）。后续不再考虑该顶点。</p>
+
+      <p><strong>(4) <code>(x, prev[x])</code></strong></p>
+      <p>记录 MST 的边。当 doneNum > 1 时，顶点 x 是通过边 (x, prev[x]) 连接到已有 MST 的。prev[x] 记录了"x 是从哪个已选顶点引入的"。</p>
+
+      <p><strong>(5) <code>G[x][v] is not None and G[x][v] &lt; dist[v]</code></strong></p>
+      <p>松弛/更新操作的条件：</p>
+      <ul>
+        <li><code>G[x][v] is not None</code>：x 和 v 之间有边（邻接矩阵中非 None）。</li>
+        <li><code>G[x][v] &lt; dist[v]</code>：通过 x 连接 v 的边权比当前已知的最短连接距离更小。</li>
+      </ul>
+      <p>这是 Prim 的核心：维护每个未选顶点到<strong>已选集合</strong>的最短边权。</p>
+
+      <p><strong>(6) <code>prev[v] = x</code></strong></p>
+      <p>更新 v 的前驱为 x，表示 v 当前最短的连接方式是通过 x。配合上面 dist[v] = G[x][v] 一起使用。</p>
+
+      <h4>算法对照 Prim 思想</h4>
+      <div class="tbl-wrap">
+      <table class="data">
+      <thead><tr><th>代码变量</th><th>对应 Prim 概念</th></tr></thead>
+      <tbody>
+      <tr><td><code>used[i]</code></td><td>顶点 i 是否已在 MST 集合 S 中</td></tr>
+      <tr><td><code>dist[v]</code></td><td>顶点 v 到集合 S 的最短边权</td></tr>
+      <tr><td><code>prev[v]</code></td><td>连接 v 到 S 的那条最短边的另一端</td></tr>
+      <tr><td><code>edges</code></td><td>MST 的边集</td></tr>
+      </tbody>
+      </table>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 算法4 连通分量 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">编程</span>DFS 计算连通分量的结点个数（2024 算法题4）</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">DFS · 连通分量</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    完成计算无向图各连通分量结点个数的代码：
+<pre><code>def dfs(node, visited, graph, n):
+    count = 1
+    visited[node] = True
+    for i in range(n):
+        if i in graph[node] and ___(1)___:     # 1分
+            count += ___(2)___                  # 2分
+    return count
+
+def count_components(n, edges):
+    graph = {i: [] for i in range(n)}
+    for u, v in edges:
+        ___(3)___                               # 1分
+        ___(4)___                               # 1分
+    visited = [False] * n
+    components = []
+    for i in range(n):
+        if ___(5)___:                           # 1分
+            components.append(___(6)___)        # 2分
+    return components</code></pre>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">
+        (1) <code>not visited[i]</code><br>
+        (2) <code>dfs(i, visited, graph, n)</code><br>
+        (3) <code>graph[u].append(v)</code><br>
+        (4) <code>graph[v].append(u)</code><br>
+        (5) <code>not visited[i]</code><br>
+        (6) <code>dfs(i, visited, graph, n)</code>
+      </div>
+
+      <h4>逐空详解</h4>
+
+      <p><strong>(1) <code>not visited[i]</code></strong></p>
+      <p>DFS 只访问<strong>未被标记</strong>的邻居。若 visited[i] 为 True，说明 i 已被之前的递归处理过，不应重复计数。</p>
+
+      <p><strong>(2) <code>dfs(i, visited, graph, n)</code></strong></p>
+      <p>递归调用 DFS 处理邻居 i，返回从 i 出发能到达的（包括 i 自身的）未访问顶点数。将结果<strong>累加</strong>到 count 中。</p>
+
+      <p><strong>(3)(4) <code>graph[u].append(v)</code> 和 <code>graph[v].append(u)</code></strong></p>
+      <p>构建<strong>无向图</strong>的邻接表：每条边 (u, v) 需要在两个方向都加入。u 的邻居列表加 v，v 的邻居列表加 u。</p>
+
+      <p><strong>(5) <code>not visited[i]</code></strong></p>
+      <p>遍历所有顶点，找到<strong>未访问</strong>的顶点作为新连通分量的起点。每个未访问顶点启动一次 DFS，对应一个新的连通分量。</p>
+
+      <p><strong>(6) <code>dfs(i, visited, graph, n)</code></strong></p>
+      <p>从未访问的顶点 i 启动 DFS，返回该连通分量的<strong>结点个数</strong>，追加到 components 列表中。</p>
+
+      <h4>算法整体逻辑</h4>
+      <p><code>count_components</code> 返回一个列表，每个元素是一个连通分量的顶点数。例如对于 3 个连通分量（大小分别为 4、2、1）的图，返回 [4, 2, 1]。</p>
+      <p>DFS 函数的 count 从 1 开始（计入当前节点），然后递归累加所有可达的未访问节点数。这是计算连通分量大小的经典模式。</p>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-summary"><span class="secnum">总结</span>本章速查表</h2>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>图的核心公式与性质</caption>
+<thead><tr><th>内容</th><th>公式/结论</th></tr></thead>
+<tbody>
+<tr><td>无向图度数和</td><td>$\sum \text{deg}(v_i) = 2m$</td></tr>
+<tr><td>有向图度数和</td><td>$\sum \text{ID} = \sum \text{OD} = m$</td></tr>
+<tr><td>无向完全图边数</td><td>$n(n-1)/2$</td></tr>
+<tr><td>有向完全图边数</td><td>$n(n-1)$</td></tr>
+<tr><td>树的边数</td><td>$n-1$（连通无环）</td></tr>
+<tr><td>强连通图最少边数</td><td>$n$（构成一个有向环）</td></tr>
+<tr><td>无向图有环条件</td><td>$m \geq n$</td></tr>
+<tr><td>非连通图最少顶点</td><td>找最小 $k$ 使 $k(k-1)/2 \geq m$，答案为 $k+1$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>图算法复杂度速查</caption>
+<thead><tr><th>算法</th><th>时间复杂度</th><th>适用场景</th></tr></thead>
+<tbody>
+<tr><td>DFS（邻接表）</td><td>$O(n+m)$</td><td>连通分量、环检测、拓扑排序</td></tr>
+<tr><td>DFS（邻接矩阵）</td><td>$O(n^2)$</td><td>同上</td></tr>
+<tr><td>BFS（邻接表）</td><td>$O(n+m)$</td><td>无权最短路、层序遍历</td></tr>
+<tr><td>BFS（邻接矩阵）</td><td>$O(n^2)$</td><td>同上</td></tr>
+<tr><td>Prim（朴素）</td><td>$O(n^2)$</td><td>稠密图 MST</td></tr>
+<tr><td>Kruskal</td><td>$O(m \log m)$</td><td>稀疏图 MST</td></tr>
+<tr><td>Dijkstra（朴素）</td><td>$O(n^2)$</td><td>非负权单源最短路</td></tr>
+<tr><td>拓扑排序</td><td>$O(n+m)$</td><td>DAG 排序、判环</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>存储结构对比速查</caption>
+<thead><tr><th>特征</th><th>邻接矩阵</th><th>邻接表</th></tr></thead>
+<tbody>
+<tr><td>空间</td><td>$O(n^2)$</td><td>$O(n+m)$</td></tr>
+<tr><td>查边</td><td>$O(1)$</td><td>$O(\text{deg})$</td></tr>
+<tr><td>遍历邻居</td><td>$O(n)$</td><td>$O(\text{deg})$</td></tr>
+<tr><td>求入度</td><td>$O(n)$（列求和）</td><td>$O(n+m)$（需逆邻接表）</td></tr>
+<tr><td>适合</td><td>稠密图</td><td>稀疏图</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="conclusion">
+本章核心：(1) 握手定理：度之和=2m；(2) 稀疏图用邻接表，稠密图用邻接矩阵；(3) DFS/BFS 复杂度相同，都适用于有向图和无向图；(4) Prim 适合稠密图 O(n^2)，Kruskal 适合稀疏图 O(m log m)；(5) Dijkstra 不能处理负权边；(6) 拓扑排序可判环，DFS/BFS 都能实现；(7) 边权互不相同时 MST 唯一；(8) 连通无环无向图=树，每条边都是桥。
+</div>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>

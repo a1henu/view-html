@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第三章 树与二叉树 · 数据结构与算法B 复习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">数据结构与算法B<small>复习报告 · 第三章</small></div>
+    <a class="home-link" href="index.html">&larr; 返回首页目录</a>
+    <nav>
+      <div class="nav-group">知识点</div>
+      <a href="#sec-basic">3.1 树的基本概念</a>
+      <a href="#sec-binary" class="lvl2">3.2 二叉树</a>
+      <a href="#sec-traversal" class="lvl2">3.3 二叉树的遍历</a>
+      <a href="#sec-bst" class="lvl2">3.4 二叉排序树 BST</a>
+      <a href="#sec-huffman" class="lvl2">3.5 哈夫曼树与编码</a>
+      <a href="#sec-heap" class="lvl2">3.6 堆</a>
+      <a href="#sec-forest" class="lvl2">3.7 森林</a>
+      <div class="nav-group">往年真题</div>
+      <a href="#exam-2021">2021 年真题</a>
+      <a href="#exam-2022" class="lvl2">2022 年真题</a>
+      <a href="#exam-2024" class="lvl2">2024 年真题</a>
+      <a href="#exam-algo" class="lvl2">算法填空题</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">DATA STRUCTURES &middot; TREES</div>
+      <h1>第三章 树与二叉树</h1>
+      <p>树是非线性结构的核心，二叉树是整门课的重中之重。本章涵盖树的基本概念、二叉树性质与遍历、BST、哈夫曼编码、堆、森林等核心内容。</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.1 树的基本概念
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-basic"><span class="secnum">3.1</span>树的基本概念</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>树（Tree）</div>
+  <p><strong>递归定义</strong>：树是 $n$（$n \ge 0$）个结点的有限集合 $T$。当 $n=0$ 时为空树；当 $n > 0$ 时，存在唯一的<span class="term">根结点</span> $r$，其余结点可分为 $m$（$m \ge 0$）个互不相交的有限集 $T_1, T_2, \ldots, T_m$，每个集合本身又是一棵树，称为根的<span class="term">子树</span>。</p>
+  <p><strong>直觉</strong>：树是一种"一对多"的层次关系，从根出发向下分裂，每个结点可以有零个或多个后继，但最多只有一个前驱（父结点）。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>树的术语</div>
+  <ul>
+    <li><span class="term">根（Root）</span>：没有父结点的结点，整棵树唯一。</li>
+    <li><span class="term">叶子（Leaf）/ 终端结点</span>：没有子结点（度为 0）的结点。</li>
+    <li><span class="term">度（Degree）</span>：一个结点的子结点个数。树的度 = 所有结点度的最大值。</li>
+    <li><span class="term">层（Level）</span>：根结点在第 0 层（或第 1 层，视约定），其子女在第 1 层（或第 2 层），依次类推。</li>
+    <li><span class="term">高度（Height）</span>：从根到最远叶子的路径上的边数（或结点数减1）。本课程约定：高度 = 最大层数 + 1（若根在第 0 层）。</li>
+    <li><span class="term">深度（Depth）</span>：从根到某结点的路径上的边数（根的深度为 0）。</li>
+    <li><span class="term">兄弟</span>：拥有同一父结点的结点互称兄弟。</li>
+    <li><span class="term">祖先 / 子孙</span>：从根到某结点路径上的所有结点是该结点的祖先；反之为子孙。</li>
+  </ul>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>树的基本性质</div>
+  <p><strong>性质 1</strong>：$n$ 个结点的树恰好有 <span class="hl">$n-1$ 条边</span>。</p>
+  <p><em>证明</em>：除根结点外，每个结点恰好有一条边连向其父结点，所以边数 = $n - 1$。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>度与结点数的关系（高频考点）</div>
+  <p>设一棵树中，度为 $i$ 的结点有 $n_i$ 个（$i = 0, 1, 2, \ldots, m$），则：</p>
+  $$n = n_0 + n_1 + n_2 + \cdots + n_m$$
+  <p>边数 = $n - 1$ = 所有结点的度之和 = $\sum_{i=1}^{m} i \cdot n_i$</p>
+  <p>因此：</p>
+  $$\boxed{n = 1 + \sum_{i=1}^{m} i \cdot n_i}$$
+  <p><strong>推论（叶子数公式）</strong>：将 $n = n_0 + n_1 + \cdots + n_m$ 代入 $n - 1 = \sum i \cdot n_i$：</p>
+  $$n_0 + n_1 + \cdots + n_m - 1 = n_1 + 2n_2 + 3n_3 + \cdots + mn_m$$
+  $$\boxed{n_0 = 1 + \sum_{i=2}^{m}(i-1) \cdot n_i = 1 + n_2 + 2n_3 + 3n_4 + \cdots + (m-1)n_m}$$
+  <p><strong>直觉</strong>：每多一个度为 $k$ 的结点（$k \ge 2$），就比"只有度 0 和度 1"的情况多产生 $k-1$ 个叶子。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>度为 3 的树中结点计数</div>
+  <p>在一棵度为 3 的树中，度为 3 的结点有 2 个，度为 2 的结点有 1 个，度为 1 的结点有 0 个，求叶子结点数。</p>
+  <details class="solution"><summary></summary><div>
+    <p><strong>方法一：用公式</strong></p>
+    <p>$n_0 = 1 + (2-1) \times n_2 + (3-1) \times n_3 = 1 + 1 \times 1 + 2 \times 2 = 1 + 1 + 4 = 6$</p>
+    <p><strong>方法二：从边数出发</strong></p>
+    <p>边数 = $3 \times 2 + 2 \times 1 + 1 \times 0 = 8$，所以 $n = 9$。</p>
+    <p>$n_0 = 9 - 0 - 1 - 2 = 6$。</p>
+    <div class="final-answer">$n_0 = 6$</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.2 二叉树
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-binary"><span class="secnum">3.2</span>二叉树</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>二叉树（Binary Tree）</div>
+  <p>二叉树是 $n$（$n \ge 0$）个结点的有限集合，或者是空集（$n=0$），或者由一个根结点和两棵互不相交的、分别称为<span class="term">左子树</span>和<span class="term">右子树</span>的二叉树组成。</p>
+  <p><strong>关键区分</strong>：二叉树不是度为 2 的树！二叉树严格区分左右子树，即使只有一个子结点也要区分是左还是右。</p>
+</div>
+
+<h3>二叉树的重要性质</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质 1</span>各层最多结点数</div>
+  <p>二叉树第 $i$ 层（根为第 0 层）上最多有 $2^i$ 个结点。</p>
+  <p><em>证明（归纳法）</em>：第 0 层有 1 = $2^0$ 个结点（根）。设第 $i$ 层最多 $2^i$ 个，则第 $i+1$ 层最多 $2 \times 2^i = 2^{i+1}$ 个。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质 2</span>最多结点总数</div>
+  <p>高度为 $h$ 的二叉树（根在第 0 层，最大层数为 $h$）最多有 $\displaystyle\sum_{i=0}^{h} 2^i = 2^{h+1} - 1$ 个结点。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质 3</span>$n_0 = n_2 + 1$（极高频考点）</div>
+  <p>对任何一棵非空二叉树，若叶子结点数为 $n_0$，度为 2 的结点数为 $n_2$，则：</p>
+  $$\boxed{n_0 = n_2 + 1}$$
+  <p><em>证明</em>：设度为 1 的结点数为 $n_1$。</p>
+  <ul class="steps">
+    <li>结点总数 $n = n_0 + n_1 + n_2$</li>
+    <li>边数 = $n - 1 = n_1 + 2n_2$（每个度为 $k$ 的结点贡献 $k$ 条向下的边）</li>
+    <li>两式相减：$n_0 + n_1 + n_2 - 1 = n_1 + 2n_2$</li>
+    <li>化简得 $n_0 = n_2 + 1$。</li>
+  </ul>
+  <p><strong>直觉</strong>：树从根开始有 1 个结点，每个度为 2 的结点"分裂"出 1 个额外结点，度为 1 的结点不增不减，所以叶子总比"分裂点"多 1。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质 4</span>完全二叉树的高度</div>
+  <p>含 $n$ 个结点的完全二叉树的高度（层数 - 1）为 $h = \lfloor \log_2 n \rfloor$。</p>
+  <p>若定义高度 = 层数，则高度 = $\lfloor \log_2 n \rfloor + 1$。</p>
+</div>
+
+<h3>完全二叉树与满二叉树</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>满二叉树 / 完全二叉树</div>
+  <p><strong>满二叉树</strong>：所有非叶结点的度都为 2，且所有叶子在同一层。等价地说，没有度为 1 的结点，且所有叶子在最底层。高度 $h$ 的满二叉树恰好有 $2^{h+1} - 1$ 个结点。</p>
+  <p><strong>完全二叉树</strong>：对一棵满二叉树，按层序编号后，从最后一个结点开始连续去掉若干个结点得到的就是完全二叉树。等价定义：除最后一层外每层都是满的，且最后一层的结点集中在左侧。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>完全二叉树的编号关系</div>
+  <p>按层序从 0 开始编号（根为 0）：</p>
+  <ul>
+    <li>结点 $i$ 的左孩子编号：$2i + 1$</li>
+    <li>结点 $i$ 的右孩子编号：$2i + 2$</li>
+    <li>结点 $i$ 的父结点编号：$\lfloor(i-1)/2\rfloor$</li>
+  </ul>
+  <p>按层序从 1 开始编号（根为 1）：</p>
+  <ul>
+    <li>结点 $i$ 的左孩子编号：$2i$</li>
+    <li>结点 $i$ 的右孩子编号：$2i + 1$</li>
+    <li>结点 $i$ 的父结点编号：$\lfloor i/2 \rfloor$</li>
+  </ul>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>完全二叉树中 $n_1$ 的取值</div>
+  <p>完全二叉树中度为 1 的结点要么有 0 个（$n$ 为奇数），要么有 1 个（$n$ 为偶数）。</p>
+  <p>原因：完全二叉树最多只有最后一个非叶子结点可能只有左孩子而无右孩子（度为 1），而这只在总结点数为偶数时发生。</p>
+  <p>所以对于 $n$ 个结点的完全二叉树：</p>
+  <ul>
+    <li>$n$ 为奇数：$n_1 = 0$，$n_0 = (n+1)/2$，$n_2 = (n-1)/2$</li>
+    <li>$n$ 为偶数：$n_1 = 1$，$n_0 = n/2$，$n_2 = n/2 - 1$</li>
+  </ul>
+  <p>统一公式：$n_0 = \lceil n/2 \rceil$。</p>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>满二叉树的不同定义</div>
+  <p>国内教材常用的定义：满二叉树 = 每层都满 = 高度 $h$ 恰有 $2^{h+1}-1$ 个结点。</p>
+  <p>但本课程部分考题中定义"没有度为 1 的结点"的二叉树为满二叉树（更接近英文 full binary tree）。此时满二叉树只要求 $n_1 = 0$，叶子不必全在同一层。若 $n_1=0$，则 $n = n_0 + n_2 = 2n_0 - 1$（总是奇数），叶子数 = $(n+1)/2$。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>120 个结点的完全二叉树</div>
+  <p>已知某棵完全二叉树有 120 个结点，求层数和叶子数。</p>
+  <details class="solution"><summary></summary><div>
+    <p><strong>层数</strong>：$\lfloor \log_2 120 \rfloor + 1 = 6 + 1 = 7$ 层（根在第 1 层）。</p>
+    <p><strong>叶子数</strong>：$n = 120$ 为偶数，所以 $n_1 = 1$。</p>
+    <p>由 $n_0 = n_2 + 1$ 和 $n_0 + n_1 + n_2 = 120$：</p>
+    <p>$n_0 + 1 + (n_0 - 1) = 120 \Rightarrow 2n_0 = 120 \Rightarrow n_0 = 60$</p>
+    <div class="final-answer">7 层，60 个叶子结点。</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.3 二叉树的遍历
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-traversal"><span class="secnum">3.3</span>二叉树的遍历（核心考点）</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>四种遍历方式</div>
+  <ul>
+    <li><span class="term">前序遍历（先根）</span>：根 &rarr; 左子树 &rarr; 右子树</li>
+    <li><span class="term">中序遍历（中根）</span>：左子树 &rarr; 根 &rarr; 右子树</li>
+    <li><span class="term">后序遍历（后根）</span>：左子树 &rarr; 右子树 &rarr; 根</li>
+    <li><span class="term">层次遍历</span>：按层从上到下、从左到右访问，用队列实现</li>
+  </ul>
+</div>
+
+<h3>根据遍历序列还原二叉树</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>遍历序列确定二叉树</div>
+  <ul>
+    <li><strong>前序 + 中序</strong> &rarr; <span class="hl">唯一确定</span>一棵二叉树。</li>
+    <li><strong>后序 + 中序</strong> &rarr; <span class="hl">唯一确定</span>一棵二叉树。</li>
+    <li><strong>前序 + 后序</strong> &rarr; <span class="hl">不能</span>唯一确定（除非每个结点度为 0 或 2）。</li>
+  </ul>
+  <p><strong>还原方法</strong>：</p>
+  <ul class="steps">
+    <li>前序序列的第一个元素（或后序序列的最后一个元素）一定是根。</li>
+    <li>在中序序列中找到根，根左边的是左子树的中序，根右边的是右子树的中序。</li>
+    <li>根据左/右子树中序的长度，在前序/后序中分割出对应的子序列。</li>
+    <li>对左右子树递归执行上述步骤。</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>由中序 + 后序还原二叉树</div>
+  <p>中序：DGBAECF，后序：GDBEFCA。求前序遍历序列。</p>
+  <details class="solution"><summary></summary><div>
+    <ul class="steps">
+      <li>后序最后一个字符 A 是根。在中序中 A 的位置将序列分为：左子树中序 = DGB，右子树中序 = ECF。</li>
+      <li>后序中对应：左子树后序 = GDB（前3个），右子树后序 = EFC（接下来3个）。</li>
+      <li>左子树：后序最后字符 B 为根。中序 DGB 中 B 在最右，左子树中序 = DG，右子树为空。</li>
+      <li>左子树的左子树：后序 GD 最后字符 D 为根。中序 DG 中 D 在最左，左子树为空，右子树中序 = G。</li>
+      <li>右子树：后序 EFC 最后字符 C 为根。中序 ECF 中 C 分割为左子树中序 = E，右子树中序 = F。</li>
+    </ul>
+    <p>最终树结构：A(左:B(左:D(右:G)), 右:C(左:E, 右:F))</p>
+    <p>前序遍历：A &rarr; B &rarr; D &rarr; G &rarr; C &rarr; E &rarr; F</p>
+    <div class="final-answer">前序遍历序列为 ABDGCEF</div>
+  </div></details>
+</div>
+
+<h3>重要结论</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">结论 1</span>前序与后序相反的条件</div>
+  <p>若一棵二叉树的前序遍历序列和后序遍历序列<strong>正好相反</strong>，则该二叉树中<span class="hl">每个结点至多一个孩子</span>，即整棵树是一条"链"（类似线性表）。等价地说，该二叉树的<strong>高度等于结点数</strong>。</p>
+  <p><em>直觉</em>：前序是"根左右"，后序是"左右根"。反过来后后序变成"根右左"。要让"根左右"="根右左"，必须每个结点要么没有子树，要么只有一个子树（此时不存在"左"和"右"的区分问题——但注意这并不要求一定无左或一定无右，只要每个结点至多一个孩子即可）。</p>
+  <p><strong>注意</strong>：本课程 2021 年考题的标准答案是 B（高度等于结点数），因为"任一结点无左孩子"（C）或"任一结点无右孩子"（D）只是充分条件之一，而非充要条件。但"高度=结点数"等价于"每个结点至多一个孩子"，是充要条件。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">结论 2</span>叶结点的相对顺序不变</div>
+  <p>任意一棵二叉树中，所有<span class="hl">叶结点在前序、中序、后序遍历中的相对次序不变</span>。</p>
+  <p><em>证明</em>：叶结点没有子树，对于任意两个叶结点 $u, v$，它们的相对位置只取决于它们分属哪棵子树的左右关系。前序、中序、后序都是先遍历左子树再遍历右子树，所以左子树中的叶子一定在右子树中的叶子前面，对所有三种遍历都成立。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">结论 3</span>前序中X在Y前 且 后序中X在Y后 &rarr; X是Y的祖先</div>
+  <p>设结点 X 和 Y 是二叉树中任意两个结点。若在先根遍历中 X 在 Y 前，在后根遍历中 X 在 Y 后，则 <span class="hl">X 是 Y 的祖先</span>。</p>
+  <p><em>分析</em>：前序中祖先在子孙前（先访问根再递归）；后序中祖先在子孙后（先递归再访问根）。若 X 不是 Y 的祖先，则 X 与 Y 要么是兄弟子树关系（此时两种遍历中相对顺序相同），要么 Y 是 X 的祖先（此时前序中 Y 在 X 前），均矛盾。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>3 个结点的不同二叉树</div>
+  <p>3 个结点可以构成 <strong>5 种</strong>不同形态的二叉树（第 $n$ 个 Catalan 数 $C_3 = 5$）。</p>
+  <p>若前序确定为 ADC，则 A 必为根，D 和 C 的位置有 5 种不同排列方式对应 5 种不同的二叉树。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.4 二叉排序树 BST
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-bst"><span class="secnum">3.4</span>二叉排序树（BST）</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>二叉排序树 / 二叉搜索树（Binary Search Tree）</div>
+  <p>二叉排序树或者是空树，或者满足以下性质的二叉树：</p>
+  <ul>
+    <li>左子树上所有结点的关键字 <strong>小于</strong> 根结点的关键字；</li>
+    <li>右子树上所有结点的关键字 <strong>大于</strong> 根结点的关键字；</li>
+    <li>左子树和右子树各自也是二叉排序树。</li>
+  </ul>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>BST 的中序遍历</div>
+  <p>BST 的中序遍历序列是<span class="hl">严格递增的有序序列</span>。</p>
+  <p><strong>逆命题</strong>：若给定一个序列是某棵二叉树的中序遍历结果，当且仅当该序列严格递增时，该二叉树可能是 BST。</p>
+</div>
+
+<h3>BST 的操作</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">操作</span>查找</div>
+  <p>从根开始比较：等于则找到；小于则进入左子树；大于则进入右子树。时间复杂度 $O(h)$，$h$ 为树高。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">操作</span>插入</div>
+  <p>按查找路径走到空位置处，将新结点作为叶子插入。插入后仍满足 BST 性质。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">操作</span>删除（重点）</div>
+  <p>删除结点 $p$ 分三种情况：</p>
+  <ul class="steps">
+    <li><strong>$p$ 是叶子结点</strong>：直接删除，父结点对应指针置空。</li>
+    <li><strong>$p$ 只有一个子树</strong>：用该子树替代 $p$ 的位置。</li>
+    <li><strong>$p$ 有两个子树</strong>：用 $p$ 的<span class="term">中序前驱</span>（左子树中最大的结点）或<span class="term">中序后继</span>（右子树中最小的结点）替代 $p$，然后删除那个前驱/后继（它最多只有一个子树，递归到前两种情况）。</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>BST 删除结点 37</div>
+  <p>在以下 BST 中删除结点 37（用左子树最大者替代）：</p>
+  <p>树结构：37 为根，左子树 24(左 7(左 2)，右 32(左 30))，右子树 42(左 40，右 120)</p>
+  <details class="solution"><summary></summary><div>
+    <p>左子树最大者 = 从 24 出发一直向右，到达 32。</p>
+    <p>用 32 替代 37 的位置。32 原来有左子 30，30 替代 32 原来的位置（挂到 24 的右边）。</p>
+    <p>删除后的树：</p>
+    <p>32 为根，左子树 24(左 7(左 2)，右 30)，右子树 42(左 40，右 120)</p>
+    <div class="final-answer">32 替代 37 成为新根，30 上移到原来 32 的位置。</div>
+  </div></details>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>BST 不一定是满二叉树</div>
+  <p>BST 的形态取决于插入顺序。如果按升序插入 1,2,3,4,5，得到的 BST 是一条向右的链，退化为线性结构。BST 不一定是满二叉树，也不一定是完全二叉树。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.5 哈夫曼树与编码
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-huffman"><span class="secnum">3.5</span>哈夫曼树与哈夫曼编码</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>带权路径长度 WPL</div>
+  <p>设二叉树有 $n$ 个叶子结点，第 $i$ 个叶子结点的权值为 $w_i$，从根到该叶子的路径长度（边数）为 $l_i$，则该树的<span class="term">带权路径长度</span>为：</p>
+  $$WPL = \sum_{i=1}^{n} w_i \times l_i$$
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>哈夫曼树（最优二叉树）</div>
+  <p>在所有含有相同叶子结点（权值确定）的二叉树中，<span class="hl">WPL 最小</span>的那棵称为哈夫曼树。</p>
+</div>
+
+<h3>哈夫曼树的构建算法</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">算法</span>哈夫曼算法（贪心）</div>
+  <ul class="steps">
+    <li>将所有权值看作独立的单结点树，放入集合 $S$。</li>
+    <li>从 $S$ 中取出权值最小的两棵树 $T_1, T_2$，将它们作为左右子树构建新树，新树的根权值 = $w_1 + w_2$。</li>
+    <li>将新树放回 $S$。</li>
+    <li>重复步骤 2-3，直到 $S$ 中只剩一棵树，即为哈夫曼树。</li>
+  </ul>
+  <p><strong>性质</strong>：哈夫曼树中没有度为 1 的结点（只有度为 0 和度为 2 的结点）。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>哈夫曼编码</div>
+  <p>利用哈夫曼树对字符进行编码：从根出发，走左分支记为 0，走右分支记为 1，到达叶子时得到的 0/1 串就是该字符的编码。</p>
+  <p><strong>前缀码性质</strong>：哈夫曼编码是前缀码（prefix code），即没有任何一个字符的编码是另一个字符编码的前缀，因此解码时不会产生歧义。</p>
+  <p><strong>编码总长度</strong>：对电文编码的总长度恰好等于哈夫曼树的 WPL（这里 $w_i$ = 字符出现次数，$l_i$ = 该字符编码的位数）。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>构建哈夫曼树（权值 4,8,6,9,18）</div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>构建过程</strong>：</p>
+    <ul class="steps">
+      <li>初始集合：{4, 6, 8, 9, 18}</li>
+      <li>取最小两个 4 和 6，合并为 10。集合变为 {8, 9, 10, 18}</li>
+      <li>取最小两个 8 和 9，合并为 17。集合变为 {10, 17, 18}</li>
+      <li>取最小两个 10 和 17，合并为 27。集合变为 {18, 27}</li>
+      <li>取 18 和 27，合并为 45。完成。</li>
+    </ul>
+    <p><strong>树结构</strong>：</p>
+    <pre>
+         45
+        /  \
+      18    27
+           /  \
+         10    17
+        / \   / \
+       4   6 8   9</pre>
+    <p><strong>计算 WPL</strong>：</p>
+    <p>18 在第 1 层（路径长度 1），4/6/8/9 在第 3 层（路径长度 3）：</p>
+    <p>$WPL = 18 \times 1 + 4 \times 3 + 6 \times 3 + 8 \times 3 + 9 \times 3$</p>
+    <p>$= 18 + 12 + 18 + 24 + 27 = 99$</p>
+    <div class="final-answer">WPL = 99</div>
+  </div></details>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>哈夫曼编码电文长度</div>
+  <p>字符 a 出现 1000 次，b 出现 2000 次，c 出现 6000 次，d 出现 1000 次。求哈夫曼编码后电文总长度。</p>
+  <details class="solution"><summary></summary><div>
+    <p>权值集合：{a:1000, d:1000, b:2000, c:6000}</p>
+    <ul class="steps">
+      <li>取 a(1000) + d(1000) = 2000。集合：{2000, b:2000, c:6000}</li>
+      <li>取 2000 + b(2000) = 4000。集合：{4000, c:6000}</li>
+      <li>取 4000 + c(6000) = 10000。</li>
+    </ul>
+    <p>树结构：c 在第 1 层，b 在第 2 层，a 和 d 在第 3 层。</p>
+    <p>编码长度：c = 1 位，b = 2 位，a = 3 位，d = 3 位。</p>
+    <p>总长度 = $6000 \times 1 + 2000 \times 2 + 1000 \times 3 + 1000 \times 3 = 6000 + 4000 + 3000 + 3000 = 16000$ 位</p>
+    <div class="final-answer">电文总长度为 16000 个比特</div>
+  </div></details>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>哈夫曼编码（8 个字符）</div>
+  <p>权值为 {3, 4, 5, 6, 8, 9, 11, 12}，求 WPL。</p>
+  <details class="solution"><summary></summary><div>
+    <p><strong>构建过程</strong>：</p>
+    <ul class="steps">
+      <li>取 3 + 4 = 7。集合：{5, 6, 7, 8, 9, 11, 12}</li>
+      <li>取 5 + 6 = 11。集合：{7, 8, 9, 11, 11, 12}</li>
+      <li>取 7 + 8 = 15。集合：{9, 11, 11, 12, 15}</li>
+      <li>取 9 + 11 = 20。集合：{11, 12, 15, 20}</li>
+      <li>取 11 + 12 = 23。集合：{15, 20, 23}</li>
+      <li>取 15 + 20 = 35。集合：{23, 35}</li>
+      <li>取 23 + 35 = 58。完成。</li>
+    </ul>
+    <p>确定各叶子的深度（通过回溯合并过程）：</p>
+    <ul>
+      <li>3, 4: 深度 5（经过 7&rarr;15&rarr;35&rarr;58 根方向）</li>
+      <li>5, 6: 深度 4（经过 11&rarr;23&rarr;58）。等一下让我重新追踪树结构。</li>
+    </ul>
+    <p>重新画树：</p>
+    <pre>
+                58
+              /    \
+           35       23
+          /  \     /  \
+        15    20  11   12
+       / \   / \
+      7   8 9  11(原)
+     / \
+    3   4
+    </pre>
+    <p>等一下，Step 4 中取 9 和 11(由5+6得到)合并为 20。Step 5 取剩余的 11(原始)和 12。</p>
+    <p>让我重新精确追踪：</p>
+    <p>Step 1: 3+4=7 &rarr; 序列 {5,6,7,8,9,11,12}</p>
+    <p>Step 2: 5+6=11' &rarr; 序列 {7,8,9,11',11,12}</p>
+    <p>Step 3: 7+8=15 &rarr; 序列 {9,11',11,12,15}</p>
+    <p>Step 4: 9+11'=20 &rarr; 序列 {11,12,15,20}</p>
+    <p>Step 5: 11+12=23 &rarr; 序列 {15,20,23}</p>
+    <p>Step 6: 15+20=35 &rarr; 序列 {23,35}</p>
+    <p>Step 7: 23+35=58</p>
+    <p>树结构从根 58 出发：</p>
+    <pre>
+              58
+            /    \
+          23      35
+         / \    /    \
+       11  12  15     20
+              / \    /  \
+             7   8  9   11'
+            / \        / \
+           3   4      5   6</pre>
+    <p>各叶子深度：11=2, 12=2, 8=3, 9=3, 3=5(根层为0时：0,1,2,3,4), 4=5, 5=4, 6=4</p>
+    <p>等等让我从根开始数层数（根=层0）：</p>
+    <ul>
+      <li>58: 层0</li>
+      <li>23, 35: 层1</li>
+      <li>11, 12, 15, 20: 层2</li>
+      <li>7, 8, 9, 11': 层3</li>
+      <li>3, 4, 5, 6: 层4</li>
+    </ul>
+    <p>叶子结点及其路径长度（=层数）：</p>
+    <ul>
+      <li>11: 路径长度 2</li>
+      <li>12: 路径长度 2</li>
+      <li>8: 路径长度 3</li>
+      <li>9: 路径长度 3</li>
+      <li>3: 路径长度 4</li>
+      <li>4: 路径长度 4</li>
+      <li>5: 路径长度 4</li>
+      <li>6: 路径长度 4</li>
+    </ul>
+    <p>$WPL = 11 \times 2 + 12 \times 2 + 8 \times 3 + 9 \times 3 + 3 \times 4 + 4 \times 4 + 5 \times 4 + 6 \times 4$</p>
+    <p>$= 22 + 24 + 24 + 27 + 12 + 16 + 20 + 24 = 169$</p>
+    <div class="final-answer">WPL = 169（选 B）</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.6 堆
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-heap"><span class="secnum">3.6</span>堆（Heap）</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>堆</div>
+  <p><span class="term">最小堆（小根堆）</span>：完全二叉树，每个结点的值 $\le$ 其子结点的值。根结点是全局最小值。</p>
+  <p><span class="term">最大堆（大根堆）</span>：完全二叉树，每个结点的值 $\ge$ 其子结点的值。根结点是全局最大值。</p>
+  <p><strong>存储</strong>：利用完全二叉树的性质，用数组存储。编号从 0 开始，结点 $i$ 的左孩子为 $2i+1$，右孩子为 $2i+2$，父结点为 $\lfloor(i-1)/2\rfloor$。</p>
+</div>
+
+<h3>堆的核心操作</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">操作</span>建堆（Build Heap）—— O(n)</div>
+  <p>给定一个无序数组，将其调整为堆：</p>
+  <ul class="steps">
+    <li>从最后一个<strong>非叶结点</strong>开始（编号为 $\lfloor n/2 \rfloor - 1$），向前逐个执行<span class="term">下沉（sift down）</span>操作。</li>
+    <li>下沉操作：将当前结点与其较小（小根堆）/ 较大（大根堆）的子结点比较，若不满足堆序性质则交换，继续向下直到满足条件或到达叶子。</li>
+  </ul>
+  <p><strong>时间复杂度</strong>：$O(n)$（不是 $O(n \log n)$！）。直觉：底层结点多但下沉距离短，顶层结点少但下沉距离长，总和是 $O(n)$。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">操作</span>插入 —— O(log n)</div>
+  <p>将新元素添加到数组末尾（完全二叉树的最后一个位置），然后执行<span class="term">上浮（sift up）</span>：将其与父结点比较，若不满足堆序性质则交换，一直向上直到满足条件或到达根。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">操作</span>删除最小/最大 —— O(log n)</div>
+  <ul class="steps">
+    <li>将根（最小/最大元素）取出。</li>
+    <li>用数组最后一个元素替换根的位置。</li>
+    <li>对新的根执行<span class="term">下沉（sift down）</span>操作，恢复堆序。</li>
+  </ul>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>建堆复杂度不是 O(n log n)</div>
+  <p>很多同学误以为建堆是 $O(n \log n)$。实际上自底向上建堆只需 $O(n)$。这是因为大部分结点在底层，它们下沉的距离很短。精确分析：$\sum_{h=0}^{H} \lceil n/2^{h+1} \rceil \cdot h = O(n)$。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>对数组建小根堆</div>
+  <p>初始数组：[31, 8, 53, 10, 20, 7, 15, 3, 20, 1]（完全二叉树），建小根堆。</p>
+  <details class="solution"><summary></summary><div>
+    <p>最后一个非叶结点：index = $\lfloor 10/2 \rfloor - 1 = 4$（值为 20）。</p>
+    <p><strong>从 index=4 开始下沉</strong>：</p>
+    <ul class="steps">
+      <li><strong>index=4（值 20）</strong>：子结点 index9（值 1）。1 &lt; 20，交换。<br>数组变为：[31, 8, 53, 10, <strong>1</strong>, 7, 15, 3, 20, <strong>20</strong>]</li>
+      <li><strong>index=3（值 10）</strong>：子结点 index7（值 3）、index8（值 20）。3 &lt; 10，交换。<br>数组变为：[31, 8, 53, <strong>3</strong>, 1, 7, 15, <strong>10</strong>, 20, 20]</li>
+      <li><strong>index=2（值 53）</strong>：子结点 index5（值 7）、index6（值 15）。7 &lt; 53，交换。<br>数组变为：[31, 8, <strong>7</strong>, 3, 1, <strong>53</strong>, 15, 10, 20, 20]<br>继续检查 index5（值 53）：无子结点，停止。</li>
+      <li><strong>index=1（值 8）</strong>：子结点 index3（值 3）、index4（值 1）。1 最小且 1 &lt; 8，交换 index1 和 index4。<br>数组变为：[31, <strong>1</strong>, 7, 3, <strong>8</strong>, 53, 15, 10, 20, 20]<br>继续检查 index4（值 8）：子结点 index9（值 20）。8 &lt; 20，不交换。</li>
+      <li><strong>index=0（值 31）</strong>：子结点 index1（值 1）、index2（值 7）。1 最小且 1 &lt; 31，交换 index0 和 index1。<br>数组变为：[<strong>1</strong>, <strong>31</strong>, 7, 3, 8, 53, 15, 10, 20, 20]<br>继续 index1（值 31）：子结点 index3（值 3）、index4（值 8）。3 最小且 3 &lt; 31，交换。<br>数组变为：[1, <strong>3</strong>, 7, <strong>31</strong>, 8, 53, 15, 10, 20, 20]<br>继续 index3（值 31）：子结点 index7（值 10）、index8（值 20）。10 最小且 10 &lt; 31，交换。<br>数组变为：[1, 3, 7, <strong>10</strong>, 8, 53, 15, <strong>31</strong>, 20, 20]</li>
+    </ul>
+    <div class="final-answer">最终小根堆：[1, 3, 7, 10, 8, 53, 15, 31, 20, 20]</div>
+  </div></details>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>堆的删除操作</div>
+  <p>基于上述小根堆 [1, 3, 7, 10, 8, 53, 15, 31, 20, 20]，删除最小元素。</p>
+  <details class="solution"><summary></summary><div>
+    <ul class="steps">
+      <li>取出根元素 1。用最后一个元素 20 替换根。堆变为：[<strong>20</strong>, 3, 7, 10, 8, 53, 15, 31, 20]（9 个元素）</li>
+      <li>对根（值 20）下沉：子结点 index1（值 3）、index2（值 7）。3 最小且 3 &lt; 20，交换。<br>[<strong>3</strong>, <strong>20</strong>, 7, 10, 8, 53, 15, 31, 20]</li>
+      <li>继续 index1（值 20）：子结点 index3（值 10）、index4（值 8）。8 最小且 8 &lt; 20，交换。<br>[3, <strong>8</strong>, 7, 10, <strong>20</strong>, 53, 15, 31, 20]</li>
+      <li>继续 index4（值 20）：子结点 index9 不存在（只有 9 个元素，最大下标 8）。等等，n=9，index4 的左子=9，超出范围，停止。</li>
+    </ul>
+    <div class="final-answer">删除后的堆：[3, 8, 7, 10, 20, 53, 15, 31, 20]</div>
+  </div></details>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>堆的插入操作</div>
+  <p>基于小根堆 [1, 3, 7, 10, 8, 53, 15, 31, 20, 20]，插入元素 2。</p>
+  <details class="solution"><summary></summary><div>
+    <ul class="steps">
+      <li>将 2 放到末尾（index10）。堆变为：[1, 3, 7, 10, 8, 53, 15, 31, 20, 20, <strong>2</strong>]</li>
+      <li>上浮：index10 的父结点 = $\lfloor(10-1)/2\rfloor = 4$（值 8）。2 &lt; 8，交换。<br>[1, 3, 7, 10, <strong>2</strong>, 53, 15, 31, 20, 20, <strong>8</strong>]</li>
+      <li>继续上浮：index4 的父结点 = $\lfloor(4-1)/2\rfloor = 1$（值 3）。2 &lt; 3，交换。<br>[1, <strong>2</strong>, 7, 10, <strong>3</strong>, 53, 15, 31, 20, 20, 8]</li>
+      <li>继续上浮：index1 的父结点 = $\lfloor(1-1)/2\rfloor = 0$（值 1）。2 &gt; 1，停止。</li>
+    </ul>
+    <div class="final-answer">插入后的堆：[1, 2, 7, 10, 3, 53, 15, 31, 20, 20, 8]</div>
+  </div></details>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>删除堆元素时的比较次数</div>
+  <p>小根堆 [8, 15, 10, 21, 34, 16, 12]，删除关键字 8 后重建堆，比较次数是多少？</p>
+  <details class="solution"><summary></summary><div>
+    <p>删除根 8，用最后元素 12 替换根。堆变为：[12, 15, 10, 21, 34, 16]（6 个元素）</p>
+    <p>下沉 12：</p>
+    <ul class="steps">
+      <li>比较左子 15 和右子 10：<strong>第 1 次比较</strong>。10 较小。</li>
+      <li>比较 12 和 10：<strong>第 2 次比较</strong>。12 &gt; 10，交换。堆变为 [10, 15, 12, 21, 34, 16]</li>
+      <li>继续下沉 12（现在在 index2）：左子 index5（值 16），无右子。比较 12 和 16：<strong>第 3 次比较</strong>。12 &lt; 16，不交换，停止。</li>
+    </ul>
+    <div class="final-answer">比较次数为 3 次</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3.7 森林
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-forest"><span class="secnum">3.7</span>森林</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>森林（Forest）</div>
+  <p>森林是 $m$（$m \ge 0$）棵互不相交的树的集合。</p>
+</div>
+
+<h3>森林与二叉树的互相转换</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">方法</span>森林 &rarr; 二叉树（左孩子右兄弟表示法）</div>
+  <ul class="steps">
+    <li>将每棵树用"左孩子-右兄弟"表示法转化为二叉树：结点的第一个孩子作为其左子结点，结点的下一个兄弟作为其右子结点。</li>
+    <li>将各棵树的根通过"右兄弟"链接起来：第一棵树的根是二叉树的根，第二棵树的根是第一棵树根的右子结点，第三棵树的根是第二棵树根的右子结点……</li>
+  </ul>
+  <p><strong>关键结论</strong>：森林转化为二叉树后，二叉树<span class="hl">根的右子树</span>对应除第一棵树外的其余森林。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>森林的遍历与对应二叉树的遍历</div>
+  <ul>
+    <li>森林的<strong>先序遍历</strong> = 对应二叉树的<strong>先序遍历</strong></li>
+    <li>森林的<strong>中序遍历</strong>（也叫后根遍历） = 对应二叉树的<strong>中序遍历</strong></li>
+  </ul>
+  <p><em>森林的先序遍历</em>：访问第一棵树的根 &rarr; 先序遍历第一棵树的子树森林 &rarr; 先序遍历其余树组成的森林。</p>
+  <p><em>森林的中序遍历</em>：中序遍历第一棵树的子树森林 &rarr; 访问第一棵树的根 &rarr; 中序遍历其余树组成的森林。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>森林中度与结点数的关系</div>
+  <p>设森林 $F$ 中有 $T$ 棵树，叶子结点总数为 $L$，度为 2 的结点总数为 $N_2$。对于每棵树单独看：</p>
+  <p>每棵树 $n_i$ 个结点有 $n_i - 1$ 条边，森林总边数 = $\sum(n_i - 1) = N - T$（$N$ 为总结点数）。</p>
+  <p>又总边数 = $\sum_{i=1}^{m} i \cdot N_i$，其中 $N_i$ 是度为 $i$ 的结点数。</p>
+  <p>若森林中每个结点的度不超过 2（子结点个数 &le; 2），则：</p>
+  <p>$N - T = N_1 + 2N_2$，且 $N = L + N_1 + N_2$，解得 $\boxed{T = L - N_2}$。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>森林转二叉树后右子树结点数</div>
+  <p>森林 F 有 4 棵树，结点数分别为 10, 9, 11, 7。转为二叉树后根的右子树有多少个结点？</p>
+  <details class="solution"><summary></summary><div>
+    <p>转换规则：第一棵树的根成为二叉树的根，其余三棵树（的根及所有结点）构成根的右子树。</p>
+    <p>右子树结点数 = 第 2、3、4 棵树的结点总和 = 9 + 11 + 7 = 27。</p>
+    <div class="final-answer">根的右子树中有 27 个结点</div>
+  </div></details>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>森林的深度优先与广度优先遍历</div>
+  <p>森林结构：A(D, E(J,K), F, G(L))，B，H，C(I(M,N))。</p>
+  <details class="solution"><summary></summary><div>
+    <p><strong>深度优先遍历（先序）</strong>：对每棵树先序遍历，然后拼接。</p>
+    <ul>
+      <li>第一棵树先序：A &rarr; D &rarr; E &rarr; J &rarr; K &rarr; F &rarr; G &rarr; L</li>
+      <li>第二棵树：B</li>
+      <li>第三棵树：H</li>
+      <li>第四棵树先序：C &rarr; I &rarr; M &rarr; N</li>
+    </ul>
+    <p>结果：<strong>A D E J K F G L B H C I M N</strong></p>
+    <p><strong>广度优先遍历（层次）</strong>：按层从上到下，每层从左到右（跨所有树）。</p>
+    <ul>
+      <li>第 0 层（各树根）：A B H C</li>
+      <li>第 1 层：D E F G I</li>
+      <li>第 2 层：J K L M N</li>
+    </ul>
+    <p>结果：<strong>A B H C D E F G I J K L M N</strong></p>
+    <p>（注：题目答案写的是 A B C D E F G H I J K L M N，这取决于"广度优先"是逐棵还是逐层。逐棵逐层则是上面的结果。若理解为先列出所有根再列第二层……需看具体定义。按森林的层次遍历标准定义：同层从左到右，答案为 A B H C D E F G I J K L M N。但原题给出的答案是按照另一种理解。）</p>
+    <div class="final-answer">深度优先：A D E J K F G L B H C I M N<br>广度优先：A B H C D E F G I J K L M N</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     往年真题
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="exam-2021"><span class="secnum">真题</span>2021 年考题</h2>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 选择题 5</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">遍历序列与树形关系</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    若定义二叉树中根结点的层数为零，树的高度等于其结点的最大层数加一。则当某二叉树的前序遍历序列和后序遍历序列正好相反，则该二叉树一定是（）的二叉树。<br>
+    A. 空或只有一个结点 &emsp; B. 高度等于其结点数 &emsp; C. 任一结点无左孩子 &emsp; D. 任一结点无右孩子
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>分析</strong>：前序是"根左右"，后序是"左右根"。后序的逆序是"根右左"。</p>
+    <p>要使前序 = 后序的逆，即"根左右" = "根右左"，需要每个结点要么无子树，要么只有一个子树。这意味着树退化为一条链，高度 = 结点数。</p>
+    <p>C（任一结点无左孩子）和 D（任一结点无右孩子）各自是充分条件但不是必要条件——可以有的结点只有左孩子、有的只有右孩子，只要每个结点至多一个孩子即可。</p>
+    <p>但"高度 = 结点数"恰好等价于"每个结点至多一个孩子"（链状），是充要条件。</p>
+    <div class="final-answer">B. 高度等于其结点数</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 选择题 6</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">叶子遍历顺序</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    任意一棵二叉树中，所有叶结点在前序、中序和后序遍历序列中的相对次序（）。<br>
+    A. 发生改变 &emsp; B. 不发生改变 &emsp; C. 不能确定 &emsp; D. 以上都不对
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>三种遍历都是先递归左子树再递归右子树，叶子之间的左右关系不会被改变。</p>
+    <div class="final-answer">B. 不发生改变</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 选择题 12</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">度与结点数关系</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    在一棵度为 3 的树中，度为 3 的结点个数为 2，度为 2 的结点个数为 1，则度为 0 的结点个数为（）。<br>
+    A. 4 &emsp; B. 5 &emsp; C. 6 &emsp; D. 7
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>边数 = $n - 1 = 3 \times 2 + 2 \times 1 + 1 \times 0 = 8$，所以 $n = 9$。</p>
+    <p>$n_0 = n - n_1 - n_2 - n_3 = 9 - 0 - 1 - 2 = 6$。</p>
+    <p>或用公式：$n_0 = 1 + (2-1) \times 1 + (3-1) \times 2 = 1 + 1 + 4 = 6$。</p>
+    <div class="final-answer">C. 6</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 填空题 3</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">$n_0 = n_2 + 1$</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    一棵含有 101 个结点的二叉树中有 36 个叶子结点，度为 2 的结点个数是____，度为 1 的结点个数是____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>$n_0 = 36$，由 $n_0 = n_2 + 1$ 得 $n_2 = 35$。</p>
+    <p>$n_1 = 101 - n_0 - n_2 = 101 - 36 - 35 = 30$。</p>
+    <div class="final-answer">$n_2 = 35$，$n_1 = 30$</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 填空题 4</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">二叉树形态计数</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知二叉树的前序遍历结果为 ADC，这棵二叉树的树型有____种可能。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>3 个结点的不同二叉树形态共有 $C_3 = \frac{1}{4}\binom{6}{3} = 5$ 种（第 3 个 Catalan 数）。</p>
+    <p>不论前序序列是什么，只要给定 3 个不同结点和确定的前序序列，每种不同的二叉树形态恰好对应前序遍历为该序列的一种树。所以恰好有 5 种。</p>
+    <p>具体 5 种形态（A 为根，前序 ADC）：</p>
+    <ol>
+      <li>A 的左子是 D，D 的左子是 C（全链左）</li>
+      <li>A 的左子是 D，D 的右子是 C</li>
+      <li>A 的左子树以 D 为根，D 有左子... 不对，让我重列：A为根，前序ADC说明D在A的左子树（或A只有右子树时D是右子的根），让我枚举：</li>
+    </ol>
+    <p>前序 = ADC 意味着 A 是根。前序"根左右"中 A 之后的 DC 被分为左子树前序和右子树前序。分法：</p>
+    <ul>
+      <li>左子树 0 个结点，右子树 2 个结点（前序 DC）：右子树有 2 种形态（D左C 或 D右C）</li>
+      <li>左子树 1 个结点（D），右子树 1 个结点（C）：1 种形态</li>
+      <li>左子树 2 个结点（前序 DC），右子树 0 个结点：左子树有 2 种形态（D左C 或 D右C）</li>
+    </ul>
+    <p>总计 2 + 1 + 2 = 5 种。</p>
+    <div class="final-answer">5 种</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 填空题 5</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">遍历序列还原</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知二叉树的中序遍历序列为 DGBAECF，后序遍历序列为 GDBEFCA，该二叉树的前序遍历序列是____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <ul class="steps">
+      <li>后序最后字符 A &rarr; A 是根。中序中 A 将序列分为左子树中序 DGB 和右子树中序 ECF。</li>
+      <li>后序中对应：左子树后序 = GDB（前 3 个），右子树后序 = EFC（接下来 3 个）。</li>
+      <li><strong>左子树</strong>（中序 DGB，后序 GDB）：后序最后 B 是根。中序中 B 将序列分为左子树 DG 和右子树空。后序对应 GD。</li>
+      <li><strong>左子树的左子树</strong>（中序 DG，后序 GD）：后序最后 D 是根。中序中 D 在最左，左子树空，右子树 G。</li>
+      <li><strong>右子树</strong>（中序 ECF，后序 EFC）：后序最后 C 是根。中序中 C 分割为左子树 E 和右子树 F。</li>
+    </ul>
+    <p>前序 = 根A + 左子树前序(B + BD左子树前序(D + D右子树G)) + 右子树前序(C + E + F)</p>
+    <p>= A + B + D + G + C + E + F</p>
+    <div class="final-answer">ABDGCEF</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 简答题 1 — 森林遍历</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">森林遍历</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    给定森林结构 A(D, E(J,K), F, G(L))，B，H，C(I(M,N))，给出深度优先周游序列和广度优先周游序列。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>深度优先（先序遍历）</strong>：依次对每棵树做先序遍历。</p>
+    <ul>
+      <li>树1：A &rarr; D &rarr; E &rarr; J &rarr; K &rarr; F &rarr; G &rarr; L</li>
+      <li>树2：B</li>
+      <li>树3：H</li>
+      <li>树4：C &rarr; I &rarr; M &rarr; N</li>
+    </ul>
+    <p>结果：<strong>A D E J K F G L B H C I M N</strong></p>
+    <p><strong>广度优先（层次遍历）</strong>：按层从上到下，每层从左到右（跨所有树）。</p>
+    <ul>
+      <li>层0：A B H C</li>
+      <li>层1：D E F G I</li>
+      <li>层2：J K L M N</li>
+    </ul>
+    <p>结果：<strong>A B H C D E F G I J K L M N</strong></p>
+    <div class="final-answer">深度优先：A D E J K F G L B H C I M N<br>广度优先：A B H C D E F G I J K L M N</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 简答题 2 — 哈夫曼树</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">哈夫曼树构建与 WPL</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    设给定五个字符，其相应的权值分别为 {4, 8, 6, 9, 18}，试画出相应的哈夫曼树，并计算它的带权外部路径长度 WPL。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>构建过程</strong>：</p>
+    <ul class="steps">
+      <li>初始：{4, 6, 8, 9, 18}</li>
+      <li>取 4 + 6 = 10。集合：{8, 9, 10, 18}</li>
+      <li>取 8 + 9 = 17。集合：{10, 17, 18}</li>
+      <li>取 10 + 17 = 27。集合：{18, 27}</li>
+      <li>取 18 + 27 = 45。完成。</li>
+    </ul>
+    <p><strong>树结构</strong>：</p>
+    <pre>
+         45
+        /  \
+      18    27
+           /  \
+         10    17
+        / \   / \
+       4   6 8   9</pre>
+    <p><strong>各叶子路径长度</strong>：18 在深度 1，4/6/8/9 在深度 3。</p>
+    <p>$WPL = 18 \times 1 + 4 \times 3 + 6 \times 3 + 8 \times 3 + 9 \times 3 = 18 + 12 + 18 + 24 + 27 = 99$</p>
+    <div class="final-answer">WPL = 99</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2021 简答题 3 — 堆操作</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">建堆、删除、插入</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    完全二叉树（数组表示）为 [31, 8, 53, 10, 20, 7, 15, 3, 20, 1]。<br>
+    (1) 建小根堆；(2) 删除最小元素；(3) 插入元素 2。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>详细建堆过程、删除和插入过程见上方"堆"一节的三道例题，答案汇总：</p>
+    <p><strong>(1) 建堆结果</strong>：[1, 3, 7, 10, 8, 53, 15, 31, 20, 20]</p>
+    <p><strong>(2) 删除最小元素后</strong>：[3, 8, 7, 10, 20, 53, 15, 31, 20]</p>
+    <p><strong>(3) 插入 2 后</strong>：[1, 2, 7, 10, 3, 53, 15, 31, 20, 20, 8]</p>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<h2 id="exam-2022"><span class="secnum">真题</span>2022 年考题</h2>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 选择题 6</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">哈夫曼树 WPL</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    用 Huffman 算法构造一个最优二叉编码树，待编码的字符权值分别为 {3, 4, 5, 6, 8, 9, 11, 12}，请问该最优二叉编码树的带权外部路径长度为（）。<br>
+    A. 58 &emsp; B. 169 &emsp; C. 72 &emsp; D. 182
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>构建过程见上方哈夫曼部分的详细例题。</p>
+    <p>$WPL = 11 \times 2 + 12 \times 2 + 8 \times 3 + 9 \times 3 + 3 \times 4 + 4 \times 4 + 5 \times 4 + 6 \times 4$</p>
+    <p>$= 22 + 24 + 24 + 27 + 12 + 16 + 20 + 24 = 169$</p>
+    <div class="final-answer">B. 169</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 选择题 13</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">遍历顺序与祖先关系</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    设结点 X 和 Y 是二叉树中任意的两个结点，在该二叉树的先根周游序列中 X 出现在 Y 之前，而在其后根周游序列中 X 出现在 Y 之后，则 X 和 Y 的关系是（）。<br>
+    A. X 是 Y 的左兄弟 &emsp; B. X 是 Y 的右兄弟 &emsp; C. X 是 Y 的祖先 &emsp; D. X 是 Y 的后裔
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>先根遍历中祖先在子孙前（根先被访问），后根遍历中祖先在子孙后（根最后被访问）。</p>
+    <p>若 X 在先根中先于 Y 且在后根中后于 Y，恰好满足"X 是 Y 的祖先"的条件。</p>
+    <p>若 X 是 Y 的左兄弟，则两种遍历中 X 都在 Y 前面（不满足后根中 X 在 Y 后）。</p>
+    <div class="final-answer">C. X 是 Y 的祖先</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 选择题 14</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">森林度与树数量</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    考虑一个森林 F，其中每个结点的子结点个数均不超过 2。如果森林 F 中叶子结点的总个数为 L，度数为 2 结点的总个数为 N，那么当前森林 F 中树的个数为（）。<br>
+    A. L-N-1 &emsp; B. 无法确定 &emsp; C. L-N &emsp; D. N-L
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>设森林有 $T$ 棵树，总结点数为 $S$，度为 1 的结点数为 $N_1$，度为 2 的结点数为 $N$（即 $N_2$），叶子数为 $L$（即 $n_0$）。</p>
+    <p>$S = L + N_1 + N$</p>
+    <p>森林的总边数 = $S - T$（每棵树 $n_i$ 个结点有 $n_i - 1$ 条边）。</p>
+    <p>总边数 = $N_1 + 2N$（度为 $k$ 的结点贡献 $k$ 条边）。</p>
+    <p>$S - T = N_1 + 2N \Rightarrow (L + N_1 + N) - T = N_1 + 2N \Rightarrow T = L - N$</p>
+    <div class="final-answer">C. L - N</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 判断题 2</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">遍历序列还原</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    给定一棵二叉树，前序周游序列和中序周游序列分别是 HGEDBFCA 和 EGBDHFAC 时，其后序周游序列必是 EBDGACFH。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>前序+中序可唯一确定二叉树，从而后序也唯一确定。验证：</p>
+    <ul class="steps">
+      <li>前序首字符 H 为根。中序中 H 的位置：EGBD|H|FAC。左子树中序 EGBD（4个），右子树中序 FAC（3个）。</li>
+      <li>左子树前序 GEDB，右子树前序 FCA。</li>
+      <li>左子树：根 G，中序 EGBD 中 G 分割为左 E 和右 BD。左子树前序 E，右子树前序 DB。</li>
+      <li>右子树：根 F，中序 FAC 中 F 在最左，左子树空，右子树中序 AC，前序 CA。</li>
+      <li>继续：BD 的根是 D（前序 DB 首字符），中序 BD 中 D 右边无元素，左子树 B。</li>
+      <li>CA 的根是 C（前序 CA 首字符），中序 AC 中 C 右边无元素，左子树 A。</li>
+    </ul>
+    <p>后序遍历（左右根）：E &rarr; B &rarr; D &rarr; G &rarr; A &rarr; C &rarr; F &rarr; H = EBDGACFH。</p>
+    <div class="final-answer">Y（正确）</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 判断题 4</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">建堆时间复杂度</span>
+    <span class="exam-badge diff">★★</span>
+    <span class="exam-badge freq">高频易错</span>
+  </div>
+  <div class="stem">
+    构建一个含 N 个结点的（二叉）最小值堆，建堆的时间复杂度大 O 表示为 $O(N\log_2 N)$。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>自底向上建堆的时间复杂度是 $O(N)$，不是 $O(N \log N)$。</p>
+    <p>$O(N \log N)$ 是逐个插入建堆（自顶向下）的复杂度，不是标准建堆算法的复杂度。</p>
+    <div class="final-answer">N（错误）。建堆时间复杂度为 $O(N)$。</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 填空题 2</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">只有度 k 和度 0 的树</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    在一棵含有 $n$ 个结点的树中，只有度为 $k$ 的分支结点和度为 0 的终端（叶子）结点，则该树中含有的终端结点的数目为____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>设度为 $k$ 的结点有 $m$ 个，叶子有 $n_0$ 个。</p>
+    <p>$n = m + n_0$</p>
+    <p>边数 = $n - 1 = k \cdot m$</p>
+    <p>所以 $m = (n-1)/k$，代入得：</p>
+    <p>$n_0 = n - m = n - \frac{n-1}{k} = \frac{nk - n + 1}{k} = \frac{n(k-1) + 1}{k}$</p>
+    <div class="final-answer">$n_0 = \dfrac{n(k-1)+1}{k}$</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 填空题 7</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">堆删除比较次数</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知以数组表示的小根堆为 [8, 15, 10, 21, 34, 16, 12]，删除关键字 8 之后需要重新建堆，在此过程中，关键字的比较次数是____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>删除根 8，用最后一个元素 12 替换根：[12, 15, 10, 21, 34, 16]</p>
+    <p>下沉 12：</p>
+    <ul class="steps">
+      <li>比较左子 15 和右子 10 &rarr; 第 1 次比较，10 较小。</li>
+      <li>比较 12 和 10 &rarr; 第 2 次比较，12 > 10，交换。数组变为 [10, 15, 12, 21, 34, 16]。</li>
+      <li>12 现在在 index 2，左子 index5=16，无右子。比较 12 和 16 &rarr; 第 3 次比较，12 < 16，不交换，停止。</li>
+    </ul>
+    <div class="final-answer">比较次数 = 3</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<h2 id="exam-2024"><span class="secnum">真题</span>2024 年考题</h2>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 选择题 3</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">子树高度</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    对于二叉树中的一个结点 N，如果其左子树的高度为 $h_1$，右子树的高度为 $h_2$，则以 N 为根结点子树高度为（）。<br>
+    A. $\max(h_1, h_2)$ &emsp; B. $\min(h_1, h_2)$ &emsp; C. $\max(h_1, h_2)+1$ &emsp; D. $\min(h_1, h_2)+1$
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>以 N 为根的子树高度 = 左右子树中较高的那个高度 + 1（加上 N 自身这一层）。</p>
+    <div class="final-answer">C. $\max(h_1, h_2) + 1$</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 选择题 8</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">BST 中序遍历</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    假设有 4 棵结点关键码为整数的二叉树，若它们的中序遍历序列分别如下，请问其中可能是二叉搜索树（二叉排序树）的是（）。<br>
+    A. 5,3,1,2,4 &emsp; B. 1,2,3,4,5 &emsp; C. 5,3,4,2,1 &emsp; D. 1,3,5,4,2
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>BST 的中序遍历一定是<strong>严格升序</strong>的。只有 B 选项 1,2,3,4,5 是升序。</p>
+    <div class="final-answer">B. 1,2,3,4,5</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 选择题 15</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">满二叉树叶子数</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    定义一棵没有 1 度结点的二叉树为满二叉树。对于一棵包含 $k$ 个结点的满二叉树，其叶子结点的个数为（）。<br>
+    A. $\lfloor k/2 \rfloor$ &emsp; B. $\lfloor k/2 \rfloor - 1$ &emsp; C. $\lfloor k/2 \rfloor + 1$ &emsp; D. 以上三个都有可能
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>没有度 1 的结点，即 $n_1 = 0$。由 $n_0 = n_2 + 1$：</p>
+    <p>$k = n_0 + n_2 = n_0 + (n_0 - 1) = 2n_0 - 1$</p>
+    <p>所以 $k$ 一定是奇数，$n_0 = (k+1)/2 = \lfloor k/2 \rfloor + 1$。</p>
+    <div class="final-answer">C. $\lfloor k/2 \rfloor + 1$</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 判断题 3</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">完全二叉树存储方式</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    相比于顺序存储，完全二叉树更适合用链式表示存储。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>完全二叉树用<strong>顺序存储（数组）最合适</strong>，因为：</p>
+    <ul>
+      <li>不浪费空间（没有空隙）</li>
+      <li>通过下标直接计算父子关系，不需要指针</li>
+      <li>这正是堆的实现方式</li>
+    </ul>
+    <div class="final-answer">N（错误）。完全二叉树最适合顺序存储。</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 判断题 4</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">前序+后序不能唯一确定</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    通常不能通过一棵二叉树的前序遍历结点序列和后序遍历结点序列来确定这棵二叉树的完整结构。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>前序+后序通常不能唯一确定二叉树（当存在度为 1 的结点时，无法确定其子树是左子树还是右子树）。只有当每个结点的度为 0 或 2 时才能唯一确定。</p>
+    <div class="final-answer">Y（正确）</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 判断题 5</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">BST 形态</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    二叉搜索树一定是满二叉树。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>BST 的形态取决于插入顺序，可以是任何二叉树形态（包括退化为链的情况），绝不一定是满二叉树。</p>
+    <div class="final-answer">N（错误）</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 填空题 3</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">完全二叉树层数与叶子数</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    已知某棵完全二叉树中有 120 个结点，则该二叉树的结点一共有____层，有____个叶子结点。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>层数：$\lfloor \log_2 120 \rfloor + 1 = 6 + 1 = 7$ 层。</p>
+    <p>叶子数：$n = 120$ 为偶数，$n_1 = 1$，$n_0 = n/2 = 60$。</p>
+    <div class="final-answer">7 层，60 个叶子结点</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 填空题 4</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">遍历序列还原</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    已知一棵树的中序遍历序列为 DBGEACF，后序遍历序列为 DGEBFCA，则这棵树的前序遍历结果为____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <ul class="steps">
+      <li>后序最后字符 A 为根。中序中 A 分割为左子树 DBGE 和右子树 CF。</li>
+      <li>后序对应：左子树后序 DGEB（前 4 个），右子树后序 FC（接下来 2 个）。</li>
+      <li><strong>左子树</strong>（中序 DBGE，后序 DGEB）：根 B。中序中 B 分割为左 D 和右 GE。后序中左子 D，右子后序 GE。</li>
+      <li><strong>B 的右子树</strong>（中序 GE，后序 GE）：根 E。中序中 E 右边无元素，左子树 G。</li>
+      <li><strong>右子树</strong>（中序 CF，后序 FC）：根 C。中序中 C 左边无元素，右子树 F。</li>
+    </ul>
+    <p>前序 = A + (B + D + (E + G)) + (C + F) = ABDEGCF</p>
+    <div class="final-answer">ABDEGCF</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 填空题 5</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">哈夫曼编码总长度</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    某段电文中只有 a,b,c,d 四种字符，出现次数为：a=1000, b=2000, c=6000, d=1000。采用哈夫曼编码该电文的长度为____个比特。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>构建哈夫曼树：</p>
+    <ul class="steps">
+      <li>取 a(1000) + d(1000) = 2000。集合：{2000, b:2000, c:6000}</li>
+      <li>取 2000 + b(2000) = 4000。集合：{4000, c:6000}</li>
+      <li>取 4000 + c(6000) = 10000。</li>
+    </ul>
+    <p>编码长度：c = 1 位，b = 2 位，a = 3 位，d = 3 位。</p>
+    <p>总长度 = $6000 \times 1 + 2000 \times 2 + 1000 \times 3 + 1000 \times 3 = 6000 + 4000 + 3000 + 3000 = 16000$</p>
+    <div class="final-answer">16000 个比特</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 填空题 7</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">m 叉树叶子数通用公式</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    设一棵 $m$ 叉树中有 $N_1$ 个度数为 1 的结点，$N_2$ 个度数为 2 的结点，...，$N_m$ 个度数为 $m$ 的结点，则该 $m$ 叉树中共有____个终端结点。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>设终端结点（叶子）数为 $n_0$。</p>
+    <p>总结点数 $n = n_0 + N_1 + N_2 + \cdots + N_m$</p>
+    <p>边数 = $n - 1 = N_1 + 2N_2 + 3N_3 + \cdots + mN_m$</p>
+    <p>两式相减：</p>
+    <p>$n_0 + N_1 + N_2 + \cdots + N_m - 1 = N_1 + 2N_2 + 3N_3 + \cdots + mN_m$</p>
+    <p>$n_0 = 1 + N_2 + 2N_3 + 3N_4 + \cdots + (m-1)N_m$</p>
+    <div class="final-answer">$n_0 = 1 + \displaystyle\sum_{i=2}^{m}(i-1)N_i = 1 + N_2 + 2N_3 + \cdots + (m-1)N_m$</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 填空题 9</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">森林转二叉树</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    设森林 F 中有 4 棵树，第 1、2、3、4 棵树的结点个数分别为 10、9、11、7，当把森林 F 转换成一棵二叉树后，其根结点的右子树中有____个结点。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>森林转二叉树的规则：第一棵树的根成为二叉树的根，第一棵树的子结点形成左子树，其余树形成根的右子树。</p>
+    <p>根的右子树包含第 2、3、4 棵树的全部结点：$9 + 11 + 7 = 27$。</p>
+    <div class="final-answer">27 个结点</div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 简答题 2 — BST 删除</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">BST 删除操作</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    在 BST 中删除结点 37（用左子树最大者 r 替代）。树结构：37 为根，左子树 24(左 7(左 2), 右 32(左 30))，右子树 42(左 40, 右 120)。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <ul class="steps">
+      <li>找左子树最大者：从 37 的左子 24 出发，一路向右，到达 32。32 即为中序前驱。</li>
+      <li>用 32 替代 37：32 成为新的根。</li>
+      <li>32 原来的位置需要被删除。32 有左子 30，用 30 替代 32 原来的位置（作为 24 的右子）。</li>
+    </ul>
+    <p>删除后的树：</p>
+    <pre>
+        32
+       /  \
+     24    42
+    / \   /  \
+   7  30 40  120
+  /
+ 2</pre>
+    <div class="final-answer">32 替代 37 成为根，30 上移成为 24 的右子。</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<h2 id="exam-algo"><span class="secnum">真题</span>算法填空题</h2>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2022 算法题 2 — 前序构建 + 中序遍历</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">递归构建与遍历</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    输入一棵二叉树的扩充二叉树的先根周游序列（@ 表示空），构建该二叉树并输出中序遍历序列。填写 7 个空。
+  </div>
+  <pre><code>s = input()
+ptr = 0
+class BinaryTree:
+    def __init__(self, data, left=None, right=None):
+        self.data, self.left, self.right = data, left, right
+    def inorderTraversal(self):
+        if self.left:
+            ___①___
+        print(self.data, end="")
+        if self.right:
+            ___②___
+
+def buildTree():
+    global ptr
+    if s[ptr] == "@":
+        ptr += 1
+        ___③___
+    tree = ___④___
+    ptr += 1
+    ___⑤___
+    ___⑥___
+    return tree
+
+tree = ___⑦___
+tree.inorderTraversal()</code></pre>
+  <details class="solution"><summary></summary><div>
+    <p><strong>逐空分析</strong>：</p>
+    <ul class="steps">
+      <li><strong>空 ①</strong>：递归中序遍历左子树 &rarr; <code>self.left.inorderTraversal()</code></li>
+      <li><strong>空 ②</strong>：递归中序遍历右子树 &rarr; <code>self.right.inorderTraversal()</code></li>
+      <li><strong>空 ③</strong>：遇到 @ 表示空结点，返回 None &rarr; <code>return None</code></li>
+      <li><strong>空 ④</strong>：创建当前结点（s[ptr] 是当前字符）&rarr; <code>BinaryTree(s[ptr])</code></li>
+      <li><strong>空 ⑤</strong>：递归构建左子树 &rarr; <code>tree.left = buildTree()</code></li>
+      <li><strong>空 ⑥</strong>：递归构建右子树 &rarr; <code>tree.right = buildTree()</code></li>
+      <li><strong>空 ⑦</strong>：调用 buildTree 构建整棵树 &rarr; <code>buildTree()</code></li>
+    </ul>
+    <p><strong>理解</strong>：扩充二叉树的前序序列唯一确定二叉树。遇到非 @ 字符就创建结点，然后递归处理下一个字符作为左子树，再处理之后的字符作为右子树。遇到 @ 就返回 None。</p>
+    <div class="final-answer">
+      ① <code>self.left.inorderTraversal()</code><br>
+      ② <code>self.right.inorderTraversal()</code><br>
+      ③ <code>return None</code><br>
+      ④ <code>BinaryTree(s[ptr])</code><br>
+      ⑤ <code>tree.left = buildTree()</code><br>
+      ⑥ <code>tree.right = buildTree()</code><br>
+      ⑦ <code>buildTree()</code>
+    </div>
+  </div></details>
+</div>
+
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>2024 算法题 2 — 求二叉树宽度</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">DFS 求宽度 + 建树</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    通过 DFS 统计每层结点数来求二叉树宽度，同时根据输入构建二叉树（找根结点）。填写 5 个空。
+  </div>
+  <pre><code>class BinaryTree:
+    def __init__(self, data, left=None, right=None):
+        self.data, self.left, self.right = data, left, right
+    def countWidth(self):
+        width = [0 for i in range(200)]
+        def traversal(root, level):
+            if root is None:
+                return
+            width[level] += 1
+            ___(1)___
+            ___(2)___
+        traversal(self, 0)
+        return max(width)
+
+def buildTree():
+    n = int(input())
+    nodes = [BinaryTree(None) for i in range(n)]
+    for nd in range(n):
+        L, R = map(int, input().split())
+        if L != -1:
+            nodes[nd].left = nodes[L]
+            ___(3)___
+        if R != -1:
+            nodes[nd].right = nodes[R]
+            ___(4)___
+    for i in range(n):
+        if ___(5)___:
+            return nodes[i]
+    return None
+
+tree = buildTree()
+print(tree.countWidth())</code></pre>
+  <details class="solution"><summary></summary><div>
+    <p><strong>逐空分析</strong>：</p>
+    <ul class="steps">
+      <li><strong>空 (1)</strong>：递归遍历左子树，层数 +1 &rarr; <code>traversal(root.left, level + 1)</code></li>
+      <li><strong>空 (2)</strong>：递归遍历右子树，层数 +1 &rarr; <code>traversal(root.right, level + 1)</code></li>
+      <li><strong>空 (3)</strong>：标记 nodes[L] 已被作为子结点（不是根）。用 data 字段来标记 &rarr; <code>nodes[L].data = L</code></li>
+      <li><strong>空 (4)</strong>：同理标记 nodes[R] &rarr; <code>nodes[R].data = R</code></li>
+      <li><strong>空 (5)</strong>：找根结点 = 找没有被标记为任何结点的子结点的那个结点 &rarr; <code>nodes[i].data is None</code></li>
+    </ul>
+    <p><strong>理解</strong>：所有结点初始 data=None。当某结点被设为别人的子结点时，设置其 data 为非 None（标记"我有父亲"）。最终 data 仍为 None 的就是根结点。</p>
+    <div class="final-answer">
+      (1) <code>traversal(root.left, level + 1)</code><br>
+      (2) <code>traversal(root.right, level + 1)</code><br>
+      (3) <code>nodes[L].data = L</code><br>
+      (4) <code>nodes[R].data = R</code><br>
+      (5) <code>nodes[i].data is None</code>
+    </div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     速查表
+     ═══════════════════════════════════════════════════════════════ -->
+<h2 id="sec-cheatsheet"><span class="secnum">附录</span>本章速查表</h2>
+
+<div class="tbl-wrap">
+<table class="data">
+  <caption>树与二叉树核心公式速查</caption>
+  <thead>
+    <tr><th>公式 / 结论</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>$n - 1 = \sum_{i=1}^m i \cdot n_i$</td><td>边数 = 度之和</td></tr>
+    <tr><td>$n_0 = 1 + \sum_{i=2}^m (i-1)n_i$</td><td>叶子数公式（通用）</td></tr>
+    <tr><td>$n_0 = n_2 + 1$</td><td>二叉树叶子与度2结点关系</td></tr>
+    <tr><td>第 $i$ 层最多 $2^i$ 个结点</td><td>根为第 0 层</td></tr>
+    <tr><td>高 $h$ 的二叉树最多 $2^{h+1}-1$ 个结点</td><td>满二叉树</td></tr>
+    <tr><td>完全二叉树高度 $\lfloor\log_2 n\rfloor$</td><td>根为第 0 层时</td></tr>
+    <tr><td>完全二叉树叶子数 $\lceil n/2 \rceil$</td><td>$n$ 偶数时 $n_1=1$，奇数时 $n_1=0$</td></tr>
+    <tr><td>前序+中序 / 后序+中序 &rarr; 唯一二叉树</td><td>前序+后序通常不能</td></tr>
+    <tr><td>BST 中序遍历 = 升序序列</td><td>判断 BST 的充要条件</td></tr>
+    <tr><td>$WPL = \sum w_i \times l_i$</td><td>哈夫曼树 WPL</td></tr>
+    <tr><td>建堆 $O(n)$</td><td>自底向上，不是 $O(n\log n)$</td></tr>
+    <tr><td>堆插入/删除 $O(\log n)$</td><td>上浮/下沉</td></tr>
+    <tr><td>森林树数 $T = L - N_2$</td><td>每结点度 $\le 2$ 时</td></tr>
+    <tr><td>森林先序 = 对应二叉树先序</td><td>森林中序 = 对应二叉树中序</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+  <caption>本章往年真题年份-题型分布</caption>
+  <thead>
+    <tr><th>考点</th><th>2021</th><th>2022</th><th>2024</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>度与结点数关系</td><td>选择12, 填空3</td><td>填空2</td><td>填空7</td></tr>
+    <tr><td>遍历序列还原</td><td>填空5</td><td>判断2</td><td>填空4</td></tr>
+    <tr><td>前序/后序与树形关系</td><td>选择5,6</td><td>选择13</td><td>判断4</td></tr>
+    <tr><td>完全二叉树性质</td><td>填空3</td><td>判断4</td><td>选择3, 填空3, 判断3</td></tr>
+    <tr><td>BST</td><td>-</td><td>-</td><td>选择8, 判断5, 简答2</td></tr>
+    <tr><td>哈夫曼树/编码</td><td>简答2</td><td>选择6</td><td>填空5</td></tr>
+    <tr><td>堆操作</td><td>简答3</td><td>判断4, 填空7</td><td>-</td></tr>
+    <tr><td>森林</td><td>简答1</td><td>选择14</td><td>填空9</td></tr>
+    <tr><td>算法填空</td><td>-</td><td>前序建树+中序遍历</td><td>DFS求宽度+建树</td></tr>
+  </tbody>
+</table>
+</div>
+
+    </div><!-- content-inner -->
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">&uarr;</a>
+<script src="script.js"></script>
+</body>
+</html>

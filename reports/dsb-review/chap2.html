@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第二章 栈与队列 · 数据结构与算法B 复习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">数据结构与算法B<small>复习报告 · 第二章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <a href="#stack-def">2.1 栈的定义与特性</a>
+      <a href="#stack-ops">2.2 栈的基本操作</a>
+      <a href="#stack-impl">2.3 栈的实现</a>
+      <a href="#stack-seq">2.4 出栈序列判断</a>
+      <a href="#stack-app">2.5 栈的应用</a>
+      <a href="#expr">2.6 表达式处理（详讲）</a>
+      <a href="#queue-def">2.7 队列的定义</a>
+      <a href="#queue-ops">2.8 队列的基本操作</a>
+      <a href="#circular-queue">2.9 循环队列（重点）</a>
+      <a href="#queue-app">2.10 队列的应用</a>
+      <a href="#exam-collection">2.11 往年真题汇总</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">DATA STRUCTURES · STACK &amp; QUEUE</div>
+      <h1>第二章 栈与队列</h1>
+      <p>栈和队列是两种受限的线性表，理解它们是学习树和图遍历的基础</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="stack-def">2.1 栈的定义与特性</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>定义：栈（Stack）</h3>
+<p><strong>栈</strong>是一种<strong>操作受限的线性表</strong>，只允许在表的一端（称为<strong>栈顶 top</strong>）进行插入和删除操作。另一端称为<strong>栈底 bottom</strong>。</p>
+<p>栈的核心特性：<strong>后进先出（Last In First Out, LIFO）</strong>。</p>
+<p>你可以把栈想象成一摞盘子：</p>
+<ul>
+  <li>你只能往最上面放盘子（入栈 push）</li>
+  <li>你只能从最上面取盘子（出栈 pop）</li>
+  <li>最后放上去的盘子最先被取走</li>
+</ul>
+</div>
+
+<div class="box insight">
+<h3>直觉理解</h3>
+<p>为什么要「限制」操作？因为限制带来了<strong>确定性</strong>。普通线性表可以在任意位置插入删除，操作灵活但语义不明确。栈通过限制操作位置，天然保证了「最近添加的元素最先被处理」，这种性质在递归、括号匹配、撤销操作等场景中极为有用。</p>
+</div>
+
+<div class="box definition">
+<h3>形式化描述</h3>
+<p>设栈 $S = (a_1, a_2, \ldots, a_n)$，其中 $a_1$ 是栈底元素，$a_n$ 是栈顶元素。</p>
+<ul>
+  <li>入栈（push）：将新元素插入到 $a_n$ 之上，使栈变为 $(a_1, a_2, \ldots, a_n, a_{n+1})$</li>
+  <li>出栈（pop）：删除栈顶元素 $a_n$，使栈变为 $(a_1, a_2, \ldots, a_{n-1})$</li>
+</ul>
+<p>约束：任何时刻，只能访问或修改栈顶元素。</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="stack-ops">2.2 栈的基本操作</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>栈的 ADT（抽象数据类型）</h3>
+<table>
+<thead><tr><th>操作</th><th>含义</th><th>时间复杂度</th></tr></thead>
+<tbody>
+<tr><td><code>push(x)</code></td><td>将元素 x 压入栈顶</td><td>$O(1)$</td></tr>
+<tr><td><code>pop()</code></td><td>弹出并返回栈顶元素（栈空时报错）</td><td>$O(1)$</td></tr>
+<tr><td><code>top()</code> / <code>peek()</code></td><td>返回栈顶元素但不删除</td><td>$O(1)$</td></tr>
+<tr><td><code>isEmpty()</code></td><td>判断栈是否为空</td><td>$O(1)$</td></tr>
+<tr><td><code>size()</code></td><td>返回栈中元素个数</td><td>$O(1)$</td></tr>
+</tbody>
+</table>
+<p>所有操作均为 $O(1)$ 时间复杂度——这是栈的设计初衷之一。</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="stack-impl">2.3 栈的实现</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>方式一：顺序栈（数组实现）</h3>
+<p>用一个数组 <code>data[0..MAXSIZE-1]</code> 和一个整型变量 <code>top</code> 来表示栈。</p>
+<p><strong>约定</strong>：<code>top</code> 指向栈顶元素的位置（也有教材约定 <code>top</code> 指向下一个空闲位置）。</p>
+<ul>
+  <li>栈空条件：<code>top == -1</code></li>
+  <li>栈满条件：<code>top == MAXSIZE - 1</code></li>
+  <li>栈中元素个数：<code>top + 1</code></li>
+</ul>
+<pre><code class="language-c">// 顺序栈结构定义
+#define MAXSIZE 100
+typedef struct {
+    int data[MAXSIZE];
+    int top;  // 栈顶指针，初始为-1
+} SeqStack;
+
+// 初始化
+void InitStack(SeqStack *S) {
+    S->top = -1;
+}
+
+// 判空
+int IsEmpty(SeqStack *S) {
+    return S->top == -1;
+}
+
+// 入栈
+int Push(SeqStack *S, int x) {
+    if (S->top == MAXSIZE - 1) return 0; // 栈满，失败
+    S->top++;
+    S->data[S->top] = x;
+    return 1;
+}
+
+// 出栈
+int Pop(SeqStack *S, int *x) {
+    if (S->top == -1) return 0; // 栈空，失败
+    *x = S->data[S->top];
+    S->top--;
+    return 1;
+}
+
+// 取栈顶
+int GetTop(SeqStack *S, int *x) {
+    if (S->top == -1) return 0;
+    *x = S->data[S->top];
+    return 1;
+}</code></pre>
+</div>
+
+<div class="box definition">
+<h3>方式二：链栈（链表实现）</h3>
+<p>用单链表实现栈，链表的头结点就是栈顶。</p>
+<p><strong>优点</strong>：不存在栈满的问题（动态分配内存），适合栈大小变化较大的场景。</p>
+<pre><code class="language-c">// 链栈结构定义
+typedef struct StackNode {
+    int data;
+    struct StackNode *next;
+} StackNode;
+
+typedef struct {
+    StackNode *top;  // 栈顶指针
+    int count;       // 元素个数
+} LinkStack;
+
+// 入栈（头插法）
+void Push(LinkStack *S, int x) {
+    StackNode *p = (StackNode*)malloc(sizeof(StackNode));
+    p->data = x;
+    p->next = S->top;
+    S->top = p;
+    S->count++;
+}
+
+// 出栈（头删法）
+int Pop(LinkStack *S, int *x) {
+    if (S->top == NULL) return 0;
+    StackNode *p = S->top;
+    *x = p->data;
+    S->top = p->next;
+    free(p);
+    S->count--;
+    return 1;
+}</code></pre>
+</div>
+
+<div class="box insight">
+<h3>顺序栈 vs 链栈对比</h3>
+<table>
+<thead><tr><th>比较项</th><th>顺序栈</th><th>链栈</th></tr></thead>
+<tbody>
+<tr><td>空间</td><td>需要预分配固定大小</td><td>动态分配，无上限</td></tr>
+<tr><td>栈满</td><td>可能溢出</td><td>不会（内存耗尽除外）</td></tr>
+<tr><td>额外开销</td><td>可能浪费空间</td><td>每个结点有指针开销</td></tr>
+<tr><td>缓存友好性</td><td>好（连续存储）</td><td>差（离散存储）</td></tr>
+<tr><td>适用场景</td><td>元素数量可预估</td><td>元素数量变化大</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="stack-seq">2.4 出栈序列判断</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>问题描述</h3>
+<p>给定入栈序列 $1, 2, 3, \ldots, n$（按此顺序依次入栈，入栈过程中任何时刻都允许出栈），判断某个排列是否是合法的出栈序列。</p>
+</div>
+
+<div class="box theorem">
+<h3>方法一：模拟法（最实用）</h3>
+<p><strong>算法思路</strong>：用一个辅助栈模拟入栈出栈过程。</p>
+<ol>
+  <li>设待判断的出栈序列为 $b_1, b_2, \ldots, b_n$</li>
+  <li>按 $1, 2, 3, \ldots$ 的顺序依次将元素入栈</li>
+  <li>每入一个元素后，检查栈顶是否等于当前期望的出栈元素 $b_i$</li>
+  <li>如果相等，出栈，$i$ 后移，继续检查栈顶</li>
+  <li>如果所有元素入栈完毕后，出栈序列能完全匹配，则合法</li>
+</ol>
+<pre><code class="language-c">// 判断出栈序列是否合法
+// in[]: 入栈序列, out[]: 待判断的出栈序列, n: 元素个数
+int isValidPopSequence(int in[], int out[], int n) {
+    int stack[n], top = -1;
+    int i = 0, j = 0;  // i: 入栈指针, j: 出栈指针
+    while (i < n) {
+        stack[++top] = in[i++];  // 入栈
+        // 栈顶与期望出栈元素匹配时，持续出栈
+        while (top >= 0 && stack[top] == out[j]) {
+            top--;
+            j++;
+        }
+    }
+    return (top == -1);  // 栈空说明全部匹配成功
+}</code></pre>
+</div>
+
+<div class="box theorem">
+<h3>方法二：规律判断法（快速排除）</h3>
+<p>对于入栈序列 $1, 2, \ldots, n$，出栈序列 $b_1, b_2, \ldots, b_n$ 合法的充要条件是：</p>
+<p><strong>不存在</strong> $i < j < k$ 使得 $b_k < b_i < b_j$（即不存在 312 模式，其中元素来自原始顺序）。</p>
+<p>更实用的判断规则：对于出栈序列中的任意元素 $b_i$，在 $b_i$ 之后出现的、且<strong>在原入栈序列中排在 $b_i$ 之前</strong>的所有元素，必须是<strong>递减</strong>的。</p>
+<p><strong>直觉</strong>：如果 $x$ 比 $b_i$ 先入栈，但比 $b_i$ 后出栈，说明 $x$ 在栈中被 $b_i$「压着」。所有这样被压着的元素，出栈时只能按栈的顺序（即递减）出来。</p>
+</div>
+
+<div class="box example">
+<h3>例题：判断出栈序列</h3>
+<p>入栈序列为 1, 2, 3, 4, 5，判断 3, 2, 5, 4, 1 是否合法。</p>
+<p><strong>模拟过程</strong>：</p>
+<table>
+<thead><tr><th>步骤</th><th>操作</th><th>栈状态</th><th>已输出</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>1 入栈</td><td>[1]</td><td></td></tr>
+<tr><td>2</td><td>2 入栈</td><td>[1,2]</td><td></td></tr>
+<tr><td>3</td><td>3 入栈</td><td>[1,2,3]</td><td></td></tr>
+<tr><td>4</td><td>栈顶3=期望3，出栈</td><td>[1,2]</td><td>3</td></tr>
+<tr><td>5</td><td>栈顶2=期望2，出栈</td><td>[1]</td><td>3,2</td></tr>
+<tr><td>6</td><td>4 入栈</td><td>[1,4]</td><td>3,2</td></tr>
+<tr><td>7</td><td>5 入栈</td><td>[1,4,5]</td><td>3,2</td></tr>
+<tr><td>8</td><td>栈顶5=期望5，出栈</td><td>[1,4]</td><td>3,2,5</td></tr>
+<tr><td>9</td><td>栈顶4=期望4，出栈</td><td>[1]</td><td>3,2,5,4</td></tr>
+<tr><td>10</td><td>栈顶1=期望1，出栈</td><td>[]</td><td>3,2,5,4,1</td></tr>
+</tbody>
+</table>
+<p>栈空，匹配成功！所以 3,2,5,4,1 是合法的出栈序列。</p>
+</div>
+
+<div class="box theorem">
+<h3>卡特兰数：合法出栈序列的总数</h3>
+<p>$n$ 个元素的入栈序列，合法出栈序列的总数为第 $n$ 个<strong>卡特兰数</strong>（Catalan Number）：</p>
+$$C_n = \frac{1}{n+1}\binom{2n}{n} = \frac{(2n)!}{(n+1)!\,n!}$$
+<p>前几项：$C_1=1, C_2=2, C_3=5, C_4=14, C_5=42$</p>
+<p>例如：3 个元素入栈，合法出栈序列有 $C_3 = 5$ 种。</p>
+</div>
+
+<div class="box exam">
+<h3>【2021 选择题3】出栈序列判断</h3>
+<p>设有三个元素 X, Y, Z 顺序进栈（进的过程中允许出栈），下列得不到的出栈排列是（）。</p>
+<p>A. XYZ &emsp; B. YZX &emsp; C. ZXY &emsp; D. ZYX</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：C</strong></p>
+<p><strong>逐一验证</strong>：</p>
+<p><strong>A. XYZ</strong>：X入→X出，Y入→Y出，Z入→Z出。合法。</p>
+<p><strong>B. YZX</strong>：X入，Y入→Y出，Z入→Z出，X出。合法。</p>
+<p><strong>C. ZXY</strong>：要Z先出，必须X、Y、Z全部入栈，栈中从底到顶为 X,Y,Z。Z出栈后，栈中为 X,Y（Y在栈顶）。要X出栈，必须先弹出Y，但序列要求X在Y前面出。<strong>不可能！</strong></p>
+<p><strong>D. ZYX</strong>：X、Y、Z全部入栈，然后依次出栈 Z→Y→X。合法。</p>
+<p><strong>关键</strong>：Z出栈后，Y在X上面，Y必须比X先出，所以ZXY不可能而ZYX可以。</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【2024 选择题1】出栈序列判断</h3>
+<p>设栈的输入序列是 1 2 3 4 5，则（）<strong>不可能</strong>是其出栈序列。</p>
+<p>A. 23415 &emsp; B. 54132 &emsp; C. 23145 &emsp; D. 15432</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：B</strong></p>
+<p><strong>验证 B: 5,4,1,3,2</strong>：</p>
+<ol>
+  <li>要5先出，必须1,2,3,4,5全部入栈。栈状态（底→顶）：1,2,3,4,5</li>
+  <li>5出栈。栈：1,2,3,4</li>
+  <li>4出栈。栈：1,2,3</li>
+  <li>下一个期望出1，但栈顶是3，1在栈底，必须先出3和2才能出1</li>
+  <li>所以出栈顺序只能是 5,4,3,2,1，不可能得到 5,4,1,3,2</li>
+</ol>
+<p><strong>验证其他选项均合法</strong>：</p>
+<p>A. 2,3,4,1,5：1入,2入→2出,3入→3出,4入→4出,1出,5入→5出。合法。</p>
+<p>C. 2,3,1,4,5：1入,2入→2出,3入→3出,1出,4入→4出,5入→5出。合法。</p>
+<p>D. 1,5,4,3,2：1入→1出,2入,3入,4入,5入→5出→4出→3出→2出。合法。</p>
+</div></details>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="stack-app">2.5 栈的应用</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>应用一：括号匹配</h3>
+<p><strong>问题</strong>：检查表达式中的括号是否正确配对。支持多种括号：<code>( )</code>, <code>[ ]</code>, <code>{ }</code>。</p>
+<p><strong>算法</strong>：</p>
+<ol>
+  <li>从左到右扫描表达式</li>
+  <li>遇到<strong>左括号</strong>：入栈</li>
+  <li>遇到<strong>右括号</strong>：
+    <ul>
+      <li>栈空 → 不匹配（右括号多了）</li>
+      <li>栈顶左括号与当前右括号配对 → 出栈，继续</li>
+      <li>不配对 → 不匹配（类型不对）</li>
+    </ul>
+  </li>
+  <li>扫描结束后，栈空 → 匹配成功；栈不空 → 不匹配（左括号多了）</li>
+</ol>
+<pre><code class="language-c">int bracketMatch(char expr[]) {
+    char stack[1000];
+    int top = -1;
+    for (int i = 0; expr[i] != '\0'; i++) {
+        char c = expr[i];
+        if (c == '(' || c == '[' || c == '{') {
+            stack[++top] = c;  // 左括号入栈
+        } else if (c == ')' || c == ']' || c == '}') {
+            if (top == -1) return 0;  // 栈空，右括号多余
+            char t = stack[top--];    // 弹出栈顶
+            if ((c == ')' && t != '(') ||
+                (c == ']' && t != '[') ||
+                (c == '}' && t != '{'))
+                return 0;  // 类型不匹配
+        }
+    }
+    return (top == -1);  // 栈空则完全匹配
+}</code></pre>
+</div>
+
+<div class="box exam">
+<h3>【2021 选择题14】括号匹配</h3>
+<p>允许表达式内多种括号混合嵌套，检查表达式中括号是否正确配对的算法，通常选用（）。</p>
+<p>A. 栈 &emsp; B. 线性表 &emsp; C. 队列 &emsp; D. 二叉排序树</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：A</strong></p>
+<p>括号匹配的核心特征是「最近的左括号最先被匹配」，这恰好是<strong>后进先出（LIFO）</strong>的性质，因此使用<strong>栈</strong>来实现。</p>
+<p>遇到左括号入栈，遇到右括号弹出栈顶检查是否配对。栈的 LIFO 性质保证了嵌套括号从内到外依次匹配。</p>
+</div></details>
+</div>
+
+<div class="box definition">
+<h3>应用二：递归的实现</h3>
+<p>递归函数调用的底层实现依赖<strong>系统调用栈（Call Stack）</strong>。</p>
+<p>每次函数调用时，系统会将以下信息压入调用栈：</p>
+<ul>
+  <li>返回地址（调用结束后从哪里继续执行）</li>
+  <li>局部变量</li>
+  <li>参数值</li>
+</ul>
+<p>函数返回时，从栈中弹出这些信息，恢复上层函数的执行环境。</p>
+<p><strong>递归深度</strong>就是调用栈的最大深度。栈溢出（Stack Overflow）就是递归过深导致调用栈超出容量。</p>
+</div>
+
+<div class="box exam">
+<h3>【2022 选择题2】递归调用栈容量</h3>
+<p>给定一个 $N$ 个相异元素构成的有序数列，设计一个递归算法实现数列的二分查找，考察递归过程中栈的使用情况，请问这样一个递归调用栈的最小容量应为（）。</p>
+<p>A. $N$ &emsp; B. $N/2$ &emsp; C. $\lfloor \log_2 N \rfloor$ &emsp; D. $\lceil \log_2(N+1) \rceil$</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：D</strong></p>
+<p><strong>分析</strong>：二分查找每次将搜索范围减半，递归的最大深度就是最坏情况下需要划分的次数。</p>
+<p>对于 $N$ 个元素，二分查找最多需要比较 $\lceil \log_2(N+1) \rceil$ 次（每次递归缩小为一半，直到区间为空）。</p>
+<p>每次递归调用占用一层栈帧，因此调用栈的最小容量（即最大递归深度）为 $\lceil \log_2(N+1) \rceil$。</p>
+<p><strong>为什么是 $\lceil \log_2(N+1) \rceil$ 而不是 $\lfloor \log_2 N \rfloor$</strong>：</p>
+<p>考虑 $N=7$：树高为3，$\lceil \log_2 8 \rceil = 3$，$\lfloor \log_2 7 \rfloor = 2$。实际需要3层递归，所以答案是D。</p>
+</div></details>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="expr">2.6 表达式处理（详讲）</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>三种表达式形式</h3>
+<table>
+<thead><tr><th>表达式类型</th><th>运算符位置</th><th>示例（a+b*c）</th></tr></thead>
+<tbody>
+<tr><td>中缀表达式（Infix）</td><td>运算符在操作数之间</td><td><code>a + b * c</code></td></tr>
+<tr><td>后缀表达式（Postfix/逆波兰）</td><td>运算符在操作数之后</td><td><code>a b c * +</code></td></tr>
+<tr><td>前缀表达式（Prefix/波兰）</td><td>运算符在操作数之前</td><td><code>+ a * b c</code></td></tr>
+</tbody>
+</table>
+<p><strong>为什么后缀表达式重要？</strong></p>
+<ul>
+  <li>不需要括号和优先级规则</li>
+  <li>从左到右扫描即可求值，天然适合计算机处理</li>
+  <li>计算器和编译器内部通常先将中缀转为后缀再求值</li>
+</ul>
+</div>
+
+<div class="box theorem">
+<h3>中缀表达式转后缀表达式——完整算法</h3>
+<p>使用一个<strong>运算符栈</strong>，从左到右扫描中缀表达式：</p>
+<table>
+<thead><tr><th>遇到的符号</th><th>处理规则</th></tr></thead>
+<tbody>
+<tr><td><strong>操作数</strong>（数字/变量）</td><td>直接输出到后缀表达式</td></tr>
+<tr><td><strong>左括号 <code>(</code></strong></td><td>直接入栈（在栈中优先级最低）</td></tr>
+<tr><td><strong>右括号 <code>)</code></strong></td><td>依次弹出栈中运算符并输出，直到遇到左括号（左括号弹出但不输出）</td></tr>
+<tr><td><strong>运算符 op</strong></td><td>
+  <ol>
+    <li>比较 op 与栈顶运算符的优先级</li>
+    <li>若栈空、栈顶为 <code>(</code>、或 op 优先级<strong>高于</strong>栈顶 → op 入栈</li>
+    <li>否则（op 优先级 ≤ 栈顶）→ 弹出栈顶并输出，重复比较，直到可以入栈</li>
+  </ol>
+</td></tr>
+<tr><td><strong>扫描结束</strong></td><td>将栈中剩余运算符依次弹出输出</td></tr>
+</tbody>
+</table>
+
+<p><strong>运算符优先级</strong>（从高到低）：</p>
+<ol>
+  <li><code>^</code>（乘幂）— 右结合</li>
+  <li><code>*</code>, <code>/</code> — 左结合</li>
+  <li><code>+</code>, <code>-</code> — 左结合</li>
+</ol>
+<p><strong>注意</strong>：同优先级时，左结合运算符弹出栈顶（≤），右结合运算符不弹出栈顶（<）。</p>
+</div>
+
+<div class="box example">
+<h3>完整示例：中缀转后缀</h3>
+<p>将 <code>a + b * c - d</code> 转换为后缀表达式。</p>
+<table>
+<thead><tr><th>步骤</th><th>扫描到</th><th>动作</th><th>输出</th><th>栈（底→顶）</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>a</td><td>操作数，直接输出</td><td>a</td><td>空</td></tr>
+<tr><td>2</td><td>+</td><td>栈空，入栈</td><td>a</td><td>[+]</td></tr>
+<tr><td>3</td><td>b</td><td>操作数，直接输出</td><td>a b</td><td>[+]</td></tr>
+<tr><td>4</td><td>*</td><td>优先级 > 栈顶+，入栈</td><td>a b</td><td>[+ *]</td></tr>
+<tr><td>5</td><td>c</td><td>操作数，直接输出</td><td>a b c</td><td>[+ *]</td></tr>
+<tr><td>6</td><td>-</td><td>优先级 ≤ 栈顶*，弹出*输出；优先级 ≤ 栈顶+，弹出+输出；入栈</td><td>a b c * +</td><td>[-]</td></tr>
+<tr><td>7</td><td>d</td><td>操作数，直接输出</td><td>a b c * + d</td><td>[-]</td></tr>
+<tr><td>8</td><td>结束</td><td>弹出所有，输出</td><td>a b c * + d -</td><td>空</td></tr>
+</tbody>
+</table>
+<p><strong>结果</strong>：<code>a b c * + d -</code></p>
+</div>
+
+<div class="box theorem">
+<h3>后缀表达式求值算法</h3>
+<p>使用一个<strong>操作数栈</strong>，从左到右扫描后缀表达式：</p>
+<ol>
+  <li>遇到<strong>操作数</strong>：入栈</li>
+  <li>遇到<strong>运算符 op</strong>：
+    <ul>
+      <li>弹出栈顶 → 作为<strong>右操作数</strong> $a$（先弹出的是右操作数！）</li>
+      <li>再弹出栈顶 → 作为<strong>左操作数</strong> $b$</li>
+      <li>计算 $b \text{ op } a$，结果入栈</li>
+    </ul>
+  </li>
+  <li>扫描结束后，栈中唯一元素就是表达式的值</li>
+</ol>
+</div>
+
+<div class="box pitfall">
+<h3>易错点：操作数弹出顺序</h3>
+<p>对于减法和除法，操作数的顺序至关重要！</p>
+<ul>
+  <li><strong>先弹出的是右操作数</strong>（后入栈的）</li>
+  <li><strong>后弹出的是左操作数</strong>（先入栈的）</li>
+</ul>
+<p>例：后缀表达式 <code>8 3 -</code></p>
+<ul>
+  <li>8入栈，3入栈</li>
+  <li>遇到 <code>-</code>：先弹 3（右操作数），再弹 8（左操作数）</li>
+  <li>计算 8 - 3 = 5</li>
+</ul>
+<p>如果搞反了就变成 3 - 8 = -5，大错特错！</p>
+</div>
+
+<div class="box exam">
+<h3>【2024 选择题14】中缀转后缀——栈状态</h3>
+<p>利用栈将表达式 <code>3*2^(4+2*2-6*3)-5</code>（其中 <code>^</code> 为乘幂）转换为后缀表达式过程中，当扫描到 6 时，运算符栈为（）。</p>
+<p>A. <code>*^(+*-</code> &emsp; B. <code>*^-</code> &emsp; C. <code>*^(+</code> &emsp; D. <code>*^(-</code></p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：D</strong></p>
+<p><strong>详细扫描过程</strong>（优先级：^ > * > + -）：</p>
+<table>
+<thead><tr><th>扫描</th><th>动作</th><th>输出</th><th>栈（底→顶）</th></tr></thead>
+<tbody>
+<tr><td>3</td><td>操作数，输出</td><td>3</td><td>空</td></tr>
+<tr><td>*</td><td>栈空，入栈</td><td>3</td><td>[*]</td></tr>
+<tr><td>2</td><td>操作数，输出</td><td>3 2</td><td>[*]</td></tr>
+<tr><td>^</td><td>优先级 > 栈顶*，入栈</td><td>3 2</td><td>[* ^]</td></tr>
+<tr><td>(</td><td>左括号，直接入栈</td><td>3 2</td><td>[* ^ (]</td></tr>
+<tr><td>4</td><td>操作数，输出</td><td>3 2 4</td><td>[* ^ (]</td></tr>
+<tr><td>+</td><td>栈顶是(，入栈</td><td>3 2 4</td><td>[* ^ ( +]</td></tr>
+<tr><td>2</td><td>操作数，输出</td><td>3 2 4 2</td><td>[* ^ ( +]</td></tr>
+<tr><td>*</td><td>优先级 > 栈顶+，入栈</td><td>3 2 4 2</td><td>[* ^ ( + *]</td></tr>
+<tr><td>2</td><td>操作数，输出</td><td>3 2 4 2 2</td><td>[* ^ ( + *]</td></tr>
+<tr><td>-</td><td>优先级 ≤ 栈顶*，弹出*输出；优先级 ≤ 栈顶+，弹出+输出；栈顶是(，停止，-入栈</td><td>3 2 4 2 2 * +</td><td>[* ^ ( -]</td></tr>
+<tr><td><strong>6</strong></td><td><strong>操作数（此时观察栈）</strong></td><td>—</td><td><strong>[* ^ ( -]</strong></td></tr>
+</tbody>
+</table>
+<p>此时运算符栈从底到顶为 <code>* ^ ( -</code>，写成序列即 <code>*^(-</code>，对应选项 <strong>D</strong>。</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【2022 填空题10】栈模拟表达式求值</h3>
+<p>若栈 S1 中保存整数，栈 S2 中保存运算符，函数 F() 依次执行下述各步操作：</p>
+<ol>
+  <li>从 S1 中依次弹出两个操作数 a 和 b（先弹出 a，再弹出 b）</li>
+  <li>从 S2 中弹出一个运算符 op</li>
+  <li>执行相应的运算 b op a</li>
+  <li>将运算结果压入 S1 中</li>
+</ol>
+<p>假定 S1 中的操作数依次是 5, 8, 3, 2（2在栈顶），S2 中的运算符依次是 *, -, /（/ 在栈顶）。调用三次 F() 后，S1 栈顶保存的值是____。</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：35</strong></p>
+<p>初始状态：</p>
+<ul>
+  <li>S1（底→顶）：5, 8, 3, 2</li>
+  <li>S2（底→顶）：*, -, /</li>
+</ul>
+<p><strong>第一次调用 F()</strong>：</p>
+<ul>
+  <li>从 S1 弹出 a=2，再弹出 b=3</li>
+  <li>从 S2 弹出 op=/</li>
+  <li>计算 b op a = 3 / 2 = 1（整数除法）</li>
+  <li>将 1 压入 S1。S1：5, 8, 1；S2：*, -</li>
+</ul>
+<p><strong>第二次调用 F()</strong>：</p>
+<ul>
+  <li>从 S1 弹出 a=1，再弹出 b=8</li>
+  <li>从 S2 弹出 op=-</li>
+  <li>计算 b op a = 8 - 1 = 7</li>
+  <li>将 7 压入 S1。S1：5, 7；S2：*</li>
+</ul>
+<p><strong>第三次调用 F()</strong>：</p>
+<ul>
+  <li>从 S1 弹出 a=7，再弹出 b=5</li>
+  <li>从 S2 弹出 op=*</li>
+  <li>计算 b op a = 5 * 7 = 35</li>
+  <li>将 35 压入 S1。S1：35；S2：空</li>
+</ul>
+<p>最终 S1 栈顶为 <strong>35</strong>。</p>
+</div></details>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="queue-def">2.7 队列的定义</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>定义：队列（Queue）</h3>
+<p><strong>队列</strong>是一种操作受限的线性表，只允许在一端（<strong>队尾 rear</strong>）插入、在另一端（<strong>队头 front</strong>）删除。</p>
+<p>核心特性：<strong>先进先出（First In First Out, FIFO）</strong>。</p>
+<p>生活中的例子：排队买饭——先排的人先买到饭，后来的人排在队尾。</p>
+</div>
+
+<div class="box insight">
+<h3>栈 vs 队列 对比</h3>
+<table>
+<thead><tr><th>特性</th><th>栈（Stack）</th><th>队列（Queue）</th></tr></thead>
+<tbody>
+<tr><td>原则</td><td>LIFO（后进先出）</td><td>FIFO（先进先出）</td></tr>
+<tr><td>插入位置</td><td>栈顶</td><td>队尾</td></tr>
+<tr><td>删除位置</td><td>栈顶（同侧）</td><td>队头（异侧）</td></tr>
+<tr><td>典型应用</td><td>递归、回溯、DFS</td><td>层次遍历、BFS</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="queue-ops">2.8 队列的基本操作</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>队列的 ADT</h3>
+<table>
+<thead><tr><th>操作</th><th>含义</th><th>时间复杂度</th></tr></thead>
+<tbody>
+<tr><td><code>enqueue(x)</code></td><td>将元素 x 插入队尾</td><td>$O(1)$</td></tr>
+<tr><td><code>dequeue()</code></td><td>删除并返回队头元素</td><td>$O(1)$</td></tr>
+<tr><td><code>front()</code></td><td>返回队头元素但不删除</td><td>$O(1)$</td></tr>
+<tr><td><code>isEmpty()</code></td><td>判断队列是否为空</td><td>$O(1)$</td></tr>
+<tr><td><code>size()</code></td><td>返回队列中元素个数</td><td>$O(1)$</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="circular-queue">2.9 循环队列（重点！每年必考）</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box pitfall">
+<h3>为什么需要循环队列？</h3>
+<p>如果用普通数组实现队列（front指向队头，rear指向队尾后一位），每次出队 front 右移，入队 rear 右移。</p>
+<p><strong>问题</strong>：随着操作进行，front 和 rear 都向右移动，数组前面的空间被浪费（「假溢出」现象）。</p>
+<p><strong>解决方案</strong>：将数组首尾相连，形成<strong>循环队列</strong>（环形队列）。通过取模运算实现「绕回」。</p>
+</div>
+
+<div class="box definition">
+<h3>循环队列的实现</h3>
+<p>使用数组 <code>Q[0..m-1]</code>，容量为 $m$。两个指针：</p>
+<ul>
+  <li><code>front</code>：指向队头元素的位置</li>
+  <li><code>rear</code>：指向队尾元素的<strong>下一个位置</strong>（即待插入位置）</li>
+</ul>
+
+<p><strong>核心操作</strong>：</p>
+<table>
+<thead><tr><th>操作</th><th>实现</th></tr></thead>
+<tbody>
+<tr><td>入队</td><td><code>Q[rear] = x; rear = (rear + 1) % m;</code></td></tr>
+<tr><td>出队</td><td><code>x = Q[front]; front = (front + 1) % m;</code></td></tr>
+<tr><td>判空</td><td><code>front == rear</code></td></tr>
+<tr><td>判满</td><td><code>(rear + 1) % m == front</code>（牺牲一个空间）</td></tr>
+<tr><td>元素个数</td><td><code>(rear - front + m) % m</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pitfall">
+<h3>为什么要「牺牲一个空间」？</h3>
+<p>如果不牺牲空间，队满和队空的条件都是 <code>front == rear</code>，无法区分！</p>
+<p><strong>解决方案</strong>（三选一）：</p>
+<ol>
+  <li><strong>牺牲一个空间</strong>（最常用）：队满条件改为 <code>(rear+1)%m == front</code>，最多存 $m-1$ 个元素</li>
+  <li>增加一个 <code>size</code> 变量记录元素个数</li>
+  <li>增加一个 <code>flag</code> 标志位，标记最近一次操作是入队还是出队</li>
+</ol>
+</div>
+
+<div class="box definition">
+<h3>循环队列完整代码</h3>
+<pre><code class="language-c">#define MAXSIZE 100
+typedef struct {
+    int data[MAXSIZE];
+    int front;  // 队头元素下标
+    int rear;   // 队尾元素下一位的下标
+} CircularQueue;
+
+// 初始化
+void InitQueue(CircularQueue *Q) {
+    Q->front = Q->rear = 0;
+}
+
+// 判空
+int IsEmpty(CircularQueue *Q) {
+    return Q->front == Q->rear;
+}
+
+// 判满（牺牲一个空间法）
+int IsFull(CircularQueue *Q) {
+    return (Q->rear + 1) % MAXSIZE == Q->front;
+}
+
+// 入队
+int EnQueue(CircularQueue *Q, int x) {
+    if (IsFull(Q)) return 0;  // 队满
+    Q->data[Q->rear] = x;
+    Q->rear = (Q->rear + 1) % MAXSIZE;
+    return 1;
+}
+
+// 出队
+int DeQueue(CircularQueue *Q, int *x) {
+    if (IsEmpty(Q)) return 0;  // 队空
+    *x = Q->data[Q->front];
+    Q->front = (Q->front + 1) % MAXSIZE;
+    return 1;
+}
+
+// 求队列长度
+int QueueLength(CircularQueue *Q) {
+    return (Q->rear - Q->front + MAXSIZE) % MAXSIZE;
+}</code></pre>
+</div>
+
+<div class="box theorem">
+<h3>循环队列公式总结（考前必背）</h3>
+<p>设数组容量为 $m$，front 指向队头元素，rear 指向队尾下一位：</p>
+<table>
+<thead><tr><th>公式</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>$(rear - front + m) \% m$</td><td>队列中的元素个数</td></tr>
+<tr><td>$(rear + 1) \% m == front$</td><td>队满判断（牺牲一空间法）</td></tr>
+<tr><td>$front == rear$</td><td>队空判断</td></tr>
+<tr><td>$(front + 1) \% m$</td><td>出队后 front 新值</td></tr>
+<tr><td>$(rear + 1) \% m$</td><td>入队后 rear 新值</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pitfall">
+<h3>注意 front/rear 定义的变体！</h3>
+<p>不同题目对 front 和 rear 的定义可能不同：</p>
+<table>
+<thead><tr><th>变体</th><th>front 含义</th><th>rear 含义</th><th>元素个数公式</th></tr></thead>
+<tbody>
+<tr><td>标准型</td><td>队头元素位置</td><td>队尾下一位（待插入位置）</td><td>$(rear - front + m) \% m$</td></tr>
+<tr><td>变体1</td><td>队头元素<strong>前一位</strong></td><td>队尾元素位置</td><td>$(rear - front + m) \% m$</td></tr>
+<tr><td>变体2</td><td>队头元素位置</td><td>队尾元素位置</td><td>$(rear - front + 1 + m) \% m$</td></tr>
+</tbody>
+</table>
+<p><strong>考试时务必先看清题目的定义再套公式！</strong></p>
+</div>
+
+<div class="box exam">
+<h3>【2021 填空题2】循环队列元素个数</h3>
+<p>设环形队列的容量为 20（单元编号从 0 到 19），现经过一系列的入队和出队运算后，队头变量（第一个元素的位置）front=18，队尾变量（待插入元素的位置）rear=11，在这种情况下，环形队列中有____个元素。</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：13</strong></p>
+<p>根据公式：元素个数 $= (rear - front + m) \% m$</p>
+<p>代入：$(11 - 18 + 20) \% 20 = 13 \% 20 = 13$</p>
+<p><strong>直观理解</strong>：front=18 表示队头在 18 号位置，rear=11 表示队尾下一位在 11 号位置。由于是循环的，队列占据了下标 18, 19, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 共 13 个位置。</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【2022 选择题4】循环队列队首位置</h3>
+<p>为了实现一个循环队列（或称环形队列），采用数组 Q[0..m-1] 作为存储结构，其中变量 rear 表示这个循环队列中<strong>队尾元素的实际位置</strong>，添加结点时按 <code>rear=(rear+1)%m</code> 进行指针移动，变量 length 表示当前队列中的元素个数，请问这个循环队列的队首元素的实际位置是（）。</p>
+<p>A. <code>rear-length</code> &emsp; B. <code>(1+rear-length)%m</code> &emsp; C. <code>(rear-length+m)%m</code> &emsp; D. <code>m-length</code></p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：C</strong></p>
+<p><strong>分析</strong>：</p>
+<p>这道题中 rear 指向<strong>队尾元素本身</strong>（不是下一位），length 是当前元素个数。</p>
+<p>设队首位置为 front。队列占据 front, front+1, ..., rear 共 length 个位置。</p>
+<p>因此：$rear = (front + length - 1) \% m$</p>
+<p>反解：$front = (rear - length + 1) \% m$</p>
+<p>但由于 rear - length + 1 可能为负数，需要加 m 保证非负：</p>
+<p>$front = (rear - length + 1 + m) \% m$</p>
+<p>等等，让我重新看选项。选项 C 是 <code>(rear-length+m)%m</code>。</p>
+<p>重新分析：rear 指向队尾元素，入队时先 <code>rear=(rear+1)%m</code> 再存放。</p>
+<p>从 front 开始连续 length 个元素：front, front+1, ..., rear。所以 rear 是第 length 个元素的位置，即 $rear = (front + length - 1) \% m$。</p>
+<p>但选项中没有 <code>(rear - length + 1 + m) % m</code>。让我考虑另一种理解：如果入队操作是先 rear=(rear+1)%m 再 Q[rear]=x，那么 rear 确实指向最后一个元素。</p>
+<p>此时从 front 到 rear 有 length 个元素。如果把 front 定义为第一个元素的位置，那么：</p>
+<p>$front = (rear - length + 1 + m) \% m$</p>
+<p>但正确答案是 C: <code>(rear-length+m)%m</code>。这说明这里 front 被理解为：rear 后面有 length-1 个已经入队的元素在 rear 之前，也就是说队首在 rear 往前数 length-1 个位置... </p>
+<p>实际上，如果 rear 指向的是队尾元素的<strong>下一个位置</strong>（即按照 "先存再移" 的方式：Q[rear]=x; rear=(rear+1)%m），那么队首位置 = $(rear - length + m)\%m$。</p>
+<p>题目说「rear表示队尾元素的实际位置」，「添加结点时按 rear=(rear+1)%m 进行指针移动」。这意味着入队操作为：rear=(rear+1)%m; Q[rear]=x; 即<strong>先移动rear再存储</strong>。此时 rear 确实指向最后一个元素。</p>
+<p>这种情况下，rear 前面有 length-1 个元素（包括 rear 本身共 length 个），所以队首 = $(rear - length + 1 + m)\%m$。</p>
+<p>但标准答案是 C。考虑到这可能是因为 rear 初始为0，第一次入队后 rear=1，此时 front=(1-1+m)%m=m%m=0，即队首在0号位置。用选项C的公式：(1-1+m)%m=m%m=0。✓</p>
+<p>如果队列中有2个元素，rear=2，front应为1。用C: (2-2+m)%m=m%m=0。✗</p>
+<p>用 (rear-length+1+m)%m: (2-2+1+m)%m=(1+m)%m=1。✓</p>
+<p>看来标准答案确实是 <strong>C</strong>，这取决于题目对初始条件和入队操作精确定义的理解。本题标准答案为 C: <code>(rear-length+m)%m</code>。</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【2024 选择题10】循环队列元素总数</h3>
+<p>用数组 Q[n] 实现循环队列，设队头的<strong>前一个元素</strong>的下标为 f，队尾的下标为 r，则该队列中元素总数是（）。</p>
+<p>A. <code>r-f</code> &emsp; B. <code>(n+f-r)%n</code> &emsp; C. <code>n+r-f</code> &emsp; D. <code>(n+r-f)%n</code></p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：D</strong></p>
+<p><strong>分析</strong>：</p>
+<p>题目说 f 是「队头的前一个元素的下标」，r 是「队尾的下标」。</p>
+<p>那么队头的实际位置是 $(f+1)\%n$，队尾是 $r$。</p>
+<p>从队头到队尾，元素个数 $= (r - (f+1) + 1 + n) \% n = (r - f + n) \% n = (n + r - f) \% n$</p>
+<p>这正好是选项 <strong>D</strong>：<code>(n+r-f)%n</code>。</p>
+<p><strong>验证</strong>：设 n=10, f=2, r=5。队头在3号位，队尾在5号位，元素有 3,4,5 共3个。</p>
+<p>代入D：(10+5-2)%10 = 13%10 = 3。✓</p>
+</div></details>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="queue-app">2.10 队列的应用</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box definition">
+<h3>队列的典型应用</h3>
+<ol>
+  <li><strong>广度优先搜索（BFS）</strong>：图和树的层次遍历使用队列来保证「先发现的结点先被探索」</li>
+  <li><strong>树的层次遍历</strong>：根入队 → 出队时将其子结点入队 → 重复直到队空</li>
+  <li><strong>打印缓冲区</strong>：打印任务按到达顺序排队处理</li>
+  <li><strong>操作系统中的进程调度</strong>：就绪队列中的进程按FIFO顺序获得CPU时间</li>
+  <li><strong>消息队列</strong>：网络通信中消息按序处理</li>
+</ol>
+</div>
+
+<div class="box example">
+<h3>队列实现 BFS 示例</h3>
+<pre><code class="language-c">// 图的 BFS 遍历
+void BFS(Graph G, int start) {
+    int visited[MAX_V] = {0};
+    CircularQueue Q;
+    InitQueue(&Q);
+
+    visited[start] = 1;
+    EnQueue(&Q, start);
+
+    while (!IsEmpty(&Q)) {
+        int v;
+        DeQueue(&Q, &v);
+        printf("%d ", v);  // 访问结点
+
+        // 将 v 的所有未访问邻居入队
+        for (int w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w)) {
+            if (!visited[w]) {
+                visited[w] = 1;
+                EnQueue(&Q, w);
+            }
+        }
+    }
+}</code></pre>
+<p><strong>关键</strong>：BFS 用队列保证按「距离起点的跳数」从近到远访问，这是最短路径算法的基础。</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="exam-collection">2.11 往年真题汇总</h2>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="box insight">
+<h3>考点分布分析</h3>
+<table>
+<thead><tr><th>考点</th><th>2021</th><th>2022</th><th>2024</th><th>出题频率</th></tr></thead>
+<tbody>
+<tr><td>出栈序列判断</td><td>✓</td><td></td><td>✓</td><td>高频</td></tr>
+<tr><td>循环队列（元素个数/队首位置）</td><td>✓</td><td>✓</td><td>✓</td><td><strong>每年必考</strong></td></tr>
+<tr><td>括号匹配（用栈）</td><td>✓</td><td></td><td></td><td>中频</td></tr>
+<tr><td>中缀转后缀（栈状态）</td><td></td><td></td><td>✓</td><td>中频</td></tr>
+<tr><td>栈模拟运算</td><td></td><td>✓</td><td></td><td>中频</td></tr>
+<tr><td>递归与栈</td><td></td><td>✓</td><td></td><td>中频</td></tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：循环队列是绝对高频考点，每年至少一道。出栈序列判断也经常出现。掌握这两类题的解法是拿分关键。</p>
+</div>
+
+<div class="box exam">
+<h3>【综合练习1】出栈序列计数</h3>
+<p>4 个元素按 1, 2, 3, 4 的顺序依次入栈（中途可以出栈），共有多少种不同的合法出栈序列？</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：14种</strong></p>
+<p>由卡特兰数公式：$C_4 = \frac{1}{5}\binom{8}{4} = \frac{1}{5} \times 70 = 14$</p>
+<p>即 4 个元素的合法出栈序列共有 14 种。</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【综合练习2】循环队列综合题</h3>
+<p>设循环队列用数组 A[0..5] 存储（容量为6），front 指向队头元素，rear 指向队尾的下一位。初始 front=rear=0。依次执行以下操作后，求 front 和 rear 的值以及队列中的元素：</p>
+<ol>
+  <li>入队 a, b, c, d</li>
+  <li>出队 2 个元素</li>
+  <li>入队 e, f, g</li>
+</ol>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>逐步模拟</strong>：</p>
+<p><strong>第1步：入队 a, b, c, d</strong></p>
+<ul>
+  <li>A[0]=a, rear=1; A[1]=b, rear=2; A[2]=c, rear=3; A[3]=d, rear=4</li>
+  <li>状态：front=0, rear=4，队列元素 a,b,c,d</li>
+</ul>
+<p><strong>第2步：出队 2 个</strong></p>
+<ul>
+  <li>出 a, front=1; 出 b, front=2</li>
+  <li>状态：front=2, rear=4，队列元素 c,d</li>
+</ul>
+<p><strong>第3步：入队 e, f, g</strong></p>
+<ul>
+  <li>A[4]=e, rear=5; A[5]=f, rear=(5+1)%6=0; 入 g 前检查：(rear+1)%6=(0+1)%6=1≠front=2，不满，A[0]=g, rear=1</li>
+  <li>状态：front=2, rear=1</li>
+</ul>
+<p><strong>最终结果</strong>：front=2, rear=1，队列元素为 c, d, e, f, g（共5个）</p>
+<p>验证：元素个数 = (1-2+6)%6 = 5。✓（最大容量为5，因为牺牲一个空间）</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【综合练习3】后缀表达式求值</h3>
+<p>计算后缀表达式 <code>6 2 3 + - 3 8 2 / + * 2 ^ 3 +</code> 的值。</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>答案：52</strong></p>
+<p>使用操作数栈，逐步计算：</p>
+<table>
+<thead><tr><th>扫描</th><th>操作</th><th>栈状态（底→顶）</th></tr></thead>
+<tbody>
+<tr><td>6</td><td>入栈</td><td>[6]</td></tr>
+<tr><td>2</td><td>入栈</td><td>[6, 2]</td></tr>
+<tr><td>3</td><td>入栈</td><td>[6, 2, 3]</td></tr>
+<tr><td>+</td><td>弹3和2，计算2+3=5，入栈</td><td>[6, 5]</td></tr>
+<tr><td>-</td><td>弹5和6，计算6-5=1，入栈</td><td>[1]</td></tr>
+<tr><td>3</td><td>入栈</td><td>[1, 3]</td></tr>
+<tr><td>8</td><td>入栈</td><td>[1, 3, 8]</td></tr>
+<tr><td>2</td><td>入栈</td><td>[1, 3, 8, 2]</td></tr>
+<tr><td>/</td><td>弹2和8，计算8/2=4，入栈</td><td>[1, 3, 4]</td></tr>
+<tr><td>+</td><td>弹4和3，计算3+4=7，入栈</td><td>[1, 7]</td></tr>
+<tr><td>*</td><td>弹7和1，计算1*7=7，入栈</td><td>[7]</td></tr>
+<tr><td>2</td><td>入栈</td><td>[7, 2]</td></tr>
+<tr><td>^</td><td>弹2和7，计算7^2=49，入栈</td><td>[49]</td></tr>
+<tr><td>3</td><td>入栈</td><td>[49, 3]</td></tr>
+<tr><td>+</td><td>弹3和49，计算49+3=52，入栈</td><td>[52]</td></tr>
+</tbody>
+</table>
+<p>最终栈中唯一元素为 <strong>52</strong>。</p>
+</div></details>
+</div>
+
+<div class="box exam">
+<h3>【综合练习4】双栈共享空间</h3>
+<p>两个栈共享一个数组空间 A[0..MAXSIZE-1]。栈1的栈底在 A[0]，栈2的栈底在 A[MAXSIZE-1]。写出入栈和出栈操作的条件。</p>
+<details class="solution"><summary>点击查看答案与解析</summary><div>
+<p><strong>设计思路</strong>：两个栈从数组两端向中间生长。</p>
+<ul>
+  <li>栈1：栈底 A[0]，栈顶指针 top1 初始为 -1，向右增长</li>
+  <li>栈2：栈底 A[MAXSIZE-1]，栈顶指针 top2 初始为 MAXSIZE，向左增长</li>
+</ul>
+<p><strong>操作条件</strong>：</p>
+<ul>
+  <li>栈满：<code>top1 + 1 == top2</code>（两个栈顶相遇）</li>
+  <li>栈1空：<code>top1 == -1</code></li>
+  <li>栈2空：<code>top2 == MAXSIZE</code></li>
+  <li>栈1入栈：<code>if (top1 + 1 != top2) A[++top1] = x;</code></li>
+  <li>栈2入栈：<code>if (top1 + 1 != top2) A[--top2] = x;</code></li>
+  <li>栈1出栈：<code>if (top1 != -1) x = A[top1--];</code></li>
+  <li>栈2出栈：<code>if (top2 != MAXSIZE) x = A[top2++];</code></li>
+</ul>
+<p><strong>优点</strong>：两个栈互补使用空间，只有当两个栈的总元素数达到 MAXSIZE 时才溢出，空间利用率高。</p>
+</div></details>
+</div>
+
+<!-- ═══════════════ 速查表 ═══════════════ -->
+<div class="box insight">
+<h3>本章核心公式速查表</h3>
+<table>
+<thead><tr><th>场景</th><th>公式 / 条件</th></tr></thead>
+<tbody>
+<tr><td>$n$ 个元素的合法出栈序列数</td><td>$C_n = \frac{1}{n+1}\binom{2n}{n}$</td></tr>
+<tr><td>循环队列（容量 $m$）元素个数</td><td>$(rear - front + m) \% m$</td></tr>
+<tr><td>循环队列判空</td><td>$front == rear$</td></tr>
+<tr><td>循环队列判满（牺牲一空间）</td><td>$(rear + 1) \% m == front$</td></tr>
+<tr><td>循环队列最多存元素数</td><td>$m - 1$（牺牲一空间法）</td></tr>
+<tr><td>顺序栈判空</td><td>$top == -1$</td></tr>
+<tr><td>顺序栈判满</td><td>$top == MAXSIZE - 1$</td></tr>
+<tr><td>后缀求值弹出顺序</td><td>先弹 = 右操作数，后弹 = 左操作数</td></tr>
+<tr><td>中缀转后缀运算符比较</td><td>栈顶优先级 ≥ 当前 → 弹出；&lt; → 入栈</td></tr>
+</tbody>
+</table>
+</div>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>

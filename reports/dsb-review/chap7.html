@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第七章 算法设计基础 · 数据结构与算法B 复习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">数据结构与算法B<small>复习报告 · 第七章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <div class="nav-group">知识点</div>
+      <a href="#sec-complexity">7.1 算法复杂度分析基础</a>
+      <a href="#sec-big-o" class="lvl2">渐进记号</a>
+      <a href="#sec-recurrence" class="lvl2">递推关系与主定理</a>
+      <a href="#sec-divide">7.2 分治法</a>
+      <a href="#sec-divide-idea" class="lvl2">基本思想与步骤</a>
+      <a href="#sec-divide-conditions" class="lvl2">适用条件</a>
+      <a href="#sec-divide-examples" class="lvl2">典型应用</a>
+      <a href="#sec-dp">7.3 动态规划</a>
+      <a href="#sec-dp-idea" class="lvl2">基本思想</a>
+      <a href="#sec-dp-conditions" class="lvl2">适用条件</a>
+      <a href="#sec-dp-examples" class="lvl2">经典例子</a>
+      <a href="#sec-backtrack">7.4 回溯法</a>
+      <a href="#sec-bt-idea" class="lvl2">基本思想与特点</a>
+      <a href="#sec-bt-examples" class="lvl2">典型应用</a>
+      <a href="#sec-greedy">7.5 贪心算法</a>
+      <a href="#sec-compare">7.6 三种策略对比</a>
+      <div class="nav-group">往年真题</div>
+      <a href="#sec-exam">真题精选</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">DATA STRUCTURES · ALGORITHM DESIGN</div>
+      <h1>第七章 算法设计基础</h1>
+      <p>分治法、动态规划与回溯法是三种核心的算法设计策略。本章系统讲解这三种方法的基本思想、适用条件、典型应用，并对比它们的异同，帮助在考试中快速判断应使用哪种策略。</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ============================================================ -->
+<h2 id="sec-complexity"><span class="secnum">7.1</span>算法复杂度分析基础</h2>
+
+<p>在讨论具体的算法设计策略之前，我们首先回顾复杂度分析的基本工具。复杂度分析是评估算法性能的基石，也是理解分治递推方程的前提。</p>
+
+<h3 id="sec-big-o">渐进记号</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>大 O 记号（上界）</div>
+  <p>$f(n) = O(g(n))$ 表示存在正常数 $c$ 和 $n_0$，使得对所有 $n \geq n_0$，有：</p>
+  $$f(n) \leq c \cdot g(n)$$
+  <p><strong>直觉</strong>：$O(g(n))$ 给出了 $f(n)$ 增长速度的<span class="term">上界</span>——"最坏情况下也不会比这更慢"。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>大 $\Omega$ 记号（下界）</div>
+  <p>$f(n) = \Omega(g(n))$ 表示存在正常数 $c$ 和 $n_0$，使得对所有 $n \geq n_0$，有：</p>
+  $$f(n) \geq c \cdot g(n)$$
+  <p><strong>直觉</strong>：$\Omega(g(n))$ 给出了增长速度的<span class="term">下界</span>——"至少需要这么多时间"。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>大 $\Theta$ 记号（精确界）</div>
+  <p>$f(n) = \Theta(g(n))$ 当且仅当 $f(n) = O(g(n))$ 且 $f(n) = \Omega(g(n))$。</p>
+  <p><strong>直觉</strong>：$\Theta$ 同时限定了上界和下界，表示 $f(n)$ 与 $g(n)$ 具有<span class="term">相同量级</span>的增长率。</p>
+</div>
+
+<h4>常见复杂度排序</h4>
+
+<div class="conclusion">
+  从低到高排列：$O(1) \lt O(\log n) \lt O(n) \lt O(n \log n) \lt O(n^2) \lt O(n^3) \lt O(2^n) \lt O(n!)$
+</div>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>常见复杂度与典型算法</caption>
+<thead><tr><th>复杂度</th><th>名称</th><th>典型算法</th></tr></thead>
+<tbody>
+<tr><td>$O(1)$</td><td>常数时间</td><td>数组随机访问、哈希查找</td></tr>
+<tr><td>$O(\log n)$</td><td>对数时间</td><td>二分查找、平衡BST查找</td></tr>
+<tr><td>$O(n)$</td><td>线性时间</td><td>线性搜索、遍历链表</td></tr>
+<tr><td>$O(n \log n)$</td><td>线性对数时间</td><td>归并排序、快速排序（期望）</td></tr>
+<tr><td>$O(n^2)$</td><td>平方时间</td><td>冒泡排序、选择排序</td></tr>
+<tr><td>$O(2^n)$</td><td>指数时间</td><td>穷举子集、朴素递归斐波那契</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>什么不影响时间复杂度？</div>
+  <p>时间复杂度取决于<span class="hl">问题的规模 $n$</span> 和<span class="hl">输入值的分布</span>（如最坏/平均/最好情况），而<strong>不取决于计算结果</strong>。</p>
+  <p>例如：一个函数计算 $1 + 2 + \cdots + n$，无论结果值 $n(n+1)/2$ 多大，只要用公式直接计算就是 $O(1)$；用循环累加就是 $O(n)$——复杂度由<strong>算法策略</strong>和<strong>输入规模</strong>决定，和输出的数值无关。</p>
+</div>
+
+<h3 id="sec-recurrence">递推关系与主定理</h3>
+
+<p>分治算法的时间复杂度通常用<span class="term">递推关系</span>（recurrence relation）描述。掌握几种典型递推的求解方法是本章重点。</p>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>主定理（Master Theorem）</div>
+  <p>设递推关系为：</p>
+  $$T(n) = a \cdot T\!\left(\frac{n}{b}\right) + O(n^d)$$
+  <p>其中 $a \geq 1$，$b > 1$，$d \geq 0$。令 $c = \log_b a$，则：</p>
+  $$T(n) = \begin{cases} O(n^d) & \text{若 } d > c \ (\text{即 } a < b^d) \\ O(n^d \log n) & \text{若 } d = c \ (\text{即 } a = b^d) \\ O(n^c) = O(n^{\log_b a}) & \text{若 } d < c \ (\text{即 } a > b^d) \end{cases}$$
+  <p><strong>直觉</strong>：比较"合并代价的增长指数 $d$"与"子问题增长指数 $\log_b a$"——谁更大谁主导总复杂度；若打平则多乘一个 $\log$。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>用主定理分析归并排序</div>
+  <p><strong>递推</strong>：$T(n) = 2T(n/2) + O(n)$</p>
+  <p>对应参数：$a = 2$，$b = 2$，$d = 1$</p>
+  <ol class="steps">
+    <li>计算 $c = \log_b a = \log_2 2 = 1$</li>
+    <li>比较 $d$ 与 $c$：$d = 1 = c$，落入"打平"情况</li>
+    <li>结论：$T(n) = O(n^1 \cdot \log n) = O(n \log n)$</li>
+  </ol>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>用主定理分析二分查找</div>
+  <p><strong>递推</strong>：$T(n) = T(n/2) + O(1)$</p>
+  <p>对应参数：$a = 1$，$b = 2$，$d = 0$</p>
+  <ol class="steps">
+    <li>计算 $c = \log_b a = \log_2 1 = 0$</li>
+    <li>比较 $d$ 与 $c$：$d = 0 = c$，落入"打平"情况</li>
+    <li>结论：$T(n) = O(n^0 \cdot \log n) = O(\log n)$</li>
+  </ol>
+</div>
+
+<div class="box note">
+  <div class="box-title"><span class="tag">注记</span>更多递推示例</div>
+  <ul>
+    <li>$T(n) = 4T(n/2) + O(n)$：$a=4, b=2, d=1$，$c = \log_2 4 = 2 > d$，故 $T(n) = O(n^2)$</li>
+    <li>$T(n) = 2T(n/2) + O(n^2)$：$a=2, b=2, d=2$，$c = 1 < d$，故 $T(n) = O(n^2)$</li>
+    <li>$T(n) = 3T(n/3) + O(n)$：$a=3, b=3, d=1$，$c = 1 = d$，故 $T(n) = O(n \log n)$</li>
+  </ul>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-divide"><span class="secnum">7.2</span>分治法（Divide and Conquer）</h2>
+
+<h3 id="sec-divide-idea">基本思想与三个步骤</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>分治法 (Divide and Conquer)</div>
+  <p>将一个规模为 $n$ 的问题<strong>分解</strong>为若干个规模较小但<strong>类似于</strong>原问题的子问题，<strong>递归</strong>地求解这些子问题，然后将子问题的解<strong>合并</strong>为原问题的解。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>三步走：分-治-合</div>
+  <p>分治法的核心可以概括为三个步骤：</p>
+  <ol class="steps">
+    <li><strong>分解（Divide）</strong>：将原问题划分为若干规模更小的同类子问题。</li>
+    <li><strong>解决（Conquer）</strong>：递归地解决各子问题。当子问题规模足够小时，直接求解（递归出口）。</li>
+    <li><strong>合并（Combine）</strong>：将子问题的解组合/合并成原问题的解。</li>
+  </ol>
+  <p>注意：分治的精髓在于"合并"步骤——如果子问题的解不需要合并，那可能只需要简单递归即可（如二分查找只取一个子问题的结果）。</p>
+</div>
+
+<h3 id="sec-divide-conditions">适用条件</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>分治法的四个适用条件</div>
+  <ol>
+    <li><strong>规模缩小可解</strong>：问题规模缩小到一定程度后容易直接解决</li>
+    <li><strong>可分解性</strong>：问题可以分解为若干个<span class="term">规模较小的同类问题</span></li>
+    <li><strong>解可合并</strong>：子问题的解可以合并为原问题的解</li>
+    <li><strong>子问题相互独立</strong>：各子问题之间<span class="hl">没有重叠</span>（互不依赖）</li>
+  </ol>
+  <p>第4点尤为关键——如果子问题有重叠（同一个子问题被反复求解），则分治会导致大量重复计算，此时应该转用<strong>动态规划</strong>。</p>
+</div>
+
+<h3 id="sec-divide-examples">典型应用</h3>
+
+<h4>归并排序 (Merge Sort)</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>归并排序的分治过程</div>
+  <p><strong>问题</strong>：将一个无序数组 $A[0..n-1]$ 排序。</p>
+  <ol class="steps">
+    <li><strong>分解</strong>：将数组从中间一分为二 → $A[0..m-1]$ 和 $A[m..n-1]$，其中 $m = \lfloor n/2 \rfloor$</li>
+    <li><strong>解决</strong>：递归地对左半和右半分别排序</li>
+    <li><strong>合并</strong>：将两个已排序子数组合并为一个有序数组（双指针归并，$O(n)$）</li>
+  </ol>
+  <p><strong>递推方程</strong>：$T(n) = 2T(n/2) + O(n)$</p>
+  <p><strong>时间复杂度</strong>：$O(n \log n)$（各情况均为 $\Theta(n\log n)$）</p>
+  <p><strong>空间复杂度</strong>：$O(n)$（需要辅助数组）</p>
+</div>
+
+<h4>快速排序 (Quick Sort)</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>快速排序的分治过程</div>
+  <ol class="steps">
+    <li><strong>分解</strong>：选择一个 pivot 元素，将数组划分为"小于 pivot"和"大于 pivot"两部分</li>
+    <li><strong>解决</strong>：递归地对两个子数组分别排序</li>
+    <li><strong>合并</strong>：无需额外合并（分区后自然有序）</li>
+  </ol>
+  <p><strong>时间复杂度</strong>：</p>
+  <ul>
+    <li>最坏情况：$O(n^2)$（每次选到最大或最小元素作 pivot）</li>
+    <li>期望（平均）情况：$O(n \log n)$</li>
+  </ul>
+</div>
+
+<h4>二分查找 (Binary Search)</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>二分查找的分治过程</div>
+  <p><strong>前提</strong>：数组已排序。</p>
+  <ol class="steps">
+    <li><strong>分解</strong>：将查找区间一分为二</li>
+    <li><strong>解决</strong>：比较中间元素与目标值，确定目标在左半还是右半，递归进入相应子区间</li>
+    <li><strong>合并</strong>：无需合并（只取一个子问题的结果）</li>
+  </ol>
+  <p><strong>递推方程</strong>：$T(n) = T(n/2) + O(1)$</p>
+  <p><strong>时间复杂度</strong>：$O(\log n)$</p>
+</div>
+
+<div class="box note">
+  <div class="box-title"><span class="tag">注记</span>分治的通用递推框架</div>
+  <p>设分治算法将问题分为 $a$ 个规模为 $n/b$ 的子问题，合并的代价为 $f(n)$，则：</p>
+  $$T(n) = a \cdot T(n/b) + f(n)$$
+  <p>这正是主定理的形式。不同的 $a, b, f(n)$ 组合对应不同的算法效率。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-dp"><span class="secnum">7.3</span>动态规划（Dynamic Programming）</h2>
+
+<h3 id="sec-dp-idea">基本思想</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>动态规划 (Dynamic Programming, DP)</div>
+  <p>将问题分解为<strong>重叠的子问题</strong>，用一张<span class="term">表</span>（数组）保存已经计算过的子问题的解，避免重复计算，<strong>自底向上</strong>（bottom-up）逐步构建出原问题的最优解。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>动态规划 = 记忆化 + 递推</div>
+  <p>如果你发现递归解法中有大量重复计算（如斐波那契 $F(n) = F(n-1) + F(n-2)$，$F(3)$ 被算了无数遍），那就把算过的结果存起来：</p>
+  <ul>
+    <li><strong>自顶向下 + 记忆化</strong>（Memoization）：仍然递归，但遇到已算过的子问题直接查表</li>
+    <li><strong>自底向上 + 表格</strong>（Tabulation）：按顺序从最小的子问题开始算，逐步填表到原问题</li>
+  </ul>
+  <p>两种方式等价，但自底向上通常更省递归栈空间。</p>
+</div>
+
+<h3 id="sec-dp-conditions">适用条件（两个关键性质）</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>最优子结构 (Optimal Substructure)</div>
+  <p>问题的<span class="term">最优解</span>包含其子问题的最优解。即：如果我们已经知道子问题的最优解，就能构造出原问题的最优解。</p>
+  <p><strong>举例</strong>：最短路径问题——从 A 到 C 的最短路径经过 B，则 A→B 的那段一定是 A 到 B 的最短路径。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>重叠子问题 (Overlapping Subproblems)</div>
+  <p>递归求解时，<span class="term">同一个子问题</span>会被反复求解多次（子问题之间并不独立）。</p>
+  <p><strong>举例</strong>：计算 $F(5) = F(4) + F(3)$，而 $F(4) = F(3) + F(2)$——$F(3)$ 被重复计算。</p>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>如何判断是否适用动态规划？</div>
+  <p>必须判定问题是否具有<span class="hl">最优子结构性质</span>。仅有重叠子问题而无最优子结构，DP 也无法给出正确的最优解。</p>
+  <p>判断流程：</p>
+  <ol>
+    <li>能否把问题定义为"在某种约束下求最值"的形式？</li>
+    <li>原问题的最优解能否由子问题的最优解推出（即"剪切粘贴"论证能否成立）？</li>
+    <li>子问题之间是否有重叠？</li>
+  </ol>
+  <p>三者皆具备 → 适用 DP。</p>
+</div>
+
+<h3 id="sec-dp-examples">经典例子</h3>
+
+<h4>斐波那契数列</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>斐波那契数列的 DP 解法</div>
+  <p><strong>问题</strong>：$F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2)$</p>
+  <p><strong>朴素递归</strong>：$T(n) = O(2^n)$（大量重复计算）</p>
+  <p><strong>DP（自底向上）</strong>：</p>
+  <ol class="steps">
+    <li>建表 $dp[0..n]$，初始化 $dp[0] = 0, dp[1] = 1$</li>
+    <li>依次计算 $dp[i] = dp[i-1] + dp[i-2]$，$i = 2, 3, \ldots, n$</li>
+    <li>最终答案为 $dp[n]$</li>
+  </ol>
+  <p><strong>时间复杂度</strong>：$O(n)$（每个子问题只算一次）</p>
+  <p><strong>空间复杂度</strong>：$O(n)$（可优化为 $O(1)$，只保留前两项）</p>
+</div>
+
+<h4>0-1 背包问题</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>0-1 背包问题</div>
+  <p><strong>问题</strong>：有 $n$ 个物品，第 $i$ 个物品重量为 $w_i$、价值为 $v_i$。背包容量为 $W$。每个物品只能选或不选，求装入背包的物品的最大总价值。</p>
+  <p><strong>状态定义</strong>：$dp[i][j]$ = 前 $i$ 个物品中选取、总重量不超过 $j$ 时的最大价值。</p>
+  <p><strong>状态转移方程</strong>：</p>
+  $$dp[i][j] = \begin{cases} dp[i-1][j] & \text{若 } w_i > j \ (\text{放不下}) \\ \max(dp[i-1][j], \ dp[i-1][j-w_i] + v_i) & \text{若 } w_i \leq j \end{cases}$$
+  <ol class="steps">
+    <li><strong>不选第 $i$ 个物品</strong>：最大价值等于前 $i-1$ 个物品在容量 $j$ 下的最大价值 $dp[i-1][j]$</li>
+    <li><strong>选第 $i$ 个物品</strong>：价值 = 前 $i-1$ 个物品在容量 $j - w_i$ 下的最大价值 + $v_i$</li>
+    <li>取两者的 $\max$ 即为 $dp[i][j]$ 的值</li>
+  </ol>
+  <p><strong>时间复杂度</strong>：$O(nW)$</p>
+  <p><strong>最优子结构</strong>：如果第 $i$ 个物品在最优解中，则去掉它后，剩余物品在容量 $W-w_i$ 中仍是最优的。</p>
+</div>
+
+<h4>最短路径</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>Floyd 全源最短路径</div>
+  <p><strong>状态</strong>：$dp[k][i][j]$ = 从 $i$ 到 $j$，只允许经过编号 $\leq k$ 的中间结点时的最短路径长度。</p>
+  <p><strong>转移</strong>：$dp[k][i][j] = \min(dp[k-1][i][j], \ dp[k-1][i][k] + dp[k-1][k][j])$</p>
+  <p><strong>时间复杂度</strong>：$O(n^3)$</p>
+  <p>Floyd 算法体现了 DP 的"逐步放开约束"思想——每轮新增一个可中转的结点。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-backtrack"><span class="secnum">7.4</span>回溯法（Backtracking）</h2>
+
+<h3 id="sec-bt-idea">基本思想与特点</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>回溯法 (Backtracking)</div>
+  <p>回溯法是一种系统地搜索问题的<strong>所有解</strong>或<strong>任意一个解</strong>的算法。它采用<span class="term">深度优先搜索</span>（DFS）策略遍历<span class="term">解空间树</span>，在搜索过程中：</p>
+  <ul>
+    <li>在生成解空间的任一结点时，先判断当前结点是否<strong>可能包含问题的有效解</strong>；</li>
+    <li>如果<strong>肯定不包含</strong>有效解，则跳过以该结点为根的整棵子树的搜索（<span class="term">剪枝</span>），逐层向祖先结点<strong>回溯</strong>；</li>
+    <li>如果可能包含，则继续向下扩展。</li>
+  </ul>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>回溯 = DFS + 剪枝</div>
+  <p>你可以把回溯法想象成"走迷宫"：</p>
+  <ul>
+    <li>每到一个岔路口，选一条路走下去（DFS 展开）</li>
+    <li>如果走到死胡同（约束不满足），就退回上一个岔路口，换一条路试（回溯）</li>
+    <li>如果能提前判断某条路一定走不通，就根本不进去（剪枝）</li>
+  </ul>
+  <p>回溯法既有<strong>系统性</strong>（不遗漏任何可能的解）又有<strong>跳跃性</strong>（通过剪枝跳过无效分支）。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>回溯法的关键特点</div>
+  <ol>
+    <li>可以系统地搜索一个问题的<strong>所有解</strong>或<strong>任意解</strong></li>
+    <li>是一种既具备<strong>系统性</strong>又具备<strong>跳跃性</strong>的搜索算法</li>
+    <li>需要借助<span class="hl">栈</span>（或递归调用栈）来保存从根结点到当前扩展结点的路径</li>
+    <li>搜索方式：<strong>深度优先搜索</strong>解空间树</li>
+    <li>核心优化：<strong>剪枝函数</strong>（约束函数 + 界限函数）</li>
+  </ol>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>回溯法用"栈"而非"队列"</div>
+  <p>回溯法基于<strong>深度优先搜索（DFS）</strong>，对应的数据结构是<strong>栈</strong>（或等价地，递归调用的系统栈）。</p>
+  <p>如果用<strong>队列</strong>辅助搜索，那是<strong>广度优先搜索（BFS）</strong>，不是回溯法。这是考试中非常容易混淆的知识点。</p>
+  <p><strong>记忆</strong>：回溯 = 回头（后退） = 后进先出 = <strong>栈</strong>。</p>
+</div>
+
+<h3 id="sec-bt-examples">典型应用</h3>
+
+<h4>N 皇后问题</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>N 皇后问题</div>
+  <p><strong>问题</strong>：在 $N \times N$ 的棋盘上放置 $N$ 个皇后，使得任意两个皇后不在同一行、同一列、同一对角线。</p>
+  <p><strong>解空间</strong>：用 $x[i]$ 表示第 $i$ 行皇后所在的列号（$1 \leq x[i] \leq N$）</p>
+  <p><strong>约束条件</strong>：</p>
+  <ul>
+    <li>不同列：$x[i] \neq x[j]$（$\forall i \neq j$）</li>
+    <li>不同对角线：$|x[i] - x[j]| \neq |i - j|$</li>
+  </ul>
+  <p><strong>回溯过程</strong>：</p>
+  <ol class="steps">
+    <li>逐行放置：第 1 行的皇后尝试放在第 1 到第 N 列</li>
+    <li>每放一个，检查约束：是否和已放置的皇后冲突</li>
+    <li>若不冲突，进入下一行继续放置（递归/DFS）</li>
+    <li>若冲突，换同一行的下一列尝试；若该行所有列都不行，则<strong>回溯</strong>到上一行</li>
+    <li>成功放置 $N$ 个皇后后，输出一个解；如需所有解，继续回溯寻找其他方案</li>
+  </ol>
+  <p>4 皇后的一个解：$x = [2, 4, 1, 3]$（即第1行第2列、第2行第4列、第3行第1列、第4行第3列）。</p>
+</div>
+
+<h4>迷宫问题</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>迷宫求解</div>
+  <p><strong>问题</strong>：从迷宫入口找一条通往出口的路径。</p>
+  <p><strong>回溯思路</strong>：从入口开始，尝试上下左右四个方向走：</p>
+  <ul>
+    <li>走得通且未走过 → 标记已走，继续深入</li>
+    <li>走不通（墙壁或已走过）→ 回退到上一个位置，换方向</li>
+    <li>到达出口 → 输出路径</li>
+  </ul>
+  <p>这就是典型的 DFS + 回溯。用栈保存当前路径，回退时弹栈。</p>
+</div>
+
+<h4>图的着色问题</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>图的 m 着色问题</div>
+  <p><strong>问题</strong>：用 $m$ 种颜色给图的 $n$ 个结点着色，要求相邻结点颜色不同。</p>
+  <p><strong>解空间</strong>：$x[i] \in \{1, 2, \ldots, m\}$ 表示结点 $i$ 的颜色</p>
+  <p><strong>约束函数</strong>：对于每条边 $(i, j)$，要求 $x[i] \neq x[j]$</p>
+  <p><strong>过程</strong>：逐个结点着色，每次检查是否与已着色的邻接结点冲突，冲突则换色或回溯。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-greedy"><span class="secnum">7.5</span>贪心算法（Greedy Algorithm）</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>贪心算法</div>
+  <p>贪心算法在每一步都做出当前看来<span class="term">局部最优</span>的选择（贪心选择），期望通过局部最优的叠加达到全局最优。</p>
+  <p><strong>特点</strong>：</p>
+  <ul>
+    <li>每步只考虑当前状态，不考虑未来的影响</li>
+    <li>一旦做出选择就不再回退（与回溯法的区别）</li>
+    <li><span class="hl">不一定</span>能得到全局最优解——只有当问题具有<strong>贪心选择性质</strong>和<strong>最优子结构</strong>时，贪心才能保证最优</li>
+  </ul>
+</div>
+
+<div class="box note">
+  <div class="box-title"><span class="tag">注记</span>贪心算法的典型应用</div>
+  <ul>
+    <li><strong>Prim 算法</strong>：最小生成树——每次选当前最短的跨切割边</li>
+    <li><strong>Kruskal 算法</strong>：最小生成树——每次选全局最短的不构成环的边</li>
+    <li><strong>Dijkstra 算法</strong>：单源最短路径——每次选距离最小的未访问结点</li>
+    <li><strong>哈夫曼编码</strong>：每次合并频率最小的两个结点</li>
+    <li><strong>活动选择问题</strong>：每次选最早结束的活动</li>
+  </ul>
+  <p>这些算法在前面的章节（图论、树）中已经详细讨论过，此处仅点明它们属于贪心策略。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-compare"><span class="secnum">7.6</span>三种策略对比</h2>
+
+<p>分治、动态规划、回溯（加上贪心）是算法设计的四大策略。它们有相似之处（都涉及子问题的分解），但在适用场景和执行方式上有本质区别。</p>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>分治法 vs 动态规划 vs 回溯法 vs 贪心</caption>
+<thead><tr>
+  <th>对比维度</th>
+  <th>分治法</th>
+  <th>动态规划</th>
+  <th>回溯法</th>
+  <th>贪心算法</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>核心思想</strong></td>
+  <td>分解为独立子问题，递归求解后合并</td>
+  <td>分解为重叠子问题，存表避免重复计算</td>
+  <td>DFS 搜索解空间树 + 剪枝</td>
+  <td>每步局部最优选择</td>
+</tr>
+<tr>
+  <td><strong>子问题关系</strong></td>
+  <td>子问题<span class="hl">互相独立</span></td>
+  <td>子问题<span class="hl">有重叠</span></td>
+  <td>解空间中各候选解可能共享前缀</td>
+  <td>无需考虑子问题（贪心选择后不回头）</td>
+</tr>
+<tr>
+  <td><strong>求解方向</strong></td>
+  <td>自顶向下（递归）</td>
+  <td>通常自底向上（也可自顶向下 + 记忆化）</td>
+  <td>深度优先（从根到叶）</td>
+  <td>自顶向下（逐步决策）</td>
+</tr>
+<tr>
+  <td><strong>是否保证最优</strong></td>
+  <td>是（求解确定问题）</td>
+  <td>是（在满足最优子结构时）</td>
+  <td>是（穷举所有解中的最优）</td>
+  <td><span class="hl">不一定</span>（需证明贪心选择性质）</td>
+</tr>
+<tr>
+  <td><strong>时间复杂度</strong></td>
+  <td>通常 $O(n \log n)$</td>
+  <td>取决于状态数，通常多项式</td>
+  <td>最坏指数级（但剪枝可大幅减少）</td>
+  <td>通常 $O(n \log n)$ 或更低</td>
+</tr>
+<tr>
+  <td><strong>空间开销</strong></td>
+  <td>递归栈 + 合并辅助空间</td>
+  <td>状态表（$dp$ 数组）</td>
+  <td>递归栈（路径深度）</td>
+  <td>$O(1)$ 到 $O(n)$</td>
+</tr>
+<tr>
+  <td><strong>适用场景</strong></td>
+  <td>子问题独立可合并（排序、查找）</td>
+  <td>最优化问题，有最优子结构和重叠子问题</td>
+  <td>组合搜索、约束满足问题</td>
+  <td>有贪心选择性质的最优化问题</td>
+</tr>
+<tr>
+  <td><strong>典型算法</strong></td>
+  <td>归并排序、快排、二分查找</td>
+  <td>背包、最短路径、最长子序列</td>
+  <td>N 皇后、迷宫、图着色</td>
+  <td>Dijkstra、Prim、Kruskal、哈夫曼</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>一句话区分四种策略</div>
+  <ul>
+    <li><strong>分治</strong>："分头干活，各干各的，最后汇总"——子问题<strong>独立</strong></li>
+    <li><strong>DP</strong>："大家的活有交叉，算过的记下来别重复"——子问题<strong>重叠</strong></li>
+    <li><strong>回溯</strong>："挨个试，不行就退回来换一个"——<strong>穷举 + 剪枝</strong></li>
+    <li><strong>贪心</strong>："每步都挑眼前最好的，走了不回头"——<strong>局部最优</strong></li>
+  </ul>
+</div>
+
+<div class="conclusion">
+  <strong>分治 vs 动态规划的核心区别</strong>：两者都将问题分解为规模更小的子问题，但分治法的子问题<strong>互相独立</strong>（无重叠），动态规划的子问题<strong>有重叠</strong>（需要存表避免重复计算）。
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam"><span class="secnum">真题</span>往年真题精选</h2>
+
+<p>本章在历年考试中主要以<strong>选择题和判断题</strong>形式考查，重点在于理解三种策略的基本概念和区别。</p>
+
+<!-- 2021 选择题 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>算法时间复杂性的影响因素</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">复杂度分析</span>
+    <span class="exam-badge diff">难度 ★</span>
+  </div>
+  <div class="stem">
+    下列不影响算法时间复杂性的因素有（ ）。<br>
+    A. 问题的规模　　B. 输入值　　C. 计算结果　　D. 算法的策略
+  </div>
+  <details class="solution"><summary></summary><div>
+    <div class="final-answer">C</div>
+    <p><strong>解析</strong>：</p>
+    <ul>
+      <li><strong>A. 问题的规模</strong>：影响。$n$ 越大，时间通常越多。</li>
+      <li><strong>B. 输入值</strong>：影响。例如快排的最坏情况取决于输入的排列。</li>
+      <li><strong>C. 计算结果</strong>：<span class="hl">不影响</span>。时间复杂度衡量的是"执行步骤数量与输入规模的关系"，与输出的数值无关。</li>
+      <li><strong>D. 算法的策略</strong>：影响。同一问题用不同算法（如冒泡 vs 归并）复杂度不同。</li>
+    </ul>
+  </div></details>
+</div>
+
+<!-- 2022 选择题15 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>回溯法的特性</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">回溯法</span>
+    <span class="exam-badge diff">难度 ★★</span>
+  </div>
+  <div class="stem">
+    回溯法是一类广泛使用的算法，以下叙述中不正确的是（ ）。<br>
+    A. 回溯法可以系统地搜索一个问题的所有解或者任意解<br>
+    B. 回溯法是一种既具备系统性又具跳跃性的搜索算法<br>
+    C. 回溯法需要借助队列数据结构来保存从根结点到当前扩展结点的路径<br>
+    D. 回溯法在生成解空间的任一结点时，先判断当前结点是否可能包含问题的有效解，如果肯定不包含，则跳过对该结点为根的子树的搜索，逐层向祖先结点回溯
+  </div>
+  <details class="solution"><summary></summary><div>
+    <div class="final-answer">C</div>
+    <p><strong>解析</strong>：</p>
+    <ul>
+      <li><strong>A 正确</strong>：回溯法的目标就是系统搜索所有解或任意一个解。</li>
+      <li><strong>B 正确</strong>：系统性——不遗漏；跳跃性——通过剪枝跳过无效子树。</li>
+      <li><strong>C 不正确</strong>：回溯法基于<strong>深度优先搜索</strong>，使用的是<span class="hl">栈</span>（或递归的调用栈），<strong>不是队列</strong>。队列对应的是广度优先搜索（BFS）。</li>
+      <li><strong>D 正确</strong>：这正是回溯法的剪枝机制的准确描述。</li>
+    </ul>
+    <p><strong>记忆口诀</strong>：回溯 → 回退 → 后进先出 → <strong>栈</strong>；广搜 → 层层扩展 → 先进先出 → <strong>队列</strong>。</p>
+  </div></details>
+</div>
+
+<!-- 2022 判断题9 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>分治算法的递归特性</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">分治法</span>
+    <span class="exam-badge diff">难度 ★</span>
+  </div>
+  <div class="stem">
+    分治算法通常将原问题分解为几个规模较小但类似于原问题的子问题，并要求算法实现写成某种递归形式，递归地求解这些子问题，然后再合并这些子问题的解来建立原问题的解。（Y / N）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <div class="final-answer">Y（正确）</div>
+    <p><strong>解析</strong>：这是分治法的标准定义。分治法的三个步骤：分解（划分为规模更小的同类子问题）→ 解决（递归求解）→ 合并（把子问题的解组合为原问题的解）。题目描述完全准确。</p>
+  </div></details>
+</div>
+
+<!-- 2022 判断题10 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>动态规划的判定条件</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">动态规划</span>
+    <span class="exam-badge diff">难度 ★</span>
+  </div>
+  <div class="stem">
+    考察某个具体问题是否适合应用动态规划算法，必须判定它是否具有最优子结构性质。（Y / N）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <div class="final-answer">Y（正确）</div>
+    <p><strong>解析</strong>：动态规划的两个必要条件是<strong>最优子结构</strong>和<strong>重叠子问题</strong>。其中，<strong>最优子结构</strong>是判定 DP 能否正确工作（保证最优性）的关键前提——如果原问题的最优解不能由子问题的最优解构成，DP 就无法得到正确的最优解。因此"必须判定是否具有最优子结构性质"是正确的。</p>
+  </div></details>
+</div>
+
+<!-- 2024 选择题12 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>分治算法复杂度计算</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">分治法 · 主定理</span>
+    <span class="exam-badge diff">难度 ★★</span>
+  </div>
+  <div class="stem">
+    若使用分治算法解决某一问题，每次把规模为 $n$ 的问题分解为 2 个规模为 $n/2$ 的子问题，将两个子问题的结果合并的时间开销为 $O(n)$，那么这个算法的总时间复杂度为（ ）。<br>
+    A. $O(n)$　　B. $O(n \log n)$　　C. $O(n^2)$　　D. $O(n^2 \log n)$
+  </div>
+  <details class="solution"><summary></summary><div>
+    <div class="final-answer">B</div>
+    <p><strong>解析</strong>：</p>
+    <ol class="steps">
+      <li>写出递推方程：$T(n) = 2T(n/2) + O(n)$</li>
+      <li>对应主定理参数：$a = 2, b = 2, d = 1$</li>
+      <li>计算 $\log_b a = \log_2 2 = 1 = d$</li>
+      <li>属于"打平"情况：$T(n) = O(n^d \log n) = O(n \log n)$</li>
+    </ol>
+    <p>这与归并排序的复杂度完全一致——实际上归并排序就是这种分治模式的经典实例。</p>
+  </div></details>
+</div>
+
+<!-- 2024 判断题1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>分治法与动态规划的共同点</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">分治法 vs 动态规划</span>
+    <span class="exam-badge diff">难度 ★</span>
+  </div>
+  <div class="stem">
+    分治法和动态规划法都运用了将问题分解为规模较小的子问题的思想。（Y / N）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <div class="final-answer">Y（正确）</div>
+    <p><strong>解析</strong>：这是分治和动态规划的<strong>共同点</strong>——两者都将原问题拆解为规模更小的子问题来求解。</p>
+    <p>它们的<strong>区别</strong>在于：</p>
+    <ul>
+      <li>分治法的子问题<strong>互相独立</strong>（不重叠），每个子问题只算一次</li>
+      <li>动态规划的子问题<strong>有重叠</strong>（同一子问题被多次引用），需要用表存储避免重复计算</li>
+    </ul>
+    <p>但"分解为子问题"这个大方向是共有的，所以题目说法正确。</p>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- 速查总结 -->
+<h3>本章速查表</h3>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>算法设计策略速查</caption>
+<thead><tr><th>考点</th><th>关键结论</th></tr></thead>
+<tbody>
+<tr><td>时间复杂度影响因素</td><td>问题规模、输入值、算法策略影响；<strong>计算结果不影响</strong></td></tr>
+<tr><td>$T(n)=2T(n/2)+O(n)$</td><td>$O(n\log n)$（归并排序）</td></tr>
+<tr><td>$T(n)=T(n/2)+O(1)$</td><td>$O(\log n)$（二分查找）</td></tr>
+<tr><td>分治法三步骤</td><td>分解 → 解决（递归）→ 合并</td></tr>
+<tr><td>分治法适用条件</td><td>子问题<strong>独立</strong>、可分解、可合并、规模小时可解</td></tr>
+<tr><td>DP 两个条件</td><td>最优子结构 + 重叠子问题</td></tr>
+<tr><td>分治 vs DP</td><td>分治：子问题独立；DP：子问题重叠需存表</td></tr>
+<tr><td>回溯法搜索方式</td><td>深度优先搜索（DFS）+ 剪枝</td></tr>
+<tr><td>回溯法数据结构</td><td><strong>栈</strong>（递归栈），不是队列</td></tr>
+<tr><td>贪心保证最优？</td><td>不一定，需要贪心选择性质才能保证</td></tr>
+</tbody>
+</table>
+</div>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>

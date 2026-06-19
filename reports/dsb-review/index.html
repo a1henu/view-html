@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据结构与算法B · 复习报告总目录</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  .home-wrap { max-width: 960px; margin: 0 auto; padding: 0 32px 100px; }
+  .hero { background: linear-gradient(135deg, #94070a 0%, #6d0508 100%); color: #fff; padding: 60px 32px 52px; text-align: center; }
+  .hero .eyebrow { letter-spacing: 4px; font-size: 13px; opacity: .82; text-transform: uppercase; }
+  .hero h1 { font-size: 38px; margin: 14px 0 12px; font-weight: 700; }
+  .hero p { max-width: 640px; margin: 0 auto; opacity: .92; font-size: 16px; }
+  .hero .meta { margin-top: 22px; font-size: 13.5px; opacity: .8; }
+  .lead { font-size: 16px; color: var(--ink-soft); margin: 34px 0 6px; }
+  .flow { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin: 14px 0 8px; font-size:14px; }
+  .flow .node { background:#fff; border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-weight:600; }
+  .flow .arrow { color: var(--muted); }
+  .exam-link { display: inline-block; margin-top: 18px; padding: 10px 24px; background: #4f46e5; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background .2s; }
+  .exam-link:hover { background: #3730a3; }
+  .source-info { background: #f8f9fa; border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+  .source-info h3 { margin: 0 0 8px; font-size: 15px; }
+  .source-info ul { margin: 0; padding-left: 20px; }
+  .source-info li { margin: 4px 0; font-size: 14px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">PEKING UNIVERSITY · DATA STRUCTURES AND ALGORITHMS B</div>
+  <h1>数据结构与算法B · 复习报告</h1>
+  <p>基于 2021/2022/2024 年三套往年题，按知识模块精讲核心考点，配套真题逐步详解</p>
+  <div class="meta">共 7 章 · 168 道真题全解 · 全程 MathJax 公式渲染 · 答案默认折叠便于自测</div>
+</header>
+
+<div class="home-wrap">
+
+  <p class="lead">学习主线（建议按顺序）：</p>
+  <div class="flow">
+    <span class="node">第1章 线性表</span><span class="arrow">→</span>
+    <span class="node">第2章 栈与队列</span><span class="arrow">→</span>
+    <span class="node">第3章 树与二叉树</span><span class="arrow">→</span>
+    <span class="node">第4章 图</span><span class="arrow">→</span>
+    <span class="node">第5章 查找</span><span class="arrow">→</span>
+    <span class="node">第6章 排序</span><span class="arrow">→</span>
+    <span class="node">第7章 算法设计</span>
+  </div>
+  <p class="muted">线性结构（1-2章）→ 非线性结构（3-4章）→ 应用算法（5-7章）。树和图是重中之重，排序和查找是必考高频。</p>
+
+  <div class="source-info">
+    <h3>试卷来源</h3>
+    <ul>
+      <li><strong>2021年</strong> 数据结构与算法B 期末试卷（9页，无答案）</li>
+      <li><strong>2022年</strong> 数据结构与算法B 期末试卷（7页，无答案）— 2022.6.21</li>
+      <li><strong>2024年</strong> 数据结构与算法B 期末试卷（8页）+ 参考答案（10页）— 2024.6.18</li>
+    </ul>
+  </div>
+
+  <h2 style="border-bottom:3px solid var(--pku-red);">章节导航</h2>
+  <div class="chap-grid">
+
+    <a class="chap-card" href="chap1.html">
+      <div class="cnum">CHAPTER 1</div>
+      <h3>线性表（顺序表与链表）</h3>
+      <p>最基础的数据结构，理解存储方式是后续一切的基石。</p>
+      <ul>
+        <li>顺序表：随机访问 O(1)，插入删除 O(n)</li>
+        <li>链表：单链表、双向链表、循环链表</li>
+        <li>顺序表 vs 链表的选择策略</li>
+        <li>Python 链表实现与操作</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap2.html">
+      <div class="cnum">CHAPTER 2</div>
+      <h3>栈与队列</h3>
+      <p>两种受限线性表，是树和图遍历的基础工具。</p>
+      <ul>
+        <li>栈：出栈序列判断（必考）</li>
+        <li>表达式求值：中缀转后缀、后缀求值</li>
+        <li>循环队列：元素个数公式（年年考）</li>
+        <li>括号匹配、递归实现</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap3.html">
+      <div class="cnum">CHAPTER 3 · 重点</div>
+      <h3>树与二叉树</h3>
+      <p>非线性结构的核心，考试占分最大的一章。</p>
+      <ul>
+        <li>二叉树性质与遍历（前/中/后/层）</li>
+        <li>BST：查找、插入、删除（必考）</li>
+        <li>哈夫曼树与编码、WPL 计算</li>
+        <li>堆：建堆 O(n)、插入删除操作</li>
+        <li>森林与二叉树互转</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap4.html">
+      <div class="cnum">CHAPTER 4 · 重点</div>
+      <h3>图</h3>
+      <p>最一般的非线性结构，算法设计题集中出在这里。</p>
+      <ul>
+        <li>存储：邻接矩阵 vs 邻接表</li>
+        <li>遍历：DFS、BFS</li>
+        <li>最小生成树：Prim、Kruskal（必考）</li>
+        <li>最短路径：Dijkstra（必考）</li>
+        <li>拓扑排序、连通分量</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap5.html">
+      <div class="cnum">CHAPTER 5</div>
+      <h3>查找</h3>
+      <p>高效检索数据是数据结构的核心目标。</p>
+      <ul>
+        <li>顺序查找与概率优化</li>
+        <li>二分查找：前提条件、最坏次数</li>
+        <li>散列表：除留余数法、冲突处理</li>
+        <li>线性探查、再散列、拉链法</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap6.html">
+      <div class="cnum">CHAPTER 6 · 高频</div>
+      <h3>排序</h3>
+      <p>每年必考，重点掌握每种排序的过程和复杂度。</p>
+      <ul>
+        <li>冒泡、选择、插入排序（基础三件套）</li>
+        <li>希尔排序：分组+步长</li>
+        <li>快速排序：划分过程（必考）</li>
+        <li>归并排序：外排首选、每趟 O(n)</li>
+        <li>堆排序：建堆过程</li>
+        <li>稳定性判断与复杂度对比</li>
+      </ul>
+    </a>
+
+    <a class="chap-card" href="chap7.html">
+      <div class="cnum">CHAPTER 7</div>
+      <h3>算法设计基础</h3>
+      <p>分治、动态规划、回溯三大策略及其对比。</p>
+      <ul>
+        <li>分治法：分-治-合、主定理</li>
+        <li>动态规划：最优子结构+重叠子问题</li>
+        <li>回溯法：DFS+剪枝</li>
+        <li>三种策略的异同对比</li>
+      </ul>
+    </a>
+
+  </div>
+
+  <h2 style="border-bottom:3px solid var(--pku-red);">如何使用这份报告</h2>
+  <div class="box note">
+    <div class="box-title"><span class="tag">注</span> 使用说明</div>
+    <ul>
+      <li><strong>彩色盒子</strong>：蓝=定义、紫=定理、青=例题、灰=证明、橙=注记、红=直觉/易错、深蓝=真题。</li>
+      <li><strong>步骤圆圈</strong>：例题逐步解答，完全不跳步。</li>
+      <li><strong>答案折叠</strong>：所有真题答案默认折叠，先独立思考再展开核对。适合投屏时让同学先讨论。</li>
+      <li><strong>左侧目录</strong>随滚动高亮当前小节；点「← 返回首页目录」回到本页。</li>
+      <li><strong>公式</strong>由 MathJax 渲染，首次需联网加载脚本。</li>
+      <li><strong>速查表</strong>：每章末尾都有核心公式/方法速查表，考前冲刺可只看速查表。</li>
+    </ul>
+  </div>
+
+  <h2 style="border-bottom:3px solid var(--pku-red);">考试题型与分值</h2>
+  <div class="tbl-wrap"><table class="data">
+    <caption>各年试卷题型分布（满分100分）</caption>
+    <thead><tr><th>题型</th><th>分值</th><th>题量</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>选择题</td><td>30分</td><td>15题×2分</td><td>概念理解、性质判断、计算</td></tr>
+      <tr><td>判断题</td><td>10分</td><td>10题×1分</td><td>对/错，易混淆概念辨析</td></tr>
+      <tr><td>填空题</td><td>20分</td><td>10题×2分</td><td>计算结果、概念填写</td></tr>
+      <tr><td>简答题</td><td>14-24分</td><td>3-4题</td><td>画图、执行算法过程</td></tr>
+      <tr><td>算法填空</td><td>16-26分</td><td>2-4题</td><td>Python代码填空</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 style="border-bottom:3px solid var(--pku-red);">高频考点速览</h2>
+  <div class="tbl-wrap"><table class="data">
+    <caption>三年出现频次最高的考点</caption>
+    <thead><tr><th>考点</th><th>出现次数</th><th>对应章节</th><th>常见题型</th></tr></thead>
+    <tbody>
+      <tr><td>循环队列元素个数/位置</td><td>3次</td><td>第2章</td><td>选择/填空</td></tr>
+      <tr><td>二叉树遍历与还原</td><td>3次</td><td>第3章</td><td>填空/判断</td></tr>
+      <tr><td>BST 操作（插入/删除）</td><td>3次</td><td>第3章</td><td>简答/选择</td></tr>
+      <tr><td>哈夫曼树 WPL</td><td>3次</td><td>第3章</td><td>选择/填空/简答</td></tr>
+      <tr><td>堆的建立与调整</td><td>3次</td><td>第3章</td><td>简答/填空</td></tr>
+      <tr><td>Prim/最小生成树</td><td>3次</td><td>第4章</td><td>简答/算法</td></tr>
+      <tr><td>Dijkstra 最短路径</td><td>2次</td><td>第4章</td><td>简答</td></tr>
+      <tr><td>散列表查找/冲突处理</td><td>3次</td><td>第5章</td><td>选择/填空</td></tr>
+      <tr><td>排序稳定性</td><td>3次</td><td>第6章</td><td>选择/判断</td></tr>
+      <tr><td>快速排序划分过程</td><td>2次</td><td>第6章</td><td>填空</td></tr>
+      <tr><td>DFS/BFS 图遍历</td><td>3次</td><td>第4章</td><td>选择/算法</td></tr>
+      <tr><td>链表操作（反转/插入/删除）</td><td>3次</td><td>第1章</td><td>算法填空</td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="conclusion">从线性表打好基础，重点突破树和图，查找排序多练手，算法策略抓对比——按这个思路复习，拿下数算B！</p>
+
+  <p class="muted" style="margin-top:40px; text-align:center;">数据结构与算法B 复习报告 · 基于 2021/2022/2024 年北京大学信息科学技术学院往年试卷精读整理</p>
+</div>
+
+</body>
+</html>

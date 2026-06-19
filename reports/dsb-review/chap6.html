@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第六章 排序 · 数据结构与算法B 复习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">数据结构与算法B<small>复习报告 · 第六章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <div class="nav-group">知识点</div>
+      <a href="#basic">6.1 排序基本概念</a>
+      <a href="#bubble">6.2 冒泡排序</a>
+      <a href="#selection">6.3 选择排序</a>
+      <a href="#insertion">6.4 插入排序</a>
+      <a href="#shell">6.5 希尔排序</a>
+      <a href="#quick">6.6 快速排序</a>
+      <a href="#merge">6.7 归并排序</a>
+      <a href="#heap">6.8 堆排序</a>
+      <a href="#multikey">6.9 多关键字排序</a>
+      <a href="#summary">6.10 算法比较总结</a>
+      <div class="nav-group">往年真题</div>
+      <a href="#exam2021">2021年真题</a>
+      <a href="#exam2022">2022年真题</a>
+      <a href="#exam2024">2024年真题</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">DATA STRUCTURES · SORTING</div>
+      <h1>第六章 排序</h1>
+      <p>排序是计算机科学最基本的操作之一，掌握各种排序算法的原理、复杂度和适用场景是数据结构课程的核心内容</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ============================================================ -->
+<h2 id="basic"><span class="secnum">6.1</span>排序的基本概念</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>排序 (Sorting)</div>
+  <p>将一组数据元素（记录）按照某个<span class="term">关键字</span>的值递增（或递减）重新排列的过程。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>排序的稳定性</div>
+  <p>若待排序的序列中存在两个关键字相等的记录 $R_i$ 和 $R_j$（$i &lt; j$），排序后 $R_i$ 仍然在 $R_j$ 前面，则称该排序算法是<span class="term">稳定的</span>；否则称为<span class="term">不稳定的</span>。</p>
+  <p><strong>注意</strong>：稳定性是排序算法本身的属性，与具体输入无关。只要存在一个反例使相等元素顺序改变，就称该算法不稳定。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>内部排序 vs 外部排序</div>
+  <p><strong>内部排序</strong>：待排序的所有记录全部存放在内存中进行排序。</p>
+  <p><strong>外部排序</strong>：待排序的记录数量很大，内存无法容纳全部记录，排序过程中需要对外存进行多次访问。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>排序算法的评价指标</div>
+  <ul>
+    <li><strong>时间复杂度</strong>：比较次数 + 移动（交换）次数</li>
+    <li><strong>空间复杂度</strong>：除原始数据占用的空间外，算法还需要的辅助存储空间</li>
+    <li><strong>稳定性</strong>：对于多关键字排序和应用场景很重要</li>
+  </ul>
+  <p>基于比较的排序算法，时间复杂度下界为 $\Omega(n \log n)$。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="bubble"><span class="secnum">6.2</span>冒泡排序 (Bubble Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>冒泡排序原理</div>
+  <p>反复遍历待排序序列，每次比较相邻的两个元素，如果它们的顺序错误就交换它们。每一趟遍历结束后，<span class="hl">当前未排序部分中最大（或最小）的元素会"冒泡"到序列的一端</span>。</p>
+  <p>如果某一趟没有发生任何交换，说明序列已经有序，可以提前终止。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>冒泡排序复杂度分析</div>
+  <ul>
+    <li><strong>最好时间</strong>：$O(n)$ —— 序列已有序，只需一趟扫描无交换即可结束</li>
+    <li><strong>最坏时间</strong>：$O(n^2)$ —— 序列逆序，需要 $n-1$ 趟，第 $i$ 趟比较 $n-i$ 次</li>
+    <li><strong>平均时间</strong>：$O(n^2)$</li>
+    <li><strong>空间复杂度</strong>：$O(1)$（只需要一个临时变量用于交换）</li>
+    <li><strong>稳定性</strong>：<span class="term">稳定</span>（相等元素不交换）</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>冒泡排序手工模拟</div>
+  <p>对序列 {5, 3, 8, 1, 2} 进行升序冒泡排序（大的往右冒）：</p>
+  <ol class="steps">
+    <li><strong>第1趟</strong>：比较相邻元素，将最大值冒泡到末尾<br>
+      (5,3)→交换→3,5,8,1,2<br>
+      (5,8)→不换→3,5,8,1,2<br>
+      (8,1)→交换→3,5,1,8,2<br>
+      (8,2)→交换→3,5,1,2,<span class="hl">8</span><br>
+      结果：{3, 5, 1, 2, <strong>8</strong>}，最大值8归位</li>
+    <li><strong>第2趟</strong>：对前4个元素冒泡<br>
+      (3,5)→不换; (5,1)→交换→3,1,5,2; (5,2)→交换→3,1,2,<span class="hl">5</span><br>
+      结果：{3, 1, 2, <strong>5</strong>, 8}</li>
+    <li><strong>第3趟</strong>：对前3个元素冒泡<br>
+      (3,1)→交换→1,3,2; (3,2)→交换→1,2,<span class="hl">3</span><br>
+      结果：{1, 2, <strong>3</strong>, 5, 8}</li>
+    <li><strong>第4趟</strong>：对前2个元素冒泡<br>
+      (1,2)→不换，<strong>本趟无交换，提前结束</strong><br>
+      最终结果：{1, 2, 3, 5, 8}</li>
+  </ol>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>冒泡排序的方向</div>
+  <p>冒泡排序可以从左往右冒（大的往右，每趟确定末尾最大值），也可以从右往左冒（小的往左，每趟确定开头最小值）。做题时要注意题目的具体描述。</p>
+  <p><strong>关键规律</strong>：第 $k$ 趟结束后，一定有 $k$ 个元素到达了最终位置。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="selection"><span class="secnum">6.3</span>选择排序 (Selection Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>直接选择排序原理</div>
+  <p>每趟从未排序部分中<span class="hl">选择最小（或最大）的元素</span>，将其与未排序部分的第一个元素交换位置，从而将其"归入"已排序部分的末尾。</p>
+  <p>经过 $n-1$ 趟选择即可完成整个排序。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>选择排序复杂度分析</div>
+  <ul>
+    <li><strong>比较次数</strong>：始终为 $\displaystyle\sum_{i=1}^{n-1}(n-i) = \frac{n(n-1)}{2}$，与输入无关</li>
+    <li><strong>最好 = 最坏 = 平均时间</strong>：$O(n^2)$</li>
+    <li><strong>空间复杂度</strong>：$O(1)$</li>
+    <li><strong>稳定性</strong>：<span class="term">不稳定</span></li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>选择排序手工模拟</div>
+  <p>对序列 {64, 25, 12, 22, 11} 进行升序选择排序：</p>
+  <ol class="steps">
+    <li><strong>第1趟</strong>：从全部5个元素中找最小值 11，与位置0的64交换<br>
+      结果：{<strong>11</strong>, 25, 12, 22, 64}</li>
+    <li><strong>第2趟</strong>：从后4个元素中找最小值 12，与位置1的25交换<br>
+      结果：{11, <strong>12</strong>, 25, 22, 64}</li>
+    <li><strong>第3趟</strong>：从后3个元素中找最小值 22，与位置2的25交换<br>
+      结果：{11, 12, <strong>22</strong>, 25, 64}</li>
+    <li><strong>第4趟</strong>：从后2个元素中找最小值 25，已在位置3，不换<br>
+      最终结果：{11, 12, 22, 25, 64}</li>
+  </ol>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>选择排序为什么不稳定</div>
+  <p>经典反例：对序列 {<strong>5a</strong>, <strong>5b</strong>, 3} 进行升序选择排序。</p>
+  <p>第1趟选择最小值3，与位置0的5a交换，得 {3, 5b, 5a}。此时5a跑到了5b后面，相等元素的相对顺序被改变。</p>
+  <p><strong>根本原因</strong>：选择排序的交换操作是"跳跃式"的，可能把前面的元素直接甩到后面。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>从 $n^2$ 个数中找最小值</div>
+  <p>从 $n^2$ 个整数中找到最小的一个，至少需要比较 $n^2 - 1$ 次。这是因为"锦标赛"模型中，要确定冠军（最小值），其余 $n^2 - 1$ 个元素都必须至少输一次。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="insertion"><span class="secnum">6.4</span>插入排序 (Insertion Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>直接插入排序原理</div>
+  <p>将待排序序列分为已排序和未排序两部分。每次取未排序部分的第一个元素，在已排序部分中<span class="hl">从后往前找到合适的位置插入</span>，使已排序部分仍然保持有序。</p>
+  <p>初始时，第一个元素自成一个已排序序列。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>插入排序复杂度分析</div>
+  <ul>
+    <li><strong>最好时间</strong>：$O(n)$ —— 序列已经有序，每个元素只需比较1次即确认位置正确</li>
+    <li><strong>最坏时间</strong>：$O(n^2)$ —— 序列完全逆序，每个元素都要移到最前面</li>
+    <li><strong>平均时间</strong>：$O(n^2)$</li>
+    <li><strong>空间复杂度</strong>：$O(1)$</li>
+    <li><strong>稳定性</strong>：<span class="term">稳定</span>（插入时遇到相等元素停止移动，放在其后面）</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>插入排序手工模拟</div>
+  <p>对序列 {5, 2, 4, 6, 1, 3} 进行升序直接插入排序：</p>
+  <ol class="steps">
+    <li>初始已排序部分：{<strong>5</strong>}，取 2 插入<br>
+      2 &lt; 5，5后移，2插到前面 → {<strong>2, 5</strong>}</li>
+    <li>取 4 插入：4 &lt; 5，5后移；4 &gt; 2，停止 → {<strong>2, 4, 5</strong>}</li>
+    <li>取 6 插入：6 &gt; 5，不移动 → {<strong>2, 4, 5, 6</strong>}</li>
+    <li>取 1 插入：1 &lt; 6, 6后移; 1 &lt; 5, 5后移; 1 &lt; 4, 4后移; 1 &lt; 2, 2后移 → {<strong>1, 2, 4, 5, 6</strong>}</li>
+    <li>取 3 插入：3 &lt; 6, 6后移; 3 &lt; 5, 5后移; 3 &lt; 4, 4后移; 3 &gt; 2, 停止 → {<strong>1, 2, 3, 4, 5, 6</strong>}</li>
+  </ol>
+</div>
+
+<div class="conclusion">
+  对于已经有序的数据，插入排序是最快的（$O(n)$），甚至比快速排序更快（快排在正序时可能退化为 $O(n^2)$）。
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>插入排序 vs 快速排序在正序情况下</div>
+  <p>正序输入时：</p>
+  <ul>
+    <li>插入排序：每个元素只需1次比较 → $O(n)$</li>
+    <li>快速排序（取第一个为基准）：每次划分极度不均（0和n-1），退化为 $O(n^2)$</li>
+  </ul>
+  <p>所以<strong>正序时插入排序可能比快排更快</strong>，这是往年考过的判断题。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="shell"><span class="secnum">6.5</span>希尔排序 (Shell Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>希尔排序原理</div>
+  <p>希尔排序是对直接插入排序的改进，也叫<span class="term">缩小增量排序</span>。基本思想：</p>
+  <ol>
+    <li>选择一个<strong>步长序列</strong> $d_1 > d_2 > \cdots > d_k = 1$</li>
+    <li>对于每个步长 $d_i$，将序列分为 $d_i$ 个子组（相距 $d_i$ 的元素在同一组）</li>
+    <li>对每个子组分别进行<strong>直接插入排序</strong></li>
+    <li>逐步缩小步长，直到步长为1（最后一趟就是普通插入排序，但此时序列已"基本有序"）</li>
+  </ol>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>希尔排序复杂度分析</div>
+  <ul>
+    <li><strong>时间复杂度</strong>：取决于步长序列，一般为 $O(n^{1.3})$ ~ $O(n^{1.5})$</li>
+    <li><strong>常用步长序列</strong>：$n/2, n/4, \ldots, 1$（Shell原始序列）</li>
+    <li><strong>空间复杂度</strong>：$O(1)$</li>
+    <li><strong>稳定性</strong>：<span class="term">不稳定</span>（不同子组的排序可能改变相等元素的相对顺序）</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>希尔排序手工模拟</div>
+  <p>对序列 {46, 70, 56, 38, 40, 80, 60, 22}（共8个元素）进行<strong>降序</strong>希尔排序，初始步长为4：</p>
+  <ol class="steps">
+    <li><strong>步长 d = 4</strong>：将8个元素按间隔4分组<br>
+      <table class="data" style="max-width:500px; margin:10px 0;">
+        <thead><tr><th>位置</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr></thead>
+        <tbody>
+        <tr><td>元素</td><td>46</td><td>70</td><td>56</td><td>38</td><td>40</td><td>80</td><td>60</td><td>22</td></tr>
+        <tr><td>分组</td><td style="background:#eff5ff">A</td><td style="background:#f5f0ff">B</td><td style="background:#ecfdf9">C</td><td style="background:#fff8ec">D</td><td style="background:#eff5ff">A</td><td style="background:#f5f0ff">B</td><td style="background:#ecfdf9">C</td><td style="background:#fff8ec">D</td></tr>
+        </tbody>
+      </table>
+      组A: {46, 40} → 降序排序: {46, 40}（46&gt;40，不换）<br>
+      组B: {70, 80} → 降序排序: {80, 70}（交换）<br>
+      组C: {56, 60} → 降序排序: {60, 56}（交换）<br>
+      组D: {38, 22} → 降序排序: {38, 22}（38&gt;22，不换）<br>
+      <strong>第一趟结果</strong>：{46, 80, 60, 38, 40, 70, 56, 22}</li>
+    <li><strong>后续步长</strong>：d=2, d=1，继续同样方法分组并插入排序，此处省略。</li>
+  </ol>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>希尔排序为什么比插入排序快</div>
+  <p>直接插入排序在序列"基本有序"时效率很高（接近$O(n)$）。希尔排序的前几趟使用较大步长，快速消除了大量的"逆序对"，使序列趋于"基本有序"。到最后步长为1时，已经几乎不需要移动了。</p>
+  <p><strong>注意</strong>：虽然希尔排序每一趟调用的是插入排序，但其总体效率比直接插入排序高。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="quick"><span class="secnum">6.6</span>快速排序 (Quick Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>快速排序原理</div>
+  <p>快速排序采用<span class="term">分治策略</span>：</p>
+  <ol>
+    <li><strong>选基准（Pivot）</strong>：通常选择第一个元素</li>
+    <li><strong>划分（Partition）</strong>：将序列划分为两部分——左边所有元素 ≤ pivot，右边所有元素 ≥ pivot</li>
+    <li><strong>递归</strong>：对左右两部分分别递归进行快速排序</li>
+  </ol>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>划分过程详解（双指针法）</div>
+  <p>以第一个元素为基准 pivot = a[low]：</p>
+  <ol>
+    <li>设两个指针 $i = \text{low}$，$j = \text{high}$</li>
+    <li>从右向左扫描（$j$ 递减）：找到第一个 &lt; pivot 的元素，将其填入 $a[i]$ 的位置</li>
+    <li>从左向右扫描（$i$ 递增）：找到第一个 &gt; pivot 的元素，将其填入 $a[j]$ 的位置</li>
+    <li>重复步骤2-3，直到 $i = j$，将 pivot 填入 $a[i]$</li>
+  </ol>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>快速排序复杂度分析</div>
+  <ul>
+    <li><strong>最好时间</strong>：$O(n \log n)$ —— 每次划分都恰好均分</li>
+    <li><strong>最坏时间</strong>：$O(n^2)$ —— 序列已有序或逆序（每次划分极度不均）</li>
+    <li><strong>平均时间</strong>：$O(n \log n)$（实践中最快的排序算法之一）</li>
+    <li><strong>空间复杂度</strong>：$O(\log n)$~$O(n)$（递归调用栈的深度）</li>
+    <li><strong>稳定性</strong>：<span class="term">不稳定</span></li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>快速排序划分过程模拟</div>
+  <p>对序列 {46, 70, 56, 38, 40, 80} 进行非递减排序，以第一个元素46为基准：</p>
+  <ol class="steps">
+    <li>初始：pivot = 46，i = 0, j = 5<br>
+      <code>[_, 70, 56, 38, 40, 80]</code>（位置0空出）</li>
+    <li>j从右扫描：a[5]=80 ≥ 46, j--; a[4]=40 &lt; 46, 将40填入位置i=0<br>
+      <code>[40, 70, 56, 38, _, 80]</code>，i++, i=1</li>
+    <li>i从左扫描：a[1]=70 &gt; 46, 将70填入位置j=4<br>
+      <code>[40, _, 56, 38, 70, 80]</code>，j--, j=3</li>
+    <li>j从右扫描：a[3]=38 &lt; 46, 将38填入位置i=1<br>
+      <code>[40, 38, 56, _, 70, 80]</code>，i++, i=2</li>
+    <li>i从左扫描：a[2]=56 &gt; 46, 将56填入位置j=3<br>
+      <code>[40, 38, _, 56, 70, 80]</code>，j--, j=2</li>
+    <li>此时 i = j = 2，将pivot=46填入位置2<br>
+      <strong>结果：{40, 38, <span class="hl">46</span>, 56, 70, 80}</strong></li>
+  </ol>
+  <p>基准46在位置2，左边 {40, 38} 都 ≤ 46，右边 {56, 70, 80} 都 ≥ 46。</p>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>快速排序的最坏情况</div>
+  <p>当输入序列已经有序（正序或逆序）且每次选第一个元素为基准时，快速排序退化为 $O(n^2)$。因为每次划分得到的子问题大小为 0 和 n-1。</p>
+  <p><strong>对比</strong>：1000个元素找前5小时，快排需要全部排完，而堆排序只需建堆后取5次堆顶即可。因此找前k小/大的问题，堆排序更优。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="merge"><span class="secnum">6.7</span>归并排序 (Merge Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>归并排序原理</div>
+  <p>采用<span class="term">分治法</span>：</p>
+  <ol>
+    <li><strong>分（Divide）</strong>：将序列从中间一分为二</li>
+    <li><strong>治（Conquer）</strong>：对左右两个子序列分别递归排序</li>
+    <li><strong>合（Merge）</strong>：将两个已排序的子序列合并为一个有序序列</li>
+  </ol>
+  <p>二路归并排序的每趟归并：将相邻的有序子序列两两合并。第1趟后子序列长度为2，第2趟后长度为4，...，第 $k$ 趟后长度为 $2^k$。</p>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>归并排序复杂度分析</div>
+  <ul>
+    <li><strong>每趟归并的时间</strong>：$O(n)$（每个元素参与一次合并）</li>
+    <li><strong>趟数</strong>：$\lceil \log_2 n \rceil$</li>
+    <li><strong>总时间</strong>：$O(n \log n)$（最好 = 平均 = 最坏）</li>
+    <li><strong>空间复杂度</strong>：$O(n)$（需要与原序列等长的辅助数组）</li>
+    <li><strong>稳定性</strong>：<span class="term">稳定</span>（合并时相等元素保持原有顺序）</li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>二路归并排序手工模拟</div>
+  <p>对序列 {38, 27, 43, 3, 9, 82, 10} 进行升序归并排序：</p>
+  <ol class="steps">
+    <li><strong>第1趟归并</strong>（子序列长度1→2）：<br>
+      (38,27)→{27,38}; (43,3)→{3,43}; (9,82)→{9,82}; (10)→{10}<br>
+      结果：{27,38, 3,43, 9,82, 10}</li>
+    <li><strong>第2趟归并</strong>（子序列长度2→4）：<br>
+      合并{27,38}和{3,43}→{3,27,38,43}; 合并{9,82}和{10}→{9,10,82}<br>
+      结果：{3,27,38,43, 9,10,82}</li>
+    <li><strong>第3趟归并</strong>（子序列长度4→8）：<br>
+      合并{3,27,38,43}和{9,10,82}→{3,9,10,27,38,43,82}<br>
+      最终结果：{3, 9, 10, 27, 38, 43, 82}</li>
+  </ol>
+</div>
+
+<div class="conclusion">
+  归并排序是<strong>外部排序的首选</strong>算法。当数据量远大于内存容量时（如1GB数据，100MB内存），归并排序通过顺序访问磁盘的方式高效完成排序。
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>归并排序的递推关系</div>
+  <p>归并排序的时间递推式：$T(n) = 2T(n/2) + O(n)$</p>
+  <p>由主定理（Master Theorem）：$a=2, b=2, f(n)=O(n)$，满足 $f(n) = \Theta(n^{\log_b a}) = \Theta(n)$，得 $T(n) = O(n \log n)$。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="heap"><span class="secnum">6.8</span>堆排序 (Heap Sort)</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>堆的概念</div>
+  <p><strong>最大堆（大顶堆）</strong>：完全二叉树中，每个节点的值都 ≥ 其子节点的值。根节点是最大值。</p>
+  <p><strong>最小堆（小顶堆）</strong>：每个节点的值都 ≤ 其子节点的值。根节点是最小值。</p>
+  <p>堆用数组存储，对于下标从0开始的数组：节点 $i$ 的左子节点为 $2i+1$，右子节点为 $2i+2$，父节点为 $\lfloor(i-1)/2\rfloor$。</p>
+</div>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>堆排序原理（升序排列用最大堆）</div>
+  <ol>
+    <li><strong>建堆</strong>：从最后一个非叶节点开始，自下而上调整，使整个数组满足最大堆性质</li>
+    <li><strong>排序</strong>：重复以下操作 $n-1$ 次：
+      <ul>
+        <li>将堆顶（最大值）与当前堆的最后一个元素交换</li>
+        <li>堆的大小减1（最大值已就位）</li>
+        <li>对新的堆顶执行"下沉"调整，恢复堆性质</li>
+      </ul>
+    </li>
+  </ol>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>堆排序复杂度分析</div>
+  <ul>
+    <li><strong>建堆时间</strong>：$O(n)$（不是 $O(n\log n)$！自底向上建堆是线性的）</li>
+    <li><strong>排序时间</strong>：$O(n \log n)$（每次调整 $O(\log n)$，共 $n-1$ 次）</li>
+    <li><strong>总时间</strong>：$O(n \log n)$（最好 = 平均 = 最坏）</li>
+    <li><strong>空间复杂度</strong>：$O(1)$（原地排序）</li>
+    <li><strong>稳定性</strong>：<span class="term">不稳定</span></li>
+  </ul>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>建最大堆手工模拟</div>
+  <p>对序列 {45, 80, 55, 40, 42, 85}（共6个元素），建立最大堆：</p>
+  <p>数组下标从0开始，最后一个非叶节点 = $\lfloor(6-2)/2\rfloor = 2$</p>
+  <ol class="steps">
+    <li><strong>调整下标2（值55）</strong>：<br>
+      子节点：index5（值85）。85 &gt; 55，交换<br>
+      数组变为：{45, 80, <strong>85</strong>, 40, 42, <strong>55</strong>}</li>
+    <li><strong>调整下标1（值80）</strong>：<br>
+      子节点：index3（值40），index4（值42）。80 &gt; 40且80 &gt; 42，不交换<br>
+      数组不变：{45, 80, 85, 40, 42, 55}</li>
+    <li><strong>调整下标0（值45）</strong>：<br>
+      子节点：index1（值80），index2（值85）。max(80,85)=85 &gt; 45，与85交换<br>
+      数组变为：{<strong>85</strong>, 80, <strong>45</strong>, 40, 42, 55}<br>
+      继续下沉index2（值45）：子节点index5（值55）。55 &gt; 45，交换<br>
+      数组变为：{85, 80, <strong>55</strong>, 40, 42, <strong>45</strong>}</li>
+  </ol>
+  <p><strong>最终最大堆</strong>：{85, 80, 55, 40, 42, 45}</p>
+  <p>对应的树形结构：</p>
+  <pre style="font-family:monospace; background:#f7f8fa; padding:12px; border-radius:6px; font-size:14px;">
+        85
+       /  \
+     80    55
+    / \    /
+   40  42 45</pre>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>堆排序 vs 快速排序</div>
+  <p><strong>找前k大/小的问题</strong>：堆排序只需建堆 $O(n)$ + 取 $k$ 次堆顶 $O(k\log n)$，总计 $O(n + k\log n)$。当 $k \ll n$ 时远优于快排的 $O(n\log n)$。</p>
+  <p>例：从1000个元素中找前5小，用最小堆只需约 $1000 + 5\times10 = 1050$ 次操作。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="multikey"><span class="secnum">6.9</span>多关键字排序</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>多关键字排序问题</div>
+  <p>当记录有多个关键字（如 key1, key2）时，要求：先按主关键字key1排序；key1相同的，再按次关键字key2排序。</p>
+  <p>两种策略：</p>
+  <ul>
+    <li><strong>MSD（Most Significant Digit first，最高位优先）</strong>：先按主关键字分组，组内再按次关键字排序</li>
+    <li><strong>LSD（Least Significant Digit first，最低位优先）</strong>：先按次关键字排序，再按主关键字排序</li>
+  </ul>
+</div>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">性质</span>LSD方法对稳定性的要求</div>
+  <p><strong>关键结论</strong>：LSD方法要求<span class="hl">最后一趟排序必须是稳定的</span>。</p>
+  <p><strong>原因</strong>：LSD先按次关键字排好序，然后按主关键字排序。如果第二趟排序不稳定，可能打乱第一趟已经排好的次关键字顺序。只有稳定排序才能保证"主关键字相同的元素，保持次关键字的有序性"。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>多关键字排序策略选择</div>
+  <p><strong>问题</strong>：线性表中每个元素有key1和key2两个数据项，要求按key1非递减排序，key1相同时按key2非递减排序。以下哪种方法满足要求？</p>
+  <p>A: 先按key1冒泡，再按key2选择排序<br>
+  B: 先按key2冒泡，再按key1选择排序<br>
+  C: 先按key1选择排序，再按key2冒泡<br>
+  D: 先按key2选择排序，再按key1冒泡排序</p>
+  <p><strong>分析</strong>（LSD思路）：先排次关键字key2，再排主关键字key1。<span class="hl">最后一趟必须用稳定排序</span>。</p>
+  <ul>
+    <li>D：先按key2选择排序（不稳定，但这是第一趟，对key2排序），再按key1冒泡排序（稳定！最后一趟稳定）</li>
+    <li>冒泡排序稳定 → key1相同的元素不会改变相对顺序 → 保持了key2的有序性</li>
+  </ul>
+  <p><strong>答案：D</strong></p>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>LSD中第一趟排序不要求稳定</div>
+  <p>LSD方法中，第一趟（对次关键字排序）不要求稳定——因为其结果只是"在主关键字相同的记录中保持有序"，而这一性质由第二趟的稳定性来保证。</p>
+  <p>但如果有3个以上关键字，则除了最后一趟必须稳定外，中间各趟也必须稳定。</p>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="summary"><span class="secnum">6.10</span>排序算法比较总结</h2>
+
+<div class="tbl-wrap">
+<table class="data">
+  <caption>各排序算法性能比较（n为待排序元素个数）</caption>
+  <thead>
+    <tr><th>算法</th><th>最好时间</th><th>平均时间</th><th>最坏时间</th><th>空间</th><th>稳定性</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>冒泡排序</strong></td><td>$O(n)$</td><td>$O(n^2)$</td><td>$O(n^2)$</td><td>$O(1)$</td><td style="color:#0d9488;font-weight:600">稳定</td></tr>
+    <tr><td><strong>选择排序</strong></td><td>$O(n^2)$</td><td>$O(n^2)$</td><td>$O(n^2)$</td><td>$O(1)$</td><td style="color:#dc2626;font-weight:600">不稳定</td></tr>
+    <tr><td><strong>插入排序</strong></td><td>$O(n)$</td><td>$O(n^2)$</td><td>$O(n^2)$</td><td>$O(1)$</td><td style="color:#0d9488;font-weight:600">稳定</td></tr>
+    <tr><td><strong>希尔排序</strong></td><td>—</td><td>$O(n^{1.3})$</td><td>—</td><td>$O(1)$</td><td style="color:#dc2626;font-weight:600">不稳定</td></tr>
+    <tr><td><strong>快速排序</strong></td><td>$O(n\log n)$</td><td>$O(n\log n)$</td><td>$O(n^2)$</td><td>$O(\log n)$</td><td style="color:#dc2626;font-weight:600">不稳定</td></tr>
+    <tr><td><strong>归并排序</strong></td><td>$O(n\log n)$</td><td>$O(n\log n)$</td><td>$O(n\log n)$</td><td>$O(n)$</td><td style="color:#0d9488;font-weight:600">稳定</td></tr>
+    <tr><td><strong>堆排序</strong></td><td>$O(n\log n)$</td><td>$O(n\log n)$</td><td>$O(n\log n)$</td><td>$O(1)$</td><td style="color:#dc2626;font-weight:600">不稳定</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>最坏复杂度相同的配对</div>
+  <ul>
+    <li><strong>快速排序</strong>与<strong>选择排序</strong>：最坏都是 $O(n^2)$</li>
+    <li><strong>堆排序</strong>与<strong>归并排序</strong>：最坏都是 $O(n\log n)$</li>
+    <li><strong>冒泡排序</strong>与<strong>插入排序</strong>：最坏都是 $O(n^2)$</li>
+  </ul>
+  <p>注意：快速排序与堆排序的最坏复杂度<strong>不同</strong>（$O(n^2)$ vs $O(n\log n)$）。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>如何记忆稳定性</div>
+  <p><strong>稳定的排序</strong>：冒泡、插入、归并 —— 口诀"<span class="hl">冒插归</span>"（帽子龟）</p>
+  <p><strong>不稳定的排序</strong>：选择、希尔、快速、堆 —— 口诀"<span class="hl">选希快堆</span>"（选稀快堆）</p>
+</div>
+
+<div class="conclusion">
+  选排序算法的一般原则：(1) 数据量小或基本有序 → 插入排序；(2) 数据量大且内存充足 → 快排（平均最快）；(3) 要求最坏也保证 $O(n\log n)$ → 堆排序或归并排序；(4) 外部排序 → 归并排序；(5) 找前k大/小 → 堆排序。
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<!-- 往年真题部分 -->
+<!-- ============================================================ -->
+
+<h2 id="exam2021"><span class="secnum">真题</span>2021年考题</h2>
+
+<!-- 2021 选择1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">时间复杂度</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    下列不影响算法时间复杂性的因素有（）。<br>
+    A. 问题的规模　　B. 输入值　　C. 计算结果　　D. 算法的策略
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：C</strong></p>
+    <p><strong>解析</strong>：算法的时间复杂度取决于：</p>
+    <ul>
+      <li>A. 问题的规模 $n$ —— 显然影响（如 $O(n^2)$ 中的 $n$）</li>
+      <li>B. 输入值 —— 影响（如插入排序正序 $O(n)$，逆序 $O(n^2)$）</li>
+      <li>C. 计算结果 —— <strong>不影响</strong>。结果是算法执行后产生的，不是输入，不影响执行过程</li>
+      <li>D. 算法的策略 —— 影响（如同一问题，冒泡 vs 快排的效率不同）</li>
+    </ul>
+    <div class="final-answer">C. 计算结果不影响算法时间复杂性。</div>
+  </div></details>
+</div>
+
+<!-- 2021 选择7 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">多关键字排序 / LSD</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    假设线性表中每个元素有两个数据项key1和key2，现对线性表按以下规则进行排序：先根据数据项key1的值进行非递减排序；在key1值相同的情况下，再根据数据项key2的值进行非递减排序。满足这种要求的排序方法是（）。<br>
+    A. 先按key1值进行冒泡排序，再按key2值进行直接选择排序<br>
+    B. 先按key2值进行冒泡排序，再按key1值进行直接选择排序<br>
+    C. 先按key1值进行直接选择排序，再按key2值进行冒泡排序<br>
+    D. 先按key2值进行直接选择排序，再按key1值进行冒泡排序
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：D</strong></p>
+    <p><strong>分析</strong>：这是一道典型的<strong>LSD（最低位优先）</strong>多关键字排序题。</p>
+    <p>要求：主关键字key1有序；key1相同时key2有序。</p>
+    <p><strong>LSD策略</strong>：先按次关键字(key2)排序，再按主关键字(key1)排序。<span class="hl">关键要求：最后一趟排序必须是稳定的</span>。</p>
+    <p>逐项分析：</p>
+    <ul>
+      <li>A: MSD顺序（先主后次），且最后用选择排序（不稳定）→ 不满足</li>
+      <li>B: LSD顺序（先次后主），但最后用选择排序（不稳定）→ key1排序时可能打乱key2顺序 → 不满足</li>
+      <li>C: 先key1后key2 → MSD思路，但最终结果是按key2排序的 → 不满足</li>
+      <li>D: LSD顺序（先key2后key1），最后用冒泡排序（<strong>稳定</strong>）→ key1相同的元素保持key2顺序 → <strong>满足</strong></li>
+    </ul>
+    <div class="final-answer">D. 先按key2选择排序，再按key1冒泡排序。</div>
+  </div></details>
+</div>
+
+<!-- 2021 选择8 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">比较次数 / 选择</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    有 $n^2$ 个整数，找到其中最小整数需要比较至少为（）次。<br>
+    A. $n$　　B. $\log_2 n$　　C. $n^2-1$　　D. $n-1$
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：C</strong></p>
+    <p><strong>解析</strong>：从 $m$ 个数中找最小值，必须保证其余 $m-1$ 个数各至少"输"一次（即被比较后发现不是最小的）。因此至少需要 $m-1$ 次比较。</p>
+    <p>这里 $m = n^2$，故至少需要 $n^2 - 1$ 次比较。</p>
+    <p>注意：不要被"$n^2$个数"误导成 $n-1$（那是"$n$个数"的情况）。</p>
+    <div class="final-answer">C. 需要比较 $n^2 - 1$ 次。</div>
+  </div></details>
+</div>
+
+<!-- 2021 判断2 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>判断题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">希尔排序效率</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    希尔排序算法的每一趟都要调用一次或多次直接插入排序算法，所以其效率比直接插入排序算法差。（）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：N（错误）</strong></p>
+    <p><strong>解析</strong>：虽然希尔排序每趟都使用直接插入排序作为子过程，但这并不意味着其总效率更差。原因：</p>
+    <ul>
+      <li>希尔排序前几趟步长大时，每组元素数量少，插入排序开销很小</li>
+      <li>随着步长缩小，虽然每组元素增多，但序列已趋于"基本有序"，插入排序在基本有序时效率极高</li>
+      <li>总体效率 $O(n^{1.3})$ 远优于直接插入排序的平均 $O(n^2)$</li>
+    </ul>
+    <div class="final-answer">错误。希尔排序的总体效率比直接插入排序高。</div>
+  </div></details>
+</div>
+
+<!-- 2021 判断3 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>判断题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">正序/逆序 效率对比</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    直接插入排序、冒泡排序、希尔排序都是在数据正序的情况下比数据在逆序的情况下要快。（）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：N（错误）</strong></p>
+    <p><strong>解析</strong>：</p>
+    <ul>
+      <li>直接插入排序：正序 $O(n)$，逆序 $O(n^2)$ —— 正序快 ✓</li>
+      <li>冒泡排序：正序 $O(n)$（一趟无交换即结束），逆序 $O(n^2)$ —— 正序快 ✓</li>
+      <li>希尔排序：<strong>不一定</strong>。希尔排序的性能取决于步长序列与数据分布的配合，正序不一定是希尔排序的最优输入。在某些步长序列下，已排序的数据并不一定比逆序数据处理得更快。</li>
+    </ul>
+    <div class="final-answer">错误。希尔排序不满足"正序一定比逆序快"的规律。</div>
+  </div></details>
+</div>
+
+<!-- 2021 填空7 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>填空题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">归并排序时间复杂度</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    有n个数据对象的二路归并排序中，每趟归并的时间复杂度为____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：$O(n)$</strong></p>
+    <p><strong>解析</strong>：每趟归并要处理所有 $n$ 个元素（将它们从当前有序子序列合并为更长的有序子序列），因此每趟的时间开销为 $O(n)$。共有 $\lceil\log_2 n\rceil$ 趟，所以总时间为 $O(n\log n)$。</p>
+    <div class="final-answer">$O(n)$</div>
+  </div></details>
+</div>
+
+<!-- 2021 填空8 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>填空题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">希尔排序 / 归并排序 手动模拟</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    对一组记录进行降序排序，其关键码为(46, 70, 56, 38, 40, 80, 60, 22)，采用初始步长为4的希尔（shell）排序，第一趟扫描的结果是（____）；而采用归并排序第一轮归并的结果是（____）。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>希尔排序第一趟</strong>（步长d=4，降序）：</p>
+    <p>按步长4分组（间隔4的元素为一组）：</p>
+    <table class="data" style="max-width:600px">
+      <thead><tr><th>位置</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr></thead>
+      <tbody>
+        <tr><td>原始</td><td>46</td><td>70</td><td>56</td><td>38</td><td>40</td><td>80</td><td>60</td><td>22</td></tr>
+        <tr><td>分组</td><td>A</td><td>B</td><td>C</td><td>D</td><td>A</td><td>B</td><td>C</td><td>D</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>组A (位置0,4): {46, 40} → 降序: {46, 40}（46&gt;40，不换）</li>
+      <li>组B (位置1,5): {70, 80} → 降序: {80, 70}（交换）</li>
+      <li>组C (位置2,6): {56, 60} → 降序: {60, 56}（交换）</li>
+      <li>组D (位置3,7): {38, 22} → 降序: {38, 22}（38&gt;22，不换）</li>
+    </ul>
+    <p>重新组合回原位置：</p>
+    <div class="final-answer">希尔第一趟结果：(46, 80, 60, 38, 40, 70, 56, 22)</div>
+
+    <p><strong>归并排序第一轮</strong>（降序，两两一组归并）：</p>
+    <ul>
+      <li>(46, 70) → 降序归并: (70, 46)</li>
+      <li>(56, 38) → 降序归并: (56, 38)</li>
+      <li>(40, 80) → 降序归并: (80, 40)</li>
+      <li>(60, 22) → 降序归并: (60, 22)</li>
+    </ul>
+    <div class="final-answer">归并第一轮结果：(70, 46, 56, 38, 80, 40, 60, 22)</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="exam2022"><span class="secnum">真题</span>2022年考题</h2>
+
+<!-- 2022 选择7 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">外部排序 / 归并排序</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    假设需要对存储开销1GB(GigaBytes)的数据进行排序，但主存储器（RAM）当前可用的存储空间只有100MB(MegaBytes)。针对这种情况，（）排序算法是最适合的。<br>
+    A. 堆排序　　B. 归并排序　　C. 快速排序　　D. 插入排序
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：B</strong></p>
+    <p><strong>解析</strong>：数据量（1GB）远大于内存（100MB），属于<strong>外部排序</strong>场景。</p>
+    <ul>
+      <li>归并排序是外部排序的首选，因为它的数据访问模式是<strong>顺序的</strong>（适合磁盘I/O），且可以分块处理：先将数据分成若干块（每块100MB），每块在内存中排序，然后多路归并</li>
+      <li>堆排序、快速排序需要随机访问数据，不适合外部存储</li>
+      <li>插入排序效率太低 $O(n^2)$</li>
+    </ul>
+    <div class="final-answer">B. 归并排序最适合外部排序场景。</div>
+  </div></details>
+</div>
+
+<!-- 2022 选择11 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">排序稳定性</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    若按照排序的稳定性和不稳定性对排序算法进行分类，则（）是不稳定排序。<br>
+    A. 冒泡排序　　B. 归并排序　　C. 直接插入排序　　D. 希尔排序
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：D</strong></p>
+    <p><strong>解析</strong>：</p>
+    <ul>
+      <li>冒泡排序 —— 稳定 ✓</li>
+      <li>归并排序 —— 稳定 ✓</li>
+      <li>直接插入排序 —— 稳定 ✓</li>
+      <li>希尔排序 —— <strong>不稳定</strong> ✗（分组排序时可能改变相等元素的相对顺序）</li>
+    </ul>
+    <div class="final-answer">D. 希尔排序是不稳定排序。</div>
+  </div></details>
+</div>
+
+<!-- 2022 选择12 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">最坏时间复杂度对比</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    以下（）分组中的两个排序算法的最坏情况下时间复杂度的大O表示相同。<br>
+    A. 快速排序和堆排序　　B. 归并排序和插入排序<br>
+    C. 快速排序和选择排序　　D. 堆排序和冒泡排序
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：C</strong></p>
+    <p><strong>逐项分析最坏时间复杂度</strong>：</p>
+    <table class="data" style="max-width:500px">
+      <thead><tr><th>选项</th><th>算法1</th><th>算法2</th><th>是否相同</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>快速排序 $O(n^2)$</td><td>堆排序 $O(n\log n)$</td><td style="color:#dc2626">不同</td></tr>
+        <tr><td>B</td><td>归并排序 $O(n\log n)$</td><td>插入排序 $O(n^2)$</td><td style="color:#dc2626">不同</td></tr>
+        <tr><td>C</td><td>快速排序 $O(n^2)$</td><td>选择排序 $O(n^2)$</td><td style="color:#0d9488"><strong>相同</strong></td></tr>
+        <tr><td>D</td><td>堆排序 $O(n\log n)$</td><td>冒泡排序 $O(n^2)$</td><td style="color:#dc2626">不同</td></tr>
+      </tbody>
+    </table>
+    <div class="final-answer">C. 快速排序和选择排序的最坏时间复杂度都是 $O(n^2)$。</div>
+  </div></details>
+</div>
+
+<!-- 2022 填空3 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>填空题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">快速排序划分过程</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    对一组记录进行非递减排序，其关键码为[46, 70, 56, 38, 40, 80]，则利用快速排序的方法，以第一个记录为基准得到的第一次划分结果为____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：{40, 38, 46, 56, 70, 80}</strong></p>
+    <p><strong>详细划分过程</strong>（双指针法）：</p>
+    <p>初始：pivot = 46, i = 0, j = 5</p>
+    <ol class="steps">
+      <li>j从右扫描：a[5]=80 ≥ 46, j--; a[4]=40 &lt; 46, 将40放到位置0<br>
+        数组：[<strong>40</strong>, 70, 56, 38, _, 80], i=1</li>
+      <li>i从左扫描：a[1]=70 &gt; 46, 将70放到位置4<br>
+        数组：[40, _, 56, 38, <strong>70</strong>, 80], j=3</li>
+      <li>j从右扫描：a[3]=38 &lt; 46, 将38放到位置1<br>
+        数组：[40, <strong>38</strong>, 56, _, 70, 80], i=2</li>
+      <li>i从左扫描：a[2]=56 &gt; 46, 将56放到位置3<br>
+        数组：[40, 38, _, <strong>56</strong>, 70, 80], j=2</li>
+      <li>i = j = 2，将pivot=46放入位置2<br>
+        数组：[40, 38, <strong>46</strong>, 56, 70, 80]</li>
+    </ol>
+    <div class="final-answer">第一次划分结果：40, 38, 46, 56, 70, 80</div>
+  </div></details>
+</div>
+
+<!-- 2022 简答3 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>简答题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">奇偶交换排序</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    奇偶交换排序如下所述：第一趟对所有奇数位置 $i$（$i=1,3,5,...$）比较 $a_i$ 和 $a_{i+1}$，若 $a_i > a_{i+1}$ 则交换；第二趟对所有偶数位置 $i$（$i=2,4,6,...$）比较。交替进行，直到某趟无交换为止。<br><br>
+    a) 写出序列 {18, 73, 5, 10, 68, 99, 27, 10} 在前4趟排序后的结果（2分）。<br>
+    b) 奇偶交换排序是否是稳定的排序（1分）。<br>
+    c) 正序和逆序情况下的比较次数和交换次数（4分）。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>a) 前4趟结果</strong>（位置从1开始编号）：</p>
+    <p>原始序列：{18, 73, 5, 10, 68, 99, 27, 10}</p>
+    <p><strong>第1趟</strong>（奇数位置比较：(1,2)(3,4)(5,6)(7,8)）：</p>
+    <ul>
+      <li>比较(18,73)：18&lt;73，不换</li>
+      <li>比较(5,10)：5&lt;10，不换</li>
+      <li>比较(68,99)：68&lt;99，不换</li>
+      <li>比较(27,10)：27&gt;10，<strong>交换</strong></li>
+    </ul>
+    <p>→ {18, 73, 5, 10, 68, 99, <strong>10, 27</strong>}</p>
+
+    <p><strong>第2趟</strong>（偶数位置比较：(2,3)(4,5)(6,7)）：</p>
+    <ul>
+      <li>比较(73,5)：73&gt;5，<strong>交换</strong></li>
+      <li>比较(10,68)：10&lt;68，不换</li>
+      <li>比较(99,10)：99&gt;10，<strong>交换</strong></li>
+    </ul>
+    <p>→ {18, <strong>5, 73</strong>, 10, 68, <strong>10, 99</strong>, 27}</p>
+
+    <p><strong>第3趟</strong>（奇数位置比较：(1,2)(3,4)(5,6)(7,8)）：</p>
+    <ul>
+      <li>比较(18,5)：18&gt;5，<strong>交换</strong></li>
+      <li>比较(73,10)：73&gt;10，<strong>交换</strong></li>
+      <li>比较(68,10)：68&gt;10，<strong>交换</strong></li>
+      <li>比较(99,27)：99&gt;27，<strong>交换</strong></li>
+    </ul>
+    <p>→ {<strong>5, 18, 10, 73, 10, 68, 27, 99</strong>}</p>
+
+    <p><strong>第4趟</strong>（偶数位置比较：(2,3)(4,5)(6,7)）：</p>
+    <ul>
+      <li>比较(18,10)：18&gt;10，<strong>交换</strong></li>
+      <li>比较(73,10)：73&gt;10，<strong>交换</strong></li>
+      <li>比较(68,27)：68&gt;27，<strong>交换</strong></li>
+    </ul>
+    <p>→ {5, <strong>10, 18, 10, 73, 27, 68</strong>, 99}</p>
+
+    <div class="final-answer">
+      第1趟后：{18, 73, 5, 10, 68, 99, 10, 27}<br>
+      第2趟后：{18, 5, 73, 10, 68, 10, 99, 27}<br>
+      第3趟后：{5, 18, 10, 73, 10, 68, 27, 99}<br>
+      第4趟后：{5, 10, 18, 10, 73, 27, 68, 99}
+    </div>
+
+    <p><strong>b) 稳定性</strong>：<strong>不稳定</strong></p>
+    <p>例：序列中两个10可能在交换过程中改变相对位置。</p>
+
+    <p><strong>c) 正序和逆序的比较/交换次数</strong>：</p>
+    <p><strong>正序</strong>（$n=8$）：</p>
+    <ul>
+      <li>第1趟（奇数）：比较4次，0次交换 → change1 = FALSE</li>
+      <li>第2趟（偶数）：比较3次，0次交换 → change2 = FALSE</li>
+      <li>两趟都无交换，算法终止</li>
+      <li>总比较 = $\lfloor n/2\rfloor + \lfloor (n-1)/2 \rfloor = n-1$ 次，交换 = 0 次</li>
+    </ul>
+    <p><strong>逆序</strong>：需要很多趟才能完成排序，比较次数约为 $O(n^2)$，类似冒泡排序。</p>
+    <div class="final-answer">正序：比较 $n-1$ 次，交换 0 次。逆序：比较和交换均为 $O(n^2)$ 量级。</div>
+  </div></details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="exam2024"><span class="secnum">真题</span>2024年考题</h2>
+
+<!-- 2024 选择4 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">插入排序最好情况</span>
+    <span class="exam-badge diff">★</span>
+  </div>
+  <div class="stem">
+    在插入排序算法中，如果待排序的序列已经是有序的，则插入排序算法的时间复杂度为（）。<br>
+    A. $O(n^2)$　　B. $O(n\log n)$　　C. $O(n)$　　D. $O(1)$
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：C</strong></p>
+    <p><strong>解析</strong>：当序列已有序时，每个新元素只需与已排序部分的最后一个元素比较1次，即可确认位置正确（不需要移动）。共 $n-1$ 个元素需要插入，总比较次数为 $n-1$，故时间复杂度为 $O(n)$。</p>
+    <div class="final-answer">C. $O(n)$</div>
+  </div></details>
+</div>
+
+<!-- 2024 选择12 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>选择题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">分治算法 / 主定理</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    若使用分治算法解决某一问题，每次把规模为n的问题分解为2个规模为n/2的子问题，将两个子问题的结果合并的时间开销为 $O(n)$，那么这个算法的总时间复杂度为（）。<br>
+    A. $O(n)$　　B. $O(n\log n)$　　C. $O(n^2)$　　D. $O(n^2\log n)$
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：B</strong></p>
+    <p><strong>解析</strong>：递推关系为 $T(n) = 2T(n/2) + O(n)$</p>
+    <p>这正是归并排序的递推式。由主定理（Master Theorem）：</p>
+    <ul>
+      <li>$a = 2, b = 2$，故 $\log_b a = 1$</li>
+      <li>$f(n) = O(n) = O(n^{\log_b a})$</li>
+      <li>属于Case 2：$T(n) = O(n^{\log_b a} \cdot \log n) = O(n \log n)$</li>
+    </ul>
+    <div class="final-answer">B. $O(n\log n)$</div>
+  </div></details>
+</div>
+
+<!-- 2024 判断6 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>判断题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">归并 vs 插入 效率</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    归并排序算法一定比简单插入排序算法的执行效率高。（）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：N（错误）</strong></p>
+    <p><strong>解析</strong>：归并排序的时间复杂度始终为 $O(n\log n)$，而插入排序的最好情况为 $O(n)$（序列已有序时）。</p>
+    <p>当数据基本有序时，插入排序的性能接近 $O(n)$，优于归并排序的 $O(n\log n)$。</p>
+    <p>因此不能说归并排序"一定"比插入排序效率高。</p>
+    <div class="final-answer">错误。数据基本有序时，插入排序 $O(n)$ 比归并排序 $O(n\log n)$ 更快。</div>
+  </div></details>
+</div>
+
+<!-- 2024 判断7 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>判断题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">插入 vs 快排 正序情况</span>
+    <span class="exam-badge diff">★★</span>
+  </div>
+  <div class="stem">
+    在待排序元素为正序情况下，直接插入排序可能比快速排序的时间复杂度更小。（）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：Y（正确）</strong></p>
+    <p><strong>解析</strong>：正序输入时：</p>
+    <ul>
+      <li>直接插入排序：$O(n)$（每个元素只需1次比较）</li>
+      <li>快速排序（选第一个为基准）：$O(n^2)$（每次划分产生0和$n-1$的极端分割）</li>
+    </ul>
+    <p>因此正序时，$O(n) &lt; O(n^2)$，插入排序的时间复杂度确实可能比快排更小。</p>
+    <div class="final-answer">正确。正序时插入排序 $O(n)$，快排可能退化为 $O(n^2)$。</div>
+  </div></details>
+</div>
+
+<!-- 2024 填空6 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>填空题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">建最大堆</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    一组记录的关键字为 45, 80, 55, 40, 42, 85，利用堆排序的方法，从最后一个非叶子结点开始调整，建立的初始最大堆为____。
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p><strong>答案：85, 80, 55, 40, 42, 45</strong></p>
+    <p><strong>建堆过程</strong>：数组下标从0开始，共6个元素。</p>
+    <p>最后一个非叶节点 = $\lfloor(6-2)/2\rfloor = 2$（值为55）</p>
+    <p>初始树形：</p>
+    <pre style="font-family:monospace; background:#f7f8fa; padding:12px; border-radius:6px; font-size:14px;">
+        45
+       /  \
+     80    55
+    / \    /
+   40  42 85</pre>
+
+    <ol class="steps">
+      <li><strong>调整index=2（值55）</strong>：左子节点index=5（值85）。85&gt;55，交换。<br>
+        数组：{45, 80, <strong>85</strong>, 40, 42, <strong>55</strong>}</li>
+      <li><strong>调整index=1（值80）</strong>：左子index=3（40），右子index=4（42）。80&gt;42&gt;40，不换。<br>
+        数组不变：{45, 80, 85, 40, 42, 55}</li>
+      <li><strong>调整index=0（值45）</strong>：左子index=1（80），右子index=2（85）。85最大，与45交换。<br>
+        数组：{<strong>85</strong>, 80, <strong>45</strong>, 40, 42, 55}<br>
+        继续下沉：index=2（值45），左子index=5（55）。55&gt;45，交换。<br>
+        数组：{85, 80, <strong>55</strong>, 40, 42, <strong>45</strong>}</li>
+    </ol>
+    <p>最终堆形：</p>
+    <pre style="font-family:monospace; background:#f7f8fa; padding:12px; border-radius:6px; font-size:14px;">
+        85
+       /  \
+     80    55
+    / \    /
+   40  42 45</pre>
+    <div class="final-answer">初始最大堆：85, 80, 55, 40, 42, 45</div>
+  </div></details>
+</div>
+
+<!-- 2024 简答1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">真题</span>简答题</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024</span>
+    <span class="exam-badge type">简答题</span>
+    <span class="exam-badge kaodian">冒泡 / 归并 / 希尔 手动模拟</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    对序列 {H, E, B, L, G, A, F, J, I, C, D, K} 中的关键码按字母顺序的升序重新排列，则：<br>
+    a) 冒泡排序第一趟交换结束后的结果是？（1分）<br>
+    b) 二路归并排序第一趟归并后的结果是？（1分）<br>
+    c) 初始步长为4的希尔（shell）排序第一趟后的结果是？（2分）
+  </div>
+  <details class="solution"><summary></summary><div>
+    <p>原始序列（12个元素）：H, E, B, L, G, A, F, J, I, C, D, K</p>
+    <p>字母顺序：A&lt;B&lt;C&lt;D&lt;E&lt;F&lt;G&lt;H&lt;I&lt;J&lt;K&lt;L</p>
+
+    <h4>a) 冒泡排序第一趟（从左往右冒，大的往右）</h4>
+    <ul>
+      <li>(H,E): H&gt;E, 交换 → <strong>E</strong>,H,B,L,G,A,F,J,I,C,D,K</li>
+      <li>(H,B): H&gt;B, 交换 → E,<strong>B</strong>,H,L,G,A,F,J,I,C,D,K</li>
+      <li>(H,L): H&lt;L, 不换</li>
+      <li>(L,G): L&gt;G, 交换 → E,B,H,<strong>G</strong>,L,A,F,J,I,C,D,K</li>
+      <li>(L,A): L&gt;A, 交换 → E,B,H,G,<strong>A</strong>,L,F,J,I,C,D,K</li>
+      <li>(L,F): L&gt;F, 交换 → E,B,H,G,A,<strong>F</strong>,L,J,I,C,D,K</li>
+      <li>(L,J): L&gt;J, 交换 → E,B,H,G,A,F,<strong>J</strong>,L,I,C,D,K</li>
+      <li>(L,I): L&gt;I, 交换 → E,B,H,G,A,F,J,<strong>I</strong>,L,C,D,K</li>
+      <li>(L,C): L&gt;C, 交换 → E,B,H,G,A,F,J,I,<strong>C</strong>,L,D,K</li>
+      <li>(L,D): L&gt;D, 交换 → E,B,H,G,A,F,J,I,C,<strong>D</strong>,L,K</li>
+      <li>(L,K): L&gt;K, 交换 → E,B,H,G,A,F,J,I,C,D,<strong>K</strong>,<strong>L</strong></li>
+    </ul>
+    <div class="final-answer">a) 冒泡第一趟结果：{E, B, H, G, A, F, J, I, C, D, K, L}</div>
+
+    <h4>b) 二路归并排序第一趟</h4>
+    <p>将相邻元素两两一组进行归并（升序）：</p>
+    <ul>
+      <li>(H, E) → {E, H}</li>
+      <li>(B, L) → {B, L}</li>
+      <li>(G, A) → {A, G}</li>
+      <li>(F, J) → {F, J}</li>
+      <li>(I, C) → {C, I}</li>
+      <li>(D, K) → {D, K}</li>
+    </ul>
+    <div class="final-answer">b) 归并第一趟结果：{E, H, B, L, A, G, F, J, C, I, D, K}</div>
+
+    <h4>c) 希尔排序第一趟（步长d=4）</h4>
+    <p>12个元素按间隔4分为4组：</p>
+    <table class="data" style="max-width:700px">
+      <thead><tr><th>位置</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th></tr></thead>
+      <tbody>
+        <tr><td>元素</td><td>H</td><td>E</td><td>B</td><td>L</td><td>G</td><td>A</td><td>F</td><td>J</td><td>I</td><td>C</td><td>D</td><td>K</td></tr>
+        <tr><td>组</td><td style="background:#eff5ff">A</td><td style="background:#f5f0ff">B</td><td style="background:#ecfdf9">C</td><td style="background:#fff8ec">D</td><td style="background:#eff5ff">A</td><td style="background:#f5f0ff">B</td><td style="background:#ecfdf9">C</td><td style="background:#fff8ec">D</td><td style="background:#eff5ff">A</td><td style="background:#f5f0ff">B</td><td style="background:#ecfdf9">C</td><td style="background:#fff8ec">D</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>组A (位置0,4,8): {H, G, I} → 升序: {G, H, I}</li>
+      <li>组B (位置1,5,9): {E, A, C} → 升序: {A, C, E}</li>
+      <li>组C (位置2,6,10): {B, F, D} → 升序: {B, D, F}</li>
+      <li>组D (位置3,7,11): {L, J, K} → 升序: {J, K, L}</li>
+    </ul>
+    <p>将排序后的各组交叉放回原位置：</p>
+    <div class="final-answer">c) 希尔第一趟结果：{G, A, B, J, H, C, D, K, I, E, F, L}</div>
+  </div></details>
+</div>
+
+<!-- 总结与备考建议 -->
+<hr class="sep">
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">洞察</span>备考要点总结</div>
+  <ol>
+    <li><strong>必背</strong>：7种排序的时间/空间复杂度和稳定性（见总结表）</li>
+    <li><strong>必练</strong>：快速排序划分过程、建堆过程、希尔排序分组过程、归并排序逐趟结果</li>
+    <li><strong>必理解</strong>：
+      <ul>
+        <li>多关键字排序中LSD对稳定性的要求</li>
+        <li>正序时插入排序 vs 快排的对比</li>
+        <li>外部排序为什么选归并排序</li>
+        <li>找前k大/小为什么选堆排序</li>
+      </ul>
+    </li>
+    <li><strong>易错点</strong>：
+      <ul>
+        <li>选择排序的比较次数与输入无关（始终 $n(n-1)/2$）</li>
+        <li>快排最坏 $O(n^2)$ 但平均最快</li>
+        <li>建堆是 $O(n)$ 不是 $O(n\log n)$</li>
+        <li>希尔排序不稳定，且正序不一定比逆序快</li>
+      </ul>
+    </li>
+  </ol>
+</div>
+
+    </div><!-- /content-inner -->
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>

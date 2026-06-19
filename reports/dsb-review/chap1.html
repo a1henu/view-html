@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第一章 线性表 · 数据结构与算法B 复习报告</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true, tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">数据结构与算法B<small>复习报告 · 第一章</small></div>
+    <a class="home-link" href="index.html">← 返回首页目录</a>
+    <nav>
+      <div class="nav-group">知识点</div>
+      <a href="#sec-concept">1.1 线性表的定义与基本概念</a>
+      <a href="#sec-seqlist" class="lvl2">1.2 顺序表（数组实现）</a>
+      <a href="#sec-seq-storage" class="lvl2">存储原理</a>
+      <a href="#sec-seq-insert" class="lvl2">插入操作</a>
+      <a href="#sec-seq-delete" class="lvl2">删除操作</a>
+      <a href="#sec-seq-pros-cons" class="lvl2">优缺点总结</a>
+      <a href="#sec-linkedlist">1.3 链表</a>
+      <a href="#sec-singly" class="lvl2">单链表</a>
+      <a href="#sec-doubly" class="lvl2">双向链表</a>
+      <a href="#sec-circular" class="lvl2">循环链表</a>
+      <a href="#sec-link-ops" class="lvl2">链表操作分析</a>
+      <a href="#sec-compare">1.4 顺序表 vs 链表</a>
+      <a href="#sec-python">1.5 Python 实现</a>
+      <div class="nav-group">往年真题</div>
+      <a href="#sec-exam-choice">选择题精选</a>
+      <a href="#sec-exam-judge">判断题精选</a>
+      <a href="#sec-exam-fill">填空题精选</a>
+      <a href="#sec-exam-algo">算法填空题</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="page-header"><div class="inner">
+      <div class="eyebrow">DATA STRUCTURES · LINEAR LIST</div>
+      <h1>第一章 线性表（顺序表与链表）</h1>
+      <p>线性表是最基础也最重要的数据结构之一。掌握顺序表和链表的原理与操作，是理解后续栈、队列、树、图等复杂结构的必备前提。本章从零开始，详细讲解线性表的概念、两种存储方式、各项操作的时间复杂度，以及如何在 Python 中实现链表。</p>
+    </div></header>
+    <div class="content-inner">
+
+<!-- ============================================================ -->
+<h2 id="sec-concept"><span class="secnum">1.1</span>线性表的定义与基本概念</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>线性表 (Linear List)</div>
+  <p><strong>线性表</strong>是由 $n$（$n \geq 0$）个<span class="term">相同类型</span>的数据元素组成的<span class="term">有限序列</span>。记作：</p>
+  $$L = (a_1, a_2, \ldots, a_n)$$
+  <p>其中：</p>
+  <ul>
+    <li>$n$ 称为线性表的<strong>长度</strong>；当 $n = 0$ 时称为<strong>空表</strong>。</li>
+    <li>$a_1$ 称为<strong>表头元素</strong>（没有前驱），$a_n$ 称为<strong>表尾元素</strong>（没有后继）。</li>
+    <li>对于 $1 < i < n$，元素 $a_i$ 有且仅有一个<strong>直接前驱</strong> $a_{i-1}$ 和一个<strong>直接后继</strong> $a_{i+1}$。</li>
+  </ul>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>如何理解"线性"？</div>
+  <p>想象一列火车车厢：每节车厢（元素）只与前一节和后一节相连，不会有分叉（这点和"树"不同），也不会有环路（和"图"不同）。这种"一对一"的前后关系就是<strong>线性结构</strong>的本质。</p>
+  <p>与之对比：</p>
+  <ul>
+    <li><strong>树形结构</strong>：一对多（一个父结点可以有多个子结点）</li>
+    <li><strong>图形结构</strong>：多对多（任意结点之间都可能有边）</li>
+  </ul>
+</div>
+
+<h3>线性表的基本操作（ADT）</h3>
+
+<p>作为抽象数据类型（ADT），线性表通常需要支持以下操作：</p>
+
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>操作名称</th><th>功能描述</th></tr></thead>
+<tbody>
+<tr><td><code>InitList()</code></td><td>初始化一个空的线性表</td></tr>
+<tr><td><code>Length()</code></td><td>返回线性表中元素的个数</td></tr>
+<tr><td><code>Get(i)</code></td><td>获取第 $i$ 个位置的元素（按位查找）</td></tr>
+<tr><td><code>Locate(x)</code></td><td>查找值为 $x$ 的元素，返回其位置（按值查找）</td></tr>
+<tr><td><code>Insert(i, x)</code></td><td>在第 $i$ 个位置插入元素 $x$</td></tr>
+<tr><td><code>Delete(i)</code></td><td>删除第 $i$ 个位置的元素</td></tr>
+<tr><td><code>IsEmpty()</code></td><td>判断线性表是否为空</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box note">
+  <div class="box-title"><span class="tag">注记</span>逻辑结构 vs 存储结构</div>
+  <p>上面的定义和操作描述的是线性表的<span class="term">逻辑结构</span>——即"元素之间的关系是什么"。而如何在计算机内存中真正存放这些元素，则是<span class="term">存储结构</span>（物理结构）的问题。同一种逻辑结构可以有不同的存储方式：</p>
+  <ul>
+    <li><strong>顺序存储</strong> → 顺序表（数组）</li>
+    <li><strong>链式存储</strong> → 链表</li>
+  </ul>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-seqlist"><span class="secnum">1.2</span>顺序表（数组实现）</h2>
+
+<h3 id="sec-seq-storage">存储原理：连续内存</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>顺序表 (Sequential List / Array)</div>
+  <p>顺序表用一段<strong>地址连续的存储单元</strong>依次存储线性表中的数据元素。</p>
+  <p>设第一个元素 $a_0$ 的存储地址为 $\text{LOC}(a_0)$，每个元素占 $d$ 个存储单元，则第 $i$ 个元素的地址为：</p>
+  $$\text{LOC}(a_i) = \text{LOC}(a_0) + i \times d$$
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>为什么能随机访问？</div>
+  <p>想象一排连续编号的储物柜：如果你知道第 0 号柜子的位置（<code>LOC(a_0)</code>），以及每个柜子的宽度（$d$），那么要找第 $i$ 号柜子，你只需要做一次简单的乘法和加法——不需要从头一个个数过去。</p>
+  <p>这就是<span class="hl">随机访问</span>（Random Access）的含义：<strong>通过下标直接计算出地址，时间复杂度 $O(1)$</strong>。</p>
+</div>
+
+<p>在 Python 中，内置的 <code>list</code> 就是用连续数组实现的顺序表（底层为动态数组 / dynamic array）。</p>
+
+<h3 id="sec-seq-insert">插入操作</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>顺序表插入的平均时间复杂度</div>
+  <p>在长度为 $n$ 的顺序表中，在第 $i$ 个位置（$0 \le i \le n$）插入一个新元素，需要将后面的 $n - i$ 个元素依次后移一位。</p>
+  <p>若在每个位置插入的概率相同（均为 $\frac{1}{n+1}$），则平均移动元素次数为：</p>
+  $$E = \sum_{i=0}^{n} \frac{1}{n+1} \cdot (n - i) = \frac{1}{n+1} \cdot \frac{n(n+1)}{2} \cdot \frac{1}{1} = \frac{n}{2}$$
+  <p>因此，插入操作的<span class="hl">平均时间复杂度为 $O(n)$</span>。</p>
+</div>
+
+<details class="derive">
+  <summary>点击展开：平均移动次数的推导</summary>
+  <div>
+    <p>设在位置 $i$ 插入（$i = 0, 1, \ldots, n$，共 $n+1$ 种可能），需要移动 $n - i$ 个元素。</p>
+    <p>假设在各位置插入的概率相等，即每个概率为 $p_i = \frac{1}{n+1}$，则：</p>
+    $$E = \sum_{i=0}^{n} p_i \cdot (n-i) = \frac{1}{n+1}\sum_{i=0}^{n}(n-i)$$
+    <p>令 $k = n - i$，当 $i$ 从 0 到 $n$ 时，$k$ 从 $n$ 到 0：</p>
+    $$E = \frac{1}{n+1}\sum_{k=0}^{n} k = \frac{1}{n+1} \cdot \frac{n(n+1)}{2} = \frac{n}{2}$$
+    <p>所以平均需要移动 $\frac{n}{2}$ 个元素，时间复杂度为 $O(n)$。</p>
+  </div>
+</details>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>在顺序表 [10, 20, 30, 40, 50] 的位置 2 插入元素 25</div>
+  <p>初始状态（下标从 0 开始）：</p>
+  <pre><code>下标:  0    1    2    3    4
+元素: [10] [20] [30] [40] [50]</code></pre>
+  <p>在位置 2 插入 25，需要把下标 2、3、4 的元素分别后移一位：</p>
+  <ol class="steps">
+    <li>先将 <code>a[4]=50</code> 移到 <code>a[5]</code></li>
+    <li>将 <code>a[3]=40</code> 移到 <code>a[4]</code></li>
+    <li>将 <code>a[2]=30</code> 移到 <code>a[3]</code></li>
+    <li>将 25 放入 <code>a[2]</code></li>
+  </ol>
+  <p>结果：</p>
+  <pre><code>下标:  0    1    2    3    4    5
+元素: [10] [20] [25] [30] [40] [50]</code></pre>
+  <p>共移动了 $n - i = 5 - 2 = 3$ 个元素。</p>
+</div>
+
+<h3 id="sec-seq-delete">删除操作</h3>
+
+<div class="box theorem">
+  <div class="box-title"><span class="tag">定理</span>顺序表删除的平均时间复杂度</div>
+  <p>删除长度为 $n$ 的顺序表中第 $i$ 个元素（$1 \le i \le n$，即下标 $i-1$），需要将后面的 <span class="hl">$n - i$ 个元素</span>依次前移一位。</p>
+  <p>若删除每个位置的概率相同（均为 $\frac{1}{n}$），则平均移动次数为：</p>
+  $$E = \sum_{i=1}^{n} \frac{1}{n} \cdot (n - i) = \frac{1}{n} \cdot \frac{n(n-1)}{2} \cdot \frac{1}{1} = \frac{n-1}{2}$$
+  <p>平均时间复杂度仍为 $O(n)$。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>删除顺序表第 2 个元素（即下标 1 的元素）</div>
+  <p>设表为 [10, 20, 30, 40, 50]，$n = 5$，删除第 $i=2$ 个元素（值为 20）。</p>
+  <p>需要移动的元素个数 = $n - i = 5 - 2 = 3$ 个（即 30, 40, 50 分别前移）。</p>
+  <pre><code>删除前: [10] [20] [30] [40] [50]
+删除后: [10] [30] [40] [50]</code></pre>
+</div>
+
+<h3 id="sec-seq-pros-cons">顺序表的优缺点</h3>
+
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>优点</th><th>缺点</th></tr></thead>
+<tbody>
+<tr><td>支持<strong>随机访问</strong>，按下标取元素 $O(1)$</td><td>插入和删除需要移动大量元素，平均 $O(n)$</td></tr>
+<tr><td>存储密度高（不需要额外指针）</td><td>需要预先分配连续空间，可能造成浪费或不够用</td></tr>
+<tr><td>缓存友好（Cache Friendly），访问速度快</td><td>扩容时需要重新分配并复制所有元素</td></tr>
+<tr><td>可直接进行<strong>二分查找</strong>（O(log n)）</td><td>不适合频繁增删的场景</td></tr>
+</tbody>
+</table>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-linkedlist"><span class="secnum">1.3</span>链表</h2>
+
+<h3 id="sec-singly">单链表 (Singly Linked List)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>单链表</div>
+  <p>单链表中的每个元素称为一个<strong>结点</strong>（Node），由两部分组成：</p>
+  <ul>
+    <li><strong>数据域</strong>（data）：存储元素值</li>
+    <li><strong>指针域</strong>（next）：存储下一个结点的引用（地址）</li>
+  </ul>
+  <p>最后一个结点的 next 指向 <code>None</code>（空），表示链表结束。</p>
+  <p>通常用一个变量 <code>head</code> 引用链表的第一个结点（头结点/首结点）。</p>
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>链表的形象比喻</div>
+  <p>想象一场寻宝游戏：每个藏宝点有两样东西——一份"宝物"（data）和一张"下一个线索的地图"（next）。你必须从第一个线索开始，一步步找到下一个，不能直接跳到中间——这就是为什么<strong>链表不支持随机访问</strong>。</p>
+</div>
+
+<p>单链表的结构示意图：</p>
+<pre><code>head → [data|next] → [data|next] → [data|next] → None
+        结点1          结点2          结点3</code></pre>
+
+<h4>单链表的核心操作</h4>
+
+<p><strong>插入操作</strong>（在结点 p 后面插入新结点 s）：</p>
+<ol class="steps">
+  <li>创建新结点 s，设置 s.data = 新数据</li>
+  <li>让 s.next 指向 p.next（先连后面）</li>
+  <li>让 p.next 指向 s（再连前面）</li>
+</ol>
+<pre><code># 在 p 后面插入 s
+s.next = p.next   # 新结点先指向 p 的后继
+p.next = s        # p 指向新结点</code></pre>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>指针操作的顺序不能颠倒！</div>
+  <p>如果先执行 <code>p.next = s</code>，那么 p 原来的后继结点的地址就<strong>丢失</strong>了，无法再让 s.next 指向它。所以必须<strong>先让新结点指向后面，再修改前面的指针</strong>。</p>
+</div>
+
+<p><strong>删除操作</strong>（删除结点 p 的后继结点）：</p>
+<ol class="steps">
+  <li>用临时变量 q 保存要删除的结点：<code>q = p.next</code></li>
+  <li>让 p.next 跳过 q，指向 q.next：<code>p.next = q.next</code></li>
+  <li>（Python 中无需手动释放内存，垃圾回收会处理 q）</li>
+</ol>
+<pre><code># 删除 p 后面的结点
+q = p.next        # q 是要删除的结点
+p.next = q.next   # 跳过 q</code></pre>
+
+<h3 id="sec-doubly">双向链表 (Doubly Linked List)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>双向链表</div>
+  <p>双向链表的每个结点有<strong>三</strong>个部分：</p>
+  <ul>
+    <li><code>prev</code>：指向前驱结点</li>
+    <li><code>data</code>：数据域</li>
+    <li><code>next</code>：指向后继结点</li>
+  </ul>
+  <p>这样就可以从任意结点<strong>双向遍历</strong>，既能向前也能向后。</p>
+</div>
+
+<pre><code>None ← [prev|data|next] ⇄ [prev|data|next] ⇄ [prev|data|next] → None
+           结点1              结点2              结点3</code></pre>
+
+<h4>双向链表在 p 结点前插入 q 的操作</h4>
+
+<p>这是考试高频考点！正确的步骤：</p>
+<ol class="steps">
+  <li>设置 q 的前驱：<code>q.prev = p.prev</code></li>
+  <li>设置 q 的后继：<code>q.next = p</code></li>
+  <li>让 p 原来的前驱指向 q：<code>p.prev.next = q</code></li>
+  <li>让 p 的前驱变为 q：<code>p.prev = q</code></li>
+</ol>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>修改顺序的陷阱</div>
+  <p>关键原则：<strong>先修改新结点的指针，再修改旧结点的指针</strong>。特别注意 <code>p.prev = q</code> 必须在 <code>p.prev.next = q</code> 之后，因为一旦执行了 <code>p.prev = q</code>，就无法再通过 <code>p.prev</code> 访问到 p 的原前驱结点了。</p>
+  <p>合法的顺序组合有多种，但 2022 年考题的正确答案是：<code>p.prev.next=q; q.next=p; q.prev=p.prev; p.prev=q;</code>（选项 D 的顺序）。</p>
+</div>
+
+<h3 id="sec-circular">循环链表 (Circular Linked List)</h3>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>循环链表</div>
+  <p>循环链表是一种特殊的链表，其<strong>尾结点的 next 指针不指向 None，而是指向头结点</strong>（或链表的第一个结点），形成一个闭环。</p>
+  <ul>
+    <li><strong>循环单链表</strong>：尾结点的 next → 头结点</li>
+    <li><strong>循环双向链表</strong>：尾结点的 next → 头结点，头结点的 prev → 尾结点</li>
+  </ul>
+</div>
+
+<pre><code>循环单链表示意图：
+head → [A|→] → [B|→] → [C|→] ─┐
+  ↑                              │
+  └──────────────────────────────┘</code></pre>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>何时使用循环链表？</div>
+  <p>当你需要反复循环遍历一组元素时（如约瑟夫问题、轮询调度），循环链表非常自然——遍历到"尾部"后会自动回到"头部"，不需要特殊处理边界。</p>
+  <p>另外，如果用<strong>尾指针</strong>（tail）而非头指针来引用循环链表，可以 $O(1)$ 访问表头和表尾：</p>
+  <ul>
+    <li>表尾：<code>tail</code></li>
+    <li>表头：<code>tail.next</code></li>
+  </ul>
+</div>
+
+<h3 id="sec-link-ops">链表操作的时间复杂度</h3>
+
+<div class="tbl-wrap">
+<table class="data">
+<thead><tr><th>操作</th><th>时间复杂度</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>按下标访问第 $i$ 个元素</td><td>$O(n)$</td><td>必须从头遍历到第 $i$ 个</td></tr>
+<tr><td>按值查找</td><td>$O(n)$</td><td>最坏需要遍历整个链表</td></tr>
+<tr><td>在已知结点后插入</td><td>$O(1)$</td><td>只需修改指针</td></tr>
+<tr><td>在已知结点后删除</td><td>$O(1)$</td><td>只需修改指针</td></tr>
+<tr><td>在头部插入/删除</td><td>$O(1)$</td><td>直接操作 head</td></tr>
+<tr><td>在尾部插入</td><td>$O(n)$ 或 $O(1)$</td><td>无尾指针时需遍历到尾；有尾指针则 $O(1)$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pitfall">
+  <div class="box-title"><span class="tag">易错</span>链表的删除/查找时间复杂度</div>
+  <p>"链表删除是 $O(1)$"——这句话<strong>不完全正确</strong>！</p>
+  <ul>
+    <li>如果已经知道要删除结点的<strong>前驱结点</strong>的位置，修改指针确实是 $O(1)$。</li>
+    <li>但如果只知道要删除的<strong>值</strong>，则需要先<strong>查找</strong>该元素，查找本身是 $O(n)$。</li>
+  </ul>
+  <p>因此，"在链表中查找并删除一个元素"的总时间复杂度是 $O(n)$，而不是 $O(1)$。（2024 年判断题考点）</p>
+</div>
+
+<h4>链表的优点</h4>
+<ul>
+  <li><strong>不需要预先分配空间</strong>：按需动态创建结点</li>
+  <li><strong>插入和删除不需要移动元素</strong>：只需修改指针，$O(1)$</li>
+  <li><strong>不会浪费空间</strong>：有多少元素就占多少空间（加上指针的额外开销）</li>
+</ul>
+
+<h4>链表的缺点</h4>
+<ul>
+  <li><strong>不支持随机访问</strong>：必须从头遍历，$O(n)$</li>
+  <li><strong>额外的指针开销</strong>：每个结点除了数据还要存储指针</li>
+  <li><strong>缓存不友好</strong>：结点在内存中不连续，CPU 缓存命中率低</li>
+  <li><strong>无法二分查找</strong>：因为不能随机访问中间元素</li>
+</ul>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-compare"><span class="secnum">1.4</span>顺序表 vs 链表的选择</h2>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>顺序表与链表的全面对比</caption>
+<thead><tr><th>比较维度</th><th>顺序表（数组）</th><th>链表</th></tr></thead>
+<tbody>
+<tr><td>存储方式</td><td>连续内存</td><td>离散结点 + 指针</td></tr>
+<tr><td>随机访问</td><td>$O(1)$ ✓</td><td>$O(n)$ ✗</td></tr>
+<tr><td>头部插入/删除</td><td>$O(n)$（需移动所有元素）</td><td>$O(1)$ ✓</td></tr>
+<tr><td>中间插入/删除</td><td>$O(n)$</td><td>查找 $O(n)$ + 修改 $O(1)$</td></tr>
+<tr><td>尾部插入</td><td>均摊 $O(1)$（动态数组）</td><td>$O(n)$（无尾指针）/ $O(1)$（有尾指针）</td></tr>
+<tr><td>空间分配</td><td>预分配，可能浪费</td><td>按需分配，无浪费</td></tr>
+<tr><td>二分查找</td><td>✓ 可以</td><td>✗ 不可以</td></tr>
+<tr><td>缓存性能</td><td>好（连续内存）</td><td>差（离散存储）</td></tr>
+<tr><td>额外空间开销</td><td>无</td><td>每结点一个/两个指针</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="conclusion">
+选择策略：<strong>频繁随机访问 → 顺序表</strong>；<strong>频繁在头部或中间插入删除 → 链表</strong>；<strong>需要二分查找 → 必须用顺序存储</strong>。
+</div>
+
+<div class="box insight">
+  <div class="box-title"><span class="tag">直觉</span>考试常见的场景判断题</div>
+  <ul>
+    <li>"经常需要在线性表<strong>头部</strong>进行插入和删除" → 最合适的是<strong>链表</strong>（$O(1)$）</li>
+    <li>"需要<strong>随机存取</strong>" → 最合适的是<strong>顺序表</strong>（$O(1)$ 按下标访问）</li>
+    <li>"有序表上做<strong>二分查找</strong>" → 必须用<strong>顺序存储</strong></li>
+    <li>"元素个数变化很大、事先不知道规模" → <strong>链表</strong>更好</li>
+    <li>"删除表中第 1 个元素" → <strong>链表</strong>效率更高（$O(1)$ vs 顺序表 $O(n)$）</li>
+  </ul>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-python"><span class="secnum">1.5</span>Python 中链表的实现</h2>
+
+<div class="box definition">
+  <div class="box-title"><span class="tag">定义</span>Node 类 — 链表结点</div>
+  <pre><code>class Node:
+    def __init__(self, data, next=None):
+        self.data = data  # 数据域
+        self.next = next  # 指针域，默认为 None</code></pre>
+  <p>一个 Node 对象就是链表中的一个结点。<code>data</code> 存放数据，<code>next</code> 存放对下一个 Node 的引用。</p>
+</div>
+
+<h4>创建链表</h4>
+<pre><code># 手动创建一个包含 1→2→3 的链表
+node3 = Node(3)          # 尾结点，next 默认为 None
+node2 = Node(2, node3)   # 中间结点，next 指向 node3
+node1 = Node(1, node2)   # 头结点，next 指向 node2
+head = node1             # head 引用链表的第一个结点</code></pre>
+
+<h4>遍历链表</h4>
+<pre><code>def print_list(head):
+    p = head
+    while p is not None:
+        print(p.data, end=" ")
+        p = p.next
+    print()</code></pre>
+
+<h4>从列表构建链表</h4>
+<pre><code>class LinkList:
+    def __init__(self, lst):
+        self.head = Node(lst[0])
+        p = self.head
+        for i in lst[1:]:
+            node = Node(i)
+            p.next = node   # 当前尾结点指向新结点
+            p = node        # p 移动到新的尾结点
+
+    def print(self):
+        p = self.head
+        while p:
+            print(p.data, end=" ")
+            p = p.next
+        print()</code></pre>
+
+<h4>链表反转（头插法）</h4>
+
+<div class="box example">
+  <div class="box-title"><span class="tag">例题</span>单链表原地反转</div>
+  <p>思路：遍历链表，将每个结点依次插入到链表头部。</p>
+  <pre><code>def reverse(self):
+    p = self.head.next    # p 指向第二个结点
+    self.head.next = None # 头结点变成尾结点
+    while p is not None:
+        q = p             # 保存当前结点
+        p = p.next        # p 移动到下一个
+        q.next = self.head.next  # q 插入到 head 后面（非 head 本身！）
+        self.head.next = q       # 错误理解：实际是 q 插到 head 之后
+    # 注意：这种写法是把 head 作为"哨兵"留在最前面
+    # 另一种常见写法（head 也参与反转）见下方</code></pre>
+  <p>另一种更清晰的写法（直接改 head）：</p>
+  <pre><code>def reverse(self):
+    prev = None
+    curr = self.head
+    while curr is not None:
+        next_node = curr.next  # 保存下一个
+        curr.next = prev       # 反转指针
+        prev = curr            # prev 前进
+        curr = next_node       # curr 前进
+    self.head = prev           # 新的头是原来的尾</code></pre>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<!-- 往年真题部分 -->
+<!-- ============================================================ -->
+<h2 id="sec-exam-choice"><span class="secnum">真题</span>选择题精选</h2>
+
+<!-- 2021 选择2 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>链表的特点辨析</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">链表特性</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    链表不具有的特点是（　）。<br>
+    A. 可随机访问任意元素<br>
+    B. 插入和删除不需要移动元素<br>
+    C. 不必事先估计存储空间<br>
+    D. 所需空间与线性表长度成正比
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">A</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li><strong>A. 可随机访问任意元素</strong>——错误！链表<strong>不能</strong>随机访问。要访问第 $i$ 个元素必须从头遍历，时间 $O(n)$。随机访问是<strong>顺序表</strong>的特点。</li>
+        <li>B. 插入和删除不需要移动元素——正确。链表只需修改指针。</li>
+        <li>C. 不必事先估计存储空间——正确。链表按需动态分配。</li>
+        <li>D. 所需空间与线性表长度成正比——正确。每个结点占固定空间，$n$ 个结点共占 $\Theta(n)$ 空间。</li>
+      </ul>
+      <p>所以链表<strong>不具有</strong>的特点是 A。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2021 选择4 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>链表判空条件</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">链表基本操作</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    判定一个无序表 Q（链表实现）为空的条件是（　）。<br>
+    A. <code>Q.head == None</code><br>
+    B. <code>Q == None</code><br>
+    C. <code>Q.head == 0</code><br>
+    D. <code>Q.head != None</code>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">A</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li>链表为空意味着没有任何结点，即头指针 <code>head</code> 不指向任何结点。在 Python 中用 <code>None</code> 表示空引用。</li>
+        <li>B 错误：<code>Q</code> 是链表对象本身，只要被创建就不是 None；即使链表为空，Q 对象仍然存在。</li>
+        <li>C 错误：Python 中空引用用 <code>None</code>，不是 0。</li>
+        <li>D 错误：<code>Q.head != None</code> 表示链表<strong>非空</strong>，逻辑完全反了。</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 选择1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>双向链表插入操作</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">双向链表指针操作</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    双向链表中的每个结点有两个引用域，prev 和 next，分别引用当前结点的前驱与后继，设 p 引用链表中的一个结点，q 引用一待插入结点，现要求在 p 前插入 q，则正确的插入操作为（　）。<br>
+    A. <code>p.prev=q; q.next=p; p.prev.next=q; q.prev=p.prev;</code><br>
+    B. <code>q.prev=p.prev; p.prev.next=q; q.next=p; p.prev=q.next;</code><br>
+    C. <code>q.next=p; p.next=q; p.prev.next=q; q.next=p;</code><br>
+    D. <code>p.prev.next=q; q.next=p; q.prev=p.prev; p.prev=q;</code>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">D</div>
+      <p><strong>解析：</strong>在 p 前插入 q，需要修改四个指针：</p>
+      <ol class="steps">
+        <li><strong>p 的原前驱的 next 指向 q</strong>：<code>p.prev.next = q</code>（此时 p.prev 还指向原前驱，所以可以正确找到）</li>
+        <li><strong>q 的 next 指向 p</strong>：<code>q.next = p</code></li>
+        <li><strong>q 的 prev 指向 p 的原前驱</strong>：<code>q.prev = p.prev</code>（此时 p.prev 还没被改，仍是原前驱）</li>
+        <li><strong>p 的 prev 指向 q</strong>：<code>p.prev = q</code>（最后才改 p.prev，因为前面还需要用它）</li>
+      </ol>
+      <p>逐一验证选项 D：<code>p.prev.next=q; q.next=p; q.prev=p.prev; p.prev=q;</code></p>
+      <ul>
+        <li>第 1 步：p.prev.next = q → 原前驱的 next 正确指向 q ✓</li>
+        <li>第 2 步：q.next = p → q 后面是 p ✓</li>
+        <li>第 3 步：q.prev = p.prev → 此时 p.prev 还未被修改，仍是原前驱 ✓</li>
+        <li>第 4 步：p.prev = q → 最后修改 p.prev ✓</li>
+      </ul>
+      <p>选项 A 第一步就把 p.prev 改了，导致后续无法找到原前驱。选项 B 最后一步 <code>p.prev=q.next</code> 等于 <code>p.prev=p</code>，荒谬。选项 C 中 <code>p.next=q</code> 修改了 p 的后继，完全错误。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 选择3 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>逻辑结构 vs 存储结构</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">基本概念</span>
+    <span class="exam-badge diff">★☆☆</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    数据结构有三个基本要素：逻辑结构、存储结构以及基于结构定义的行为（运算）。下列概念中（　）属于存储结构。<br>
+    A. 线性表　　B. 链表　　C. 字符串　　D. 二叉树
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">B</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li><strong>线性表</strong>——是一种<strong>逻辑结构</strong>（描述元素间的一对一关系）</li>
+        <li><strong>链表</strong>——是一种<strong>存储结构</strong>（描述如何在内存中用指针链接结点来存储线性表）</li>
+        <li><strong>字符串</strong>——是一种<strong>逻辑结构</strong>（字符的线性序列）</li>
+        <li><strong>二叉树</strong>——是一种<strong>逻辑结构</strong>（描述元素间的一对二层次关系）</li>
+      </ul>
+      <p>关键区分：<strong>逻辑结构</strong>描述"数据间的关系"，<strong>存储结构</strong>描述"数据如何在内存中存放"。链表（用指针连接分散结点）和顺序表（用连续数组存放）都是存储结构。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 选择5 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>存储结构辨析（2024重考）</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">基本概念</span>
+    <span class="exam-badge diff">★☆☆</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    下列哪个概念属于存储结构？（　）<br>
+    A. 线性表　　B. 链表　　C. 栈　　D. 队列
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">B</div>
+      <p><strong>解析：</strong>与 2022 年同类题。线性表、栈、队列都是逻辑结构（描述元素间的关系和允许的操作），链表是存储结构（描述物理层面如何用指针串联结点）。</p>
+      <p>此题在 2022、2024 年都考过，属于<strong>必考送分题</strong>。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 选择9 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">选择</span>顺序表 vs 链表效率比较</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">选择题</span>
+    <span class="exam-badge kaodian">顺序表与链表比较</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    假设线性表有 2n（n &gt; 100）个元素，以下操作（　）在单链表上实现比在顺序表上实现效率更高。<br>
+    A. 在表中最后一个元素的后面插入一个新元素<br>
+    B. 顺序输出表中的前 i 个元素<br>
+    C. 交换表中第 i 个元素和第 n+i 个元素的值 (i=0, ..., n-1)<br>
+    D. 删除表中第 1 个元素
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">D</div>
+      <p><strong>逐项分析：</strong></p>
+      <ul>
+        <li><strong>A. 在最后一个元素后插入</strong>：顺序表均摊 $O(1)$（尾部追加）；链表若无尾指针需 $O(n)$ 遍历到末尾。顺序表更优。</li>
+        <li><strong>B. 顺序输出前 i 个元素</strong>：两者都是 $O(i)$，顺序表因为缓存友好可能更快。没有优势。</li>
+        <li><strong>C. 交换第 i 和第 n+i 个元素</strong>：顺序表 $O(1)$ 按下标直接访问；链表每次要遍历 $O(n)$。顺序表远优。</li>
+        <li><strong>D. 删除第 1 个元素</strong>：链表 $O(1)$（直接修改 head）；顺序表 $O(n)$（需要把后面所有元素前移）。<span class="hl">链表更优！</span></li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-judge"><span class="secnum">真题</span>判断题精选</h2>
+
+<!-- 2021 判断1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>顺序表插入的平均时间复杂度</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">顺序表插入复杂度</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    考虑一个长度为 n 的顺序表中各个位置插入新元素的概率是相同的，则顺序表的插入算法平均时间复杂度为 O(n)。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">Y（正确）</div>
+      <p><strong>解析：</strong>如 1.2 节所推导，等概率条件下平均移动 $\frac{n}{2}$ 个元素，属于 $O(n)$ 级别。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 判断2 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">判断</span>链表查找与删除的复杂度</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">判断题</span>
+    <span class="exam-badge kaodian">链表操作复杂度</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    在链表中查找和删除一个元素的时间复杂度都是 O(1)。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">N（错误）</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li><strong>查找</strong>：链表不支持随机访问，按值查找需要从头遍历，最坏 $O(n)$。</li>
+        <li><strong>删除</strong>：如果已经定位到前驱结点，修改指针是 $O(1)$；但如果要先查找再删除，总时间是 $O(n)$。</li>
+      </ul>
+      <p>题目说"查找和删除都是 O(1)"，查找部分明显错误，所以整句话错误。</p>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-fill"><span class="secnum">真题</span>填空题精选</h2>
+
+<!-- 2021 填空1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>二分检索的存储要求</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">顺序存储与查找</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    线性表的顺序存储与链式存储是两种常见存储形式；当表元素有序排列进行二分检索时，应采用____存储形式。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">顺序</div>
+      <p><strong>解析：</strong>二分查找（Binary Search）每次需要访问中间位置的元素。这要求能在 $O(1)$ 时间内通过下标访问任意位置——只有<strong>顺序存储</strong>（数组）能做到。链表无法在 $O(1)$ 内访问中间元素，因此无法高效地进行二分查找。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2021 填空6 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>完全二叉树的顺序存储编号</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2021 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">顺序存储 + 完全二叉树</span>
+    <span class="exam-badge diff">★★☆</span>
+  </div>
+  <div class="stem">
+    对于具有 57 个结点的完全二叉树，如果按层次自顶向下，同一层自左向右，顺序从 0 开始对全部结点进行编号，则有：编号为 18 的结点的父结点的编号是___，编号为 19 的结点的右子女结点的编号是___。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">8；40</div>
+      <p><strong>解析：</strong>完全二叉树按层序从 0 编号的性质（这是顺序存储的基础）：</p>
+      <ul>
+        <li>结点 $i$ 的<strong>父结点</strong>编号 = $\lfloor(i-1)/2\rfloor$</li>
+        <li>结点 $i$ 的<strong>左子女</strong>编号 = $2i + 1$</li>
+        <li>结点 $i$ 的<strong>右子女</strong>编号 = $2i + 2$</li>
+      </ul>
+      <p>计算：</p>
+      <ul>
+        <li>编号 18 的父结点 = $\lfloor(18-1)/2\rfloor = \lfloor 17/2 \rfloor = 8$</li>
+        <li>编号 19 的右子女 = $2 \times 19 + 2 = 40$（需验证 $40 < 57$，确实存在）</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- 2022 填空6 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>顺序表删除移动元素数</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">顺序表删除</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    删除长度为 n 的顺序表的第 i 个数据元素需要移动表中的____个数据元素。（$1 \le i \le n$）
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">$n - i$</div>
+      <p><strong>解析：</strong>删除第 $i$ 个元素后，其后面的第 $i+1, i+2, \ldots, n$ 个元素都要向前移一位，共 $n - i$ 个。</p>
+      <p>验证边界：</p>
+      <ul>
+        <li>$i = 1$（删除第一个）：移动 $n - 1$ 个 ✓</li>
+        <li>$i = n$（删除最后一个）：移动 $0$ 个 ✓</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 填空1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">填空</span>存储结构选择</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">填空题</span>
+    <span class="exam-badge kaodian">顺序表与链表选择</span>
+    <span class="exam-badge diff">★☆☆</span>
+  </div>
+  <div class="stem">
+    按照简单且高效的原则，如果经常需要在线性表头部进行插入和删除操作，最合适的存储结构是____；如果需要随机存取，最合适的存储结构是____。
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">链表；顺序表</div>
+      <p><strong>解析：</strong></p>
+      <ul>
+        <li><strong>头部插入/删除</strong>：链表只需修改 head 指针，$O(1)$；顺序表需要移动所有元素，$O(n)$。所以选<strong>链表</strong>。</li>
+        <li><strong>随机存取</strong>：顺序表通过下标直接计算地址，$O(1)$；链表必须从头遍历，$O(n)$。所以选<strong>顺序表</strong>。</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<hr class="sep">
+
+<!-- ============================================================ -->
+<h2 id="sec-exam-algo"><span class="secnum">真题</span>算法填空题</h2>
+
+<!-- 2022 算法填空1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">编程</span>链表反转（2022 算法填空）</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2022 期末</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">链表反转 · 头插法</span>
+    <span class="exam-badge diff">★★★</span>
+    <span class="exam-badge freq">高频考点</span>
+  </div>
+  <div class="stem">
+    填空完成下列程序：读入一个整数序列，用单链表存储之，然后将该单链表颠倒后输出该链表内容。
+<pre><code>class Node:
+    def __init__(self, data, next=None):
+        self.data, self.next = data, next
+
+class LinkList:
+    def __init__(self, lst):
+        self.head = Node(lst[0])
+        p = self.head
+        for i in lst[1:]:
+            node = Node(i)
+            p.next = ___①___   # (1分)
+            p = ___②___        # (2分)
+
+    def reverse(self):
+        p = self.head.next
+        self.head.next = ___③___  # (2分)
+        while p is not None:
+            q = p
+            p = ___④___        # (1分)
+            q.next = ___⑤___   # (2分)
+            ___⑥___            # (2分)
+
+    def print(self):
+        p = self.head
+        while p:
+            print(p.data, end=" ")
+            p = p.next
+        print()</code></pre>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">① node　② node　③ None　④ p.next　⑤ self.head.next　⑥ self.head.next = q</div>
+      <p><strong>逐空解析：</strong></p>
+
+      <h4>构建链表部分 __init__</h4>
+      <p>思路：尾插法。变量 <code>p</code> 始终指向当前链表的<strong>最后一个结点</strong>。</p>
+      <ol class="steps">
+        <li><strong>① <code>node</code></strong>：<code>p.next = node</code> —— 把新创建的结点挂到当前尾结点的后面。</li>
+        <li><strong>② <code>node</code></strong>：<code>p = node</code> —— 更新尾指针，让 p 指向新的尾结点（刚创建的 node）。</li>
+      </ol>
+
+      <h4>反转链表部分 reverse</h4>
+      <p>思路：<strong>头插法反转</strong>。把 head 之后的结点逐个摘下来，插入到 head 的后面，这样原来靠后的结点会变成新的前面。</p>
+      <ol class="steps">
+        <li><strong>③ <code>None</code></strong>：<code>self.head.next = None</code> —— head 原来的后继断开（head 本身保留在最前面作为第一个数据结点，它将变成反转后的最后一个结点，所以其 next 设为 None）。</li>
+        <li><strong>④ <code>p.next</code></strong>：<code>p = p.next</code> —— 在 q "摘走" 当前结点之前，p 先前进到下一个结点，否则链会断。</li>
+        <li><strong>⑤ <code>self.head.next</code></strong>：<code>q.next = self.head.next</code> —— 让摘下的结点 q 指向 head 的当前后继（即已反转部分的第二个结点），准备将 q 插入到 head 后面。</li>
+        <li><strong>⑥ <code>self.head.next = q</code></strong> —— 完成头插：让 head 的 next 指向 q。</li>
+      </ol>
+
+      <h4>执行过程模拟</h4>
+      <p>设原始链表为 head → 1 → 2 → 3 → None：</p>
+      <pre><code>初始: head(1) → 2 → 3 → None
+③后: head(1) → None, p → 2 → 3 → None
+
+第1轮: q=2, p=3, q.next=None(即head.next), head.next=q
+       → head(1) → 2 → None, p → 3
+
+第2轮: q=3, p=None, q.next=2(即head.next), head.next=q
+       → head(1) → 3 → 2 → None
+
+结果打印: 1 3 2</code></pre>
+      <p>注意：此实现中 head 结点（值为 lst[0]）不参与反转，始终留在第一位。所以"反转"是反转除第一个元素外的其余元素。整体效果是 [1,2,3] 变为 [1,3,2]。这是该题代码的特定设计。</p>
+    </div>
+  </details>
+</div>
+
+<!-- 2024 算法填空1 -->
+<div class="box exam">
+  <div class="box-title"><span class="tag">编程</span>循环单链表操作（2024 算法填空）</div>
+  <div class="exam-meta">
+    <span class="exam-badge year">2024 期末</span>
+    <span class="exam-badge type">算法填空</span>
+    <span class="exam-badge kaodian">循环链表 · 尾指针 · 头插/尾删</span>
+    <span class="exam-badge diff">★★★</span>
+  </div>
+  <div class="stem">
+    带表尾指针的循环单链表操作（表尾指针指向链表最后一个结点，最后一个结点的 next 指针指向链表的第一个结点）。先是将 n 个整数依次插入链表头部，然后删掉链表尾部 m 个元素，再往链表前部插入 k 个整数。
+<pre><code>class Node:
+    def __init__(self, data, next=None):
+        self.data, self.next = data, next
+
+class LinkedList:
+    def __init__(self):
+        self.tail = None
+
+    def pushFront(self, data):
+        nd = Node(data)
+        if self.tail is None:
+            self.tail = nd
+            nd.next = nd
+        else:
+            ___(1)___          # 2分
+            self.tail.next = nd
+
+    def popBack(self):
+        if self.tail is not None:
+            if ___(2)___:      # 1分
+                self.tail = None
+            else:
+                ptr = self.tail.next
+                while ___(3)___:  # 1分
+                    ptr = ptr.next
+                ptr.next = ptr.next.next
+                ___(4)___      # 1分
+
+    def print(self):
+        if self.tail is not None:
+            ptr = self.tail.next
+            print(ptr.data, end=" ")
+            ptr = ptr.next
+            while ___(5)___:   # 1分
+                print(ptr.data, end=" ")
+                ptr = ptr.next
+        else:
+            print("NULL")
+        print()</code></pre>
+  </div>
+  <details class="solution">
+    <summary></summary>
+    <div>
+      <div class="final-answer">
+        (1) <code>nd.next = self.tail.next</code><br>
+        (2) <code>self.tail.next is self.tail</code>（或 <code>self.tail.next == self.tail</code>）<br>
+        (3) <code>ptr.next != self.tail</code>（或 <code>ptr.next is not self.tail</code>）<br>
+        (4) <code>self.tail = ptr</code><br>
+        (5) <code>ptr != self.tail.next</code>（或 <code>ptr is not self.tail.next</code>）
+      </div>
+
+      <h4>循环链表结构理解</h4>
+      <p>带尾指针的循环单链表：</p>
+      <pre><code>     ┌───────────────────────────────┐
+     ↓                               │
+    [A] → [B] → [C] → ... → [tail] ─┘
+     ↑                         ↑
+ tail.next                   self.tail</code></pre>
+      <ul>
+        <li><strong>表头</strong>（第一个结点）= <code>self.tail.next</code></li>
+        <li><strong>表尾</strong>（最后一个结点）= <code>self.tail</code></li>
+        <li>尾结点的 next 指回头结点（形成环）</li>
+      </ul>
+
+      <h4>逐空详解</h4>
+
+      <p><strong>(1) <code>nd.next = self.tail.next</code></strong></p>
+      <p>pushFront（头插）：新结点要成为新的表头。在循环链表中，表头 = tail.next。所以新结点的 next 应指向当前表头（即 <code>self.tail.next</code>）。紧接着下一行 <code>self.tail.next = nd</code> 让尾结点指向新头。</p>
+      <pre><code>插入前: tail → [原头] → ... → [tail] ─回→ [原头]
+插入后: tail → [nd(新头)] → [原头] → ... → [tail] ─回→ [nd]</code></pre>
+
+      <p><strong>(2) <code>self.tail.next is self.tail</code></strong></p>
+      <p>popBack（尾删）：如果链表只有一个结点，该结点的 next 指向自己（<code>tail.next == tail</code>）。此时删除后链表为空，直接设 <code>self.tail = None</code>。</p>
+
+      <p><strong>(3) <code>ptr.next != self.tail</code></strong></p>
+      <p>要删除尾结点，需要找到尾结点的前驱。从头开始遍历，当 <code>ptr.next == self.tail</code> 时停下——此时 ptr 就是尾结点的前驱。所以循环条件是"ptr 的下一个还不是 tail"。</p>
+
+      <p><strong>(4) <code>self.tail = ptr</code></strong></p>
+      <p>删除尾结点后，它的前驱 ptr 成为新的尾结点。上一行 <code>ptr.next = ptr.next.next</code> 已经让 ptr 跳过了原 tail 指向表头（维持循环），现在只需更新 tail 指针。</p>
+
+      <p><strong>(5) <code>ptr != self.tail.next</code></strong></p>
+      <p>print 遍历：从 <code>tail.next</code>（表头）开始，绕一圈回到表头时停止。由于第一个元素在 while 之前已经打印了，所以 while 条件检测的是"还没回到起点"。当 ptr 再次等于 <code>self.tail.next</code> 时说明绕了一圈，应停止。</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================================ -->
+<hr class="sep">
+
+<h2 id="sec-summary"><span class="secnum">总结</span>本章速查表</h2>
+
+<div class="tbl-wrap">
+<table class="data">
+<caption>线性表操作时间复杂度速查</caption>
+<thead><tr><th>操作</th><th>顺序表</th><th>单链表（无尾指针）</th><th>单链表（有尾指针）</th></tr></thead>
+<tbody>
+<tr><td>按下标访问</td><td>$O(1)$</td><td>$O(n)$</td><td>$O(n)$</td></tr>
+<tr><td>按值查找</td><td>$O(n)$</td><td>$O(n)$</td><td>$O(n)$</td></tr>
+<tr><td>头部插入</td><td>$O(n)$</td><td>$O(1)$</td><td>$O(1)$</td></tr>
+<tr><td>尾部插入</td><td>均摊 $O(1)$</td><td>$O(n)$</td><td>$O(1)$</td></tr>
+<tr><td>中间插入（位置已知）</td><td>$O(n)$</td><td>$O(1)$</td><td>$O(1)$</td></tr>
+<tr><td>头部删除</td><td>$O(n)$</td><td>$O(1)$</td><td>$O(1)$</td></tr>
+<tr><td>尾部删除</td><td>$O(1)$</td><td>$O(n)$</td><td>$O(n)$</td></tr>
+<tr><td>二分查找</td><td>$O(\log n)$</td><td>不支持</td><td>不支持</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="conclusion">
+本章核心：（1）顺序表支持随机访问但增删慢；（2）链表增删快但不支持随机访问；（3）二分查找必须顺序存储；（4）链表是存储结构，线性表是逻辑结构；（5）指针操作顺序是链表编程的关键——先连新结点，后断旧链。
+</div>
+
+    </div>
+  </main>
+</div>
+<a class="back-top" href="#" title="回到顶部">↑</a>
+<script src="script.js"></script>
+</body>
+</html>
